@@ -42,8 +42,14 @@ let capturedSpanPillActions = null;
 
 vi.mock('./TraceTimelineViewer', async () => {
   const { SpanPillActionsContext } = await import('./TraceTimelineViewer/spanPillActions');
-  return mockDefault(function MockTraceTimelineViewer() {
+  return mockDefault(function MockTraceTimelineViewer(props) {
     capturedSpanPillActions = React.useContext(SpanPillActionsContext);
+    React.useEffect(() => {
+      // Lifecycle tests use the real store behind this rendering stub.
+      if (mockTimelineLifecycle.store && props.trace && props.filterTrace === props.trace) {
+        mockTimelineLifecycle.store.getState().setTrace(props.trace, props.findMatchesIDs);
+      }
+    }, [props.trace, props.filterTrace, props.findMatchesIDs]);
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
   });
 });
@@ -132,6 +138,7 @@ const {
   mockSetDetailPanelMode,
   mockDisplayedLayoutStore,
   mockTraceTimelineStore,
+  mockTimelineLifecycle,
   useEmbeddedStateMock,
   useTraceMock,
   mockReloadBackendTrace,
@@ -145,11 +152,13 @@ const {
     setTimelineBarsVisible: jest.fn(),
   },
   mockTraceTimelineStore: {
+    clearTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
     setSpanFilter: jest.fn(),
     detailStates: new Map(),
     spanFilter: { clauses: [], treeMode: 'lift' },
   },
+  mockTimelineLifecycle: { store: null },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
   mockReloadBackendTrace: jest.fn().mockResolvedValue(undefined),
@@ -270,6 +279,98 @@ describe('<TracePage>', () => {
     capturedArchiveNotifierProps = {};
     capturedGraphProps = {};
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
+  });
+
+  describe('timeline page lifecycle', () => {
+    let timeline;
+    let layout;
+    let heightSpy;
+    let match;
+    let parent;
+    let matches;
+
+    beforeEach(async () => {
+      const stores = await vi.importActual('./TraceTimelineViewer/store');
+      timeline = stores.useTraceTimelineStore;
+      layout = stores.useDisplayedLayoutStore;
+      timeline.setState(timeline.getInitialState(), true);
+      layout.setState({ detailPanelMode: 'inline' });
+      mockTimelineLifecycle.store = timeline;
+      mockTraceTimelineStore.clearTrace.mockImplementation(() => timeline.getState().clearTrace());
+      heightSpy = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+      match = trace.spans.find(span => span.parentSpan);
+      parent = match.parentSpan;
+      matches = new Set([match.spanID]);
+      filterSpansSpy.mockReturnValue(matches);
+    });
+
+    afterEach(() => {
+      mockTimelineLifecycle.store = null;
+      mockTraceTimelineStore.clearTrace.mockReset();
+      timeline.setState(timeline.getInitialState(), true);
+      heightSpy.mockRestore();
+      filterSpansSpy.mockReturnValue(new Set());
+    });
+
+    it('reopens the same trace after page unmount with clean state and focused URL matches', () => {
+      const pageProps = {
+        ...defaultProps,
+        uiFind: 'match',
+        location: { ...defaultProps.location, search: '?uiFind=match' },
+      };
+      const firstVisit = render(<TracePage {...pageProps} />);
+      expect(timeline.getState().detailStates.has(match.spanID)).toBe(true);
+      act(() => {
+        timeline.getState().childrenToggle(parent.spanID);
+        timeline.getState().detailToggle(match.spanID);
+        timeline.getState().clearShouldScrollToFirstUiFindMatch();
+      });
+      expect(timeline.getState().childrenHiddenIDs.has(parent.spanID)).toBe(true);
+      expect(timeline.getState().detailStates.size).toBe(0);
+      firstVisit.unmount();
+      expect(timeline.getState().traceID).toBeNull();
+      expect(timeline.getState().traceSpans).toBeNull();
+      expect(timeline.getState().childrenHiddenIDs.size).toBe(0);
+      expect(timeline.getState().detailStates.size).toBe(0);
+      expect(timeline.getState().shouldScrollToFirstUiFindMatch).toBe(false);
+
+      const secondVisit = render(<TracePage {...pageProps} />);
+      try {
+        expect(timeline.getState().traceID).toBe(trace.traceID);
+        expect(timeline.getState().traceSpans).toBe(trace.spans);
+        expect(timeline.getState().childrenHiddenIDs.has(parent.spanID)).toBe(false);
+        expect([...timeline.getState().detailStates.keys()]).toEqual([match.spanID]);
+        expect(timeline.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+      } finally {
+        secondVisit.unmount();
+      }
+    });
+
+    it('keeps collapses and selection when switching to Statistics and back', () => {
+      layout.setState({ detailPanelMode: 'sidepanel' });
+      const page = render(<TracePage {...defaultProps} uiFind="match" />);
+      try {
+        act(() => {
+          timeline.getState().childrenToggle(parent.spanID);
+          timeline.getState().detailWarningsToggle(match.spanID);
+          timeline.getState().clearShouldScrollToFirstUiFindMatch();
+        });
+        const previous = timeline.getState();
+        act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics));
+        expect(screen.getByTestId('mock-trace-statistics')).toBeInTheDocument();
+        expect(mockTraceTimelineStore.clearTrace).not.toHaveBeenCalled();
+        expect(timeline.getState()).toBe(previous);
+        act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer));
+        expect(screen.getByTestId('mock-timeline-viewer')).toBeInTheDocument();
+        expect(timeline.getState()).toBe(previous);
+        expect(timeline.getState().childrenHiddenIDs.has(parent.spanID)).toBe(true);
+        expect([...timeline.getState().detailStates.keys()]).toEqual([match.spanID]);
+        expect(timeline.getState().detailStates.get(match.spanID).isWarningsOpen).toBe(true);
+        expect(timeline.getState().shouldScrollToFirstUiFindMatch).toBe(false);
+      } finally {
+        page.unmount();
+      }
+    });
   });
 
   it.each([ETraceViewType.TraceGraph, ETraceViewType.TraceStatistics, ETraceViewType.TraceFlamegraph])(

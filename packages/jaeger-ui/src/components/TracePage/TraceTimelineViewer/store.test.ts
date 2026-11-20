@@ -18,7 +18,6 @@ import {
   useTraceTimelineStore,
 } from './store';
 import { useSavedLayoutPrefsStore } from './store.layout';
-import { findNewlyMatchedSpanInfo } from './timeline-utils';
 
 vi.mock('../../../utils/config/get-config', () => ({
   default: vi.fn(() => ({})),
@@ -477,7 +476,6 @@ describe('trace timeline zustand stores', () => {
     useTraceTimelineStore.setState({
       traceID: null,
       traceSpans: null,
-      traceMatches: null,
       childrenHiddenIDs: new Set(),
       detailStates: new Map(),
       shouldScrollToFirstUiFindMatch: false,
@@ -820,7 +818,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       const previous = useTraceTimelineStore.getState();
-      const refreshed = makeTrace('same-trace', [...trace.spans, makeSpan({ spanID: 'arrived' })]);
+      const refreshed = { ...trace, spans: [...trace.spans, makeSpan({ spanID: 'arrived' })] };
       useTraceTimelineStore.getState().setTrace(refreshed);
 
       const state = useTraceTimelineStore.getState();
@@ -988,33 +986,34 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-x')).toBe(true);
       });
 
-      it('recomputes find-focus on same-ID reload when spans change and uiFind is provided', () => {
-        vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
+      it('preserves find-focus state on same-ID reload when spans change and uiFind is provided', () => {
         vi.mocked(spanAncestorIds).mockReturnValue([]);
         const spans1 = [makeSpan({ spanID: 'span-1' })];
         const trace1 = makeTrace('t1', spans1);
-        useTraceTimelineStore.getState().setTrace(trace1, 'myFind');
+        useTraceTimelineStore.getState().setTrace(trace1, new Set(['span-1']));
 
         expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+        useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
+        useTraceTimelineStore.getState().childrenToggle('span-1');
+        const previous = useTraceTimelineStore.getState();
 
-        vi.mocked(filterSpans).mockReturnValue(new Set(['span-1', 'span-2']));
         const spans2 = [makeSpan({ spanID: 'span-1' }), makeSpan({ spanID: 'span-2' })];
         const trace2 = makeTrace('t1', spans2);
-        useTraceTimelineStore.getState().setTrace(trace2, 'myFind');
+        useTraceTimelineStore.getState().setTrace(trace2, new Set(['span-1', 'span-2']));
 
-        expect(filterSpans).toHaveBeenCalledWith('myFind', spans2);
+        const state = useTraceTimelineStore.getState();
+        expect(state.traceSpans).toBe(spans2);
+        expect(state.childrenHiddenIDs).toBe(previous.childrenHiddenIDs);
+        expect(state.detailStates).toBe(previous.detailStates);
+        expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
       });
 
       it.each(['inline', 'sidepanel'] as const)(
-        'reveals a matching child arriving on same-ID reload in %s mode',
+        'keeps a matching child arriving on same-ID reload hidden in %s mode',
         async detailPanelMode => {
-          const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
-            '../../../utils/filter-spans'
-          );
           const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
             '../../../utils/span-ancestor-ids'
           );
-          vi.mocked(filterSpans).mockImplementation(actualFilter.default);
           vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
           const attributes = { entries: () => [] };
           const resource = { serviceName: 'service', attributes };
@@ -1036,15 +1035,12 @@ describe('trace timeline zustand stores', () => {
           });
           const arrived = makeSpan({
             spanID: 'arrived',
-            name: 'late-match',
             parentSpan: parent,
             attributes,
             resource,
           });
           useDisplayedLayoutStore.setState({ detailPanelMode, spanNameColumnWidth: 0.5 });
-          useTraceTimelineStore
-            .getState()
-            .setTrace(makeTrace('same', [root, parent, existing]), 'late-match');
+          useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, parent, existing]), new Set());
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root')).toBe(true);
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
           expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
@@ -1054,14 +1050,12 @@ describe('trace timeline zustand stores', () => {
 
           useTraceTimelineStore
             .getState()
-            .setTrace(makeTrace('same', [root, parent, existing, arrived]), 'late-match');
+            .setTrace(makeTrace('same', [root, parent, existing, arrived]), new Set(['arrived']));
 
           const state = useTraceTimelineStore.getState();
-          expect(state.childrenHiddenIDs.has('root')).toBe(false);
-          expect(state.childrenHiddenIDs.has('parent')).toBe(false);
-          expect(state.detailStates.has('arrived')).toBe(true);
-          expect(state.detailStates.get('arrived')!.isAttributesOpen).toBe(detailPanelMode === 'sidepanel');
-          expect(state.detailStates.get('arrived')!.isResourceOpen).toBe(detailPanelMode === 'sidepanel');
+          expect(state.childrenHiddenIDs.has('root')).toBe(true);
+          expect(state.childrenHiddenIDs.has('parent')).toBe(true);
+          expect(state.detailStates.has('arrived')).toBe(false);
           expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
           expect(hiddenServices(state.spanFilter)).toEqual(new Set(['other-service']));
           expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe(detailPanelMode);
@@ -1069,384 +1063,52 @@ describe('trace timeline zustand stores', () => {
         }
       );
 
-      it('merges filtered match IDs on reload without reopening retained matches or hidden spans', async () => {
-        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
-          '../../../utils/span-ancestor-ids'
+      it('same-ID reload with uiFind keeps manual collapses and does not scroll', () => {
+        vi.mocked(spanAncestorIds).mockImplementation(span =>
+          span?.spanID === 'match' ? ['match-parent', 'root'] : []
         );
-        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
         const root = makeSpan({ spanID: 'root', hasChildren: true });
-        const parent = makeSpan({ spanID: 'parent', parentSpan: root, hasChildren: true });
-        const retained = makeSpan({ spanID: 'retained', parentSpan: root });
-        const hidden = makeSpan({ spanID: 'hidden', parentSpan: parent });
-        const trace = makeTrace('same', [root, parent, retained, hidden]);
-        useTraceTimelineStore.getState().setTrace(trace, new Set(['retained']));
-        useTraceTimelineStore.getState().detailToggle('retained');
-        useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
-        useTraceTimelineStore.getState().childrenToggle('root');
-
-        const arrived = makeSpan({ spanID: 'arrived', parentSpan: parent });
-        const refreshed = makeTrace('same', [...trace.spans, arrived]);
-        useTraceTimelineStore.getState().setTrace(refreshed, new Set(['retained', 'arrived', 'unknown']));
-
-        const state = useTraceTimelineStore.getState();
-        expect(state.childrenHiddenIDs).toEqual(new Set());
-        expect([...state.detailStates.keys()]).toEqual(['arrived']);
-        expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
-        expect(filterSpans).not.toHaveBeenCalled();
-
-        useTraceTimelineStore.getState().childrenToggle('root');
-        useTraceTimelineStore
-          .getState()
-          .setTrace(makeTrace('same', [...refreshed.spans]), new Set(['retained', 'arrived']));
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set(['root']));
-      });
-
-      it('updates the filtered-match baseline on search changes without refocusing unchanged spans', () => {
-        vi.mocked(spanAncestorIds).mockReturnValue([]);
-        const trace = makeTrace('same', [makeSpan({ spanID: 'a' }), makeSpan({ spanID: 'b' })]);
-        useTraceTimelineStore.getState().setTrace(trace, new Set(['a']));
+        const matchParent = makeSpan({ spanID: 'match-parent', hasChildren: true, parentSpan: root });
+        const match = makeSpan({ spanID: 'match', parentSpan: matchParent });
+        const otherParent = makeSpan({ spanID: 'other-parent', hasChildren: true, parentSpan: root });
+        const spans = [root, matchParent, match, otherParent];
+        useTraceTimelineStore.getState().setTrace(makeTrace('same', spans), new Set(['match']));
+        useTraceTimelineStore.getState().childrenToggle('match-parent');
+        useTraceTimelineStore.getState().childrenToggle('other-parent');
+        useTraceTimelineStore.getState().detailWarningsToggle('match');
         useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
         const previous = useTraceTimelineStore.getState();
-        const matches = new Set(['b']);
-        useTraceTimelineStore.getState().setTrace(trace, matches);
-        expect(useTraceTimelineStore.getState().detailStates).toBe(previous.detailStates);
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toBe(previous.childrenHiddenIDs);
-        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
 
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [...trace.spans]), matches);
-        expect([...useTraceTimelineStore.getState().detailStates.keys()]).toEqual(['a']);
-
-        useTraceTimelineStore.getState().setTrace(makeTrace('other', [...trace.spans]), matches);
-        expect([...useTraceTimelineStore.getState().detailStates.keys()]).toEqual(['b']);
-        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
-      });
-
-      it('reveals new ancestors of retained filtered matches while preserving unchanged collapses', async () => {
-        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
-          '../../../utils/span-ancestor-ids'
-        );
-        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
-        const root = makeSpan({ spanID: 'root', hasChildren: true });
-        const parent = makeSpan({ spanID: 'parent', parentSpan: root, hasChildren: true });
-        const match = makeSpan({ spanID: 'match', parentSpan: root });
-        const matches = new Set(['match']);
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, parent, match]), matches);
-        useTraceTimelineStore.getState().childrenToggle('root');
-        useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set(['root', 'parent']));
-
-        const updated = makeSpan({ spanID: 'match', parentSpan: parent });
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, parent, updated]), matches);
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set(['root']));
-        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
-      });
-
-      it('reveals an existing span that becomes a filtered match on reload', () => {
-        const trace = makeTrace('same', [makeSpan({ spanID: 'a' })]);
-        useTraceTimelineStore.getState().setTrace(trace, new Set());
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [...trace.spans]), new Set(['a']));
-        expect([...useTraceTimelineStore.getState().detailStates.keys()]).toEqual(['a']);
-        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
-      });
-
-      it('clears the reload baseline when search is cleared on unchanged spans', () => {
-        vi.mocked(spanAncestorIds).mockReturnValue([]);
-        const trace = makeTrace('same');
-        useTraceTimelineStore.getState().setTrace(trace, new Set(['span-1']));
-        useTraceTimelineStore.getState().setTrace(trace, null);
-        expect(useTraceTimelineStore.getState().traceMatches).toBeNull();
-      });
-
-      it('same-ID reload with uiFind keeps manual collapses and does not scroll', async () => {
-        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
-          '../../../utils/filter-spans'
-        );
-        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
-          '../../../utils/span-ancestor-ids'
-        );
-        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
-        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
-
-        const attributes = { entries: () => [] };
-        const resource = { serviceName: 'service', attributes };
-        const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
-        const matchParent = makeSpan({
-          spanID: 'match-parent',
-          name: 'match-parent',
-          hasChildren: true,
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        const matchChild = makeSpan({
-          spanID: 'match-child',
-          name: 'target-match',
-          parentSpan: matchParent,
-          attributes,
-          resource,
-        });
-        const otherParent = makeSpan({
-          spanID: 'other-parent',
-          name: 'other-parent',
-          hasChildren: true,
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        const otherChild = makeSpan({
-          spanID: 'other-child',
-          name: 'other',
-          parentSpan: otherParent,
-          attributes,
-          resource,
-        });
-
-        const trace = makeTrace('same-trace', [root, matchParent, matchChild, otherParent, otherChild]);
-        useTraceTimelineStore.getState().setTrace(trace, 'target-match');
-
-        // Initially, match-parent is expanded (ancestor of matchChild) and other-parent is collapsed (no matches)
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('match-parent')).toBe(false);
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('other-parent')).toBe(true);
-
-        // User manually collapses match-parent
-        useTraceTimelineStore.getState().childrenToggle('match-parent');
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('match-parent')).toBe(true);
-
-        // User manually expands other-parent
-        useTraceTimelineStore.getState().childrenToggle('other-parent');
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('other-parent')).toBe(false);
-
-        // Clear scroll flag (simulating timeline view has rendered and scrolled)
-        useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
-        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
-
-        // Reload the same trace with an unrelated new span arriving
-        const newChild = makeSpan({
-          spanID: 'new-child',
-          name: 'unrelated',
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        const refreshed = makeTrace('same-trace', [
-          root,
-          matchParent,
-          matchChild,
-          otherParent,
-          otherChild,
-          newChild,
-        ]);
-        useTraceTimelineStore.getState().setTrace(refreshed, 'target-match');
+        const arrived = makeSpan({ spanID: 'arrived', parentSpan: matchParent });
+        useTraceTimelineStore
+          .getState()
+          .setTrace(makeTrace('same', [...spans, arrived]), new Set(['match', 'arrived']));
 
         const state = useTraceTimelineStore.getState();
-        // Manual collapse of match-parent is preserved
+        expect(state.childrenHiddenIDs).toBe(previous.childrenHiddenIDs);
         expect(state.childrenHiddenIDs.has('match-parent')).toBe(true);
-        // Manual expansion of other-parent is preserved
         expect(state.childrenHiddenIDs.has('other-parent')).toBe(false);
-        // Does not scroll on reload
+        expect(state.detailStates).toBe(previous.detailStates);
+        expect(state.detailStates.get('match')!.isWarningsOpen).toBe(true);
+        expect(state.detailStates.has('arrived')).toBe(false);
         expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
       });
 
-      it('reveals an existing span when its name changes to match on same-ID reload while preserving manual collapse for prior matches', async () => {
-        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
-          '../../../utils/filter-spans'
-        );
-        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
-          '../../../utils/span-ancestor-ids'
-        );
-        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
-        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
-
-        const attributes = { entries: () => [] };
-        const resource = { serviceName: 'service', attributes };
-        const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
-        const priorMatchParent = makeSpan({
-          spanID: 'prior-parent',
-          name: 'prior-parent',
-          hasChildren: true,
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        const priorMatchChild = makeSpan({
-          spanID: 'prior-child',
-          name: 'match-keyword',
-          parentSpan: priorMatchParent,
-          attributes,
-          resource,
-        });
-        const newMatchParent = makeSpan({
-          spanID: 'new-parent',
-          name: 'new-parent',
-          hasChildren: true,
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        const existingChild = makeSpan({
-          spanID: 'existing-child',
-          name: 'unmatched',
-          parentSpan: newMatchParent,
-          attributes,
-          resource,
-        });
-
-        const trace = makeTrace('same', [
-          root,
-          priorMatchParent,
-          priorMatchChild,
-          newMatchParent,
-          existingChild,
-        ]);
-        useTraceTimelineStore.getState().setTrace(trace, 'match-keyword');
-
-        // Initially, priorMatchParent is expanded (ancestor of priorMatchChild) and newMatchParent is collapsed
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('prior-parent')).toBe(false);
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('new-parent')).toBe(true);
-
-        // User manually collapses priorMatchParent
-        useTraceTimelineStore.getState().childrenToggle('prior-parent');
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('prior-parent')).toBe(true);
-
-        // Reload where existingChild's name changes to 'match-keyword'
-        const updatedChild = makeSpan({
-          spanID: 'existing-child',
-          name: 'match-keyword',
-          parentSpan: newMatchParent,
-          attributes,
-          resource,
-        });
-        const refreshed = makeTrace('same', [
-          root,
-          priorMatchParent,
-          priorMatchChild,
-          newMatchParent,
-          updatedChild,
-        ]);
-        useTraceTimelineStore.getState().setTrace(refreshed, 'match-keyword');
-
-        const state = useTraceTimelineStore.getState();
-        // Ancestor of the newly matched existing span is revealed
-        expect(state.childrenHiddenIDs.has('new-parent')).toBe(false);
-        // Manual collapse for the span that already matched is preserved
-        expect(state.childrenHiddenIDs.has('prior-parent')).toBe(true);
-        // Newly matched span is added to detailStates
-        expect(state.detailStates.has('existing-child')).toBe(true);
-      });
-
-      it('reveals late-arriving parent for an already-matching orphan on same-ID reload while preserving manual collapse on unchanged ancestors', async () => {
-        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
-          '../../../utils/filter-spans'
-        );
-        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
-          '../../../utils/span-ancestor-ids'
-        );
-        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
-        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
-
-        const attributes = { entries: () => [] };
-        const resource = { serviceName: 'service', attributes };
-        const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
-        const matchingOrphan = makeSpan({
-          spanID: 'matching-orphan',
-          name: 'keyword',
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-
-        // Initial trace: root -> matchingOrphan.
-        // User manually collapses root.
-        const initialTrace = makeTrace('same', [root, matchingOrphan]);
-        useTraceTimelineStore.getState().setTrace(initialTrace, 'keyword');
-        useTraceTimelineStore.getState().childrenToggle('root');
-        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root')).toBe(true);
-
-        // Reload: a late-arriving parent arrives between root and matchingOrphan:
-        // root -> lateParent -> matchingOrphan.
-        const lateParent = makeSpan({
-          spanID: 'late-parent',
-          name: 'late-parent',
-          hasChildren: true,
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        const updatedOrphan = makeSpan({
-          spanID: 'matching-orphan',
-          name: 'keyword',
-          parentSpan: lateParent,
-          attributes,
-          resource,
-        });
-
-        // Simulate lateParent being collapsed (e.g. from previous state or default)
-        useTraceTimelineStore.setState({
-          childrenHiddenIDs: new Set(['root', 'late-parent']),
-        });
-
-        const refreshedTrace = makeTrace('same', [root, lateParent, updatedOrphan]);
-        useTraceTimelineStore.getState().setTrace(refreshedTrace, 'keyword');
-
-        const state = useTraceTimelineStore.getState();
-        // Newly introduced ancestor (lateParent) is revealed
-        expect(state.childrenHiddenIDs.has('late-parent')).toBe(false);
-        // Unchanged ancestor (root) remains manually collapsed
-        expect(state.childrenHiddenIDs.has('root')).toBe(true);
-      });
-
-      it.each(['sidepanel', 'inline'] as const)(
-        'prunes dropped selected span on same-ID reload with uiFind active in %s mode',
+      it.each(['inline', 'sidepanel'] as const)(
+        'preserves an explicit detail deselection on same-ID reload in %s mode',
         detailPanelMode => {
-          const attributes = { entries: () => [] };
-          const resource = { serviceName: 'service', attributes };
-          const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
-          const spanA = makeSpan({
-            spanID: 'span-a',
-            name: 'span-a',
-            parentSpan: root,
-            attributes,
-            resource,
-          });
-          const spanB = makeSpan({
-            spanID: 'span-b',
-            name: 'span-b',
-            parentSpan: root,
-            attributes,
-            resource,
-          });
-
+          vi.mocked(spanAncestorIds).mockReturnValue([]);
           useDisplayedLayoutStore.setState({ detailPanelMode });
-          useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA, spanB]));
-
-          // Select spanB in side panel or expand both in inline
-          if (detailPanelMode === 'sidepanel') {
-            useTraceTimelineStore.setState({
-              detailStates: new Map([['span-b', DetailState.forDetailPanelMode('sidepanel')]]),
-            });
-          } else {
-            useTraceTimelineStore.setState({
-              detailStates: new Map([
-                ['span-a', new DetailState()],
-                ['span-b', new DetailState()],
-              ]),
-            });
-          }
-
-          // Reload same trace where spanB was dropped and uiFind is active
-          vi.mocked(filterSpans).mockReturnValue(new Set());
-          const refreshed = makeTrace('same', [root, spanA]);
-          useTraceTimelineStore.getState().setTrace(refreshed, 'some-query');
-
-          const state = useTraceTimelineStore.getState();
-          expect(state.detailStates.has('span-b')).toBe(false);
-          if (detailPanelMode === 'sidepanel') {
-            // Falls back to empty detailStates so side panel defaults to root
-            expect(state.detailStates.size).toBe(0);
-          } else {
-            // Surviving span remains open
-            expect(state.detailStates.has('span-a')).toBe(true);
-          }
+          const span = makeSpan({ spanID: 'match' });
+          useTraceTimelineStore.getState().setTrace(makeTrace('same', [span]), new Set(['match']));
+          useTraceTimelineStore.getState().detailToggle('match');
+          const deselected = useTraceTimelineStore.getState().detailStates;
+          const arrived = makeSpan({ spanID: 'arrived' });
+          useTraceTimelineStore
+            .getState()
+            .setTrace(makeTrace('same', [span, arrived]), new Set(['match', 'arrived']));
+          expect(useTraceTimelineStore.getState().detailStates).toBe(deselected);
+          expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
         }
       );
 
@@ -1476,112 +1138,6 @@ describe('trace timeline zustand stores', () => {
         expect(s.detailStates.size).toBe(1);
         expect(s.detailStates.has('span-a')).toBe(true);
         expect(s.detailStates.get('span-a')!.isAttributesOpen).toBe(true);
-      });
-
-      it('preserves existing DetailState when an already-open span starts matching on same-ID reload', async () => {
-        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
-          '../../../utils/filter-spans'
-        );
-        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
-          '../../../utils/span-ancestor-ids'
-        );
-        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
-        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
-
-        const attributes = { entries: () => [] };
-        const resource = { serviceName: 'service', attributes };
-        const root = makeSpan({ spanID: 'root', name: 'root', attributes, resource });
-        const spanA = makeSpan({
-          spanID: 'span-a',
-          name: 'unmatched',
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-
-        useDisplayedLayoutStore.setState({ detailPanelMode: 'inline' });
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA]), 'match-target');
-
-        // User manually opens span-a and toggles tags/attributes and warnings
-        const customState = new DetailState().toggleAttributes().toggleWarnings();
-        useTraceTimelineStore.setState({
-          detailStates: new Map([['span-a', customState]]),
-        });
-        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isWarningsOpen).toBe(true);
-        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isAttributesOpen).toBe(true);
-
-        // Reload same trace where span-a now starts matching 'match-target'
-        const updatedSpanA = makeSpan({
-          spanID: 'span-a',
-          name: 'match-target',
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, updatedSpanA]), 'match-target');
-
-        const state = useTraceTimelineStore.getState();
-        expect(state.detailStates.has('span-a')).toBe(true);
-        expect(state.detailStates.get('span-a')).toBe(customState);
-        expect(state.detailStates.get('span-a')?.isWarningsOpen).toBe(true);
-        expect(state.detailStates.get('span-a')?.isAttributesOpen).toBe(true);
-      });
-
-      it('preserves existing DetailState in side-panel mode when another match arrives on same-ID reload', async () => {
-        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
-          '../../../utils/filter-spans'
-        );
-        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
-          '../../../utils/span-ancestor-ids'
-        );
-        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
-        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
-
-        const attributes = { entries: () => [] };
-        const resource = { serviceName: 'service', attributes };
-        const root = makeSpan({ spanID: 'root', name: 'root', attributes, resource });
-        const spanA = makeSpan({
-          spanID: 'span-a',
-          name: 'keyword',
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        const spanB = makeSpan({
-          spanID: 'span-b',
-          name: 'other',
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-
-        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA, spanB]), 'keyword');
-
-        // Customize the selected span-a in side-panel mode (toggle tags closed and warnings open)
-        const customState = DetailState.forDetailPanelMode('sidepanel').toggleTags().toggleWarnings();
-        useTraceTimelineStore.setState({
-          detailStates: new Map([['span-a', customState]]),
-        });
-        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isAttributesOpen).toBe(false);
-        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isWarningsOpen).toBe(true);
-
-        // Reload where spanB also becomes a match for 'keyword'
-        const updatedSpanB = makeSpan({
-          spanID: 'span-b',
-          name: 'keyword',
-          parentSpan: root,
-          attributes,
-          resource,
-        });
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA, updatedSpanB]), 'keyword');
-
-        const state = useTraceTimelineStore.getState();
-        expect(state.detailStates.size).toBe(1);
-        expect(state.detailStates.has('span-a')).toBe(true);
-        expect(state.detailStates.get('span-a')).toBe(customState);
-        expect(state.detailStates.get('span-a')?.isAttributesOpen).toBe(false);
-        expect(state.detailStates.get('span-a')?.isWarningsOpen).toBe(true);
       });
     });
 
@@ -1954,29 +1510,6 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('focusUiFindMatches', () => {
-      it('keeps manual choices on reload after repeated string focus without a URL change', () => {
-        vi.mocked(filterSpans).mockReturnValue(new Set(['leaf']));
-        vi.mocked(spanAncestorIds).mockImplementation(span => (span?.spanID === 'leaf' ? ['root'] : []));
-        const root = makeSpan({ spanID: 'root', hasChildren: true });
-        const leaf = makeSpan({ spanID: 'leaf', parentSpan: root });
-        const trace = makeTrace('same', [root, leaf]);
-        const matches = new Set(['leaf']);
-        useTraceTimelineStore.getState().setTrace(trace, matches);
-
-        // The same search text leaves the URL and its memoized match set unchanged.
-        useTraceTimelineStore.getState().focusUiFindMatches(trace, 'keyword', false);
-        useTraceTimelineStore.getState().focusUiFindMatches(trace, 'keyword', false);
-        useTraceTimelineStore.getState().childrenToggle('root');
-        useTraceTimelineStore.getState().detailToggle('leaf');
-        useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
-
-        useTraceTimelineStore.getState().setTrace(makeTrace('same', [...trace.spans]), matches);
-        const state = useTraceTimelineStore.getState();
-        expect(state.childrenHiddenIDs).toEqual(new Set(['root']));
-        expect(state.detailStates.size).toBe(0);
-        expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
-      });
-
       it.each(['', null, undefined])('is a no-op when uiFind is %s', uiFind => {
         const stateBefore = useTraceTimelineStore.getState();
         useTraceTimelineStore.getState().focusUiFindMatches(makeTrace(), uiFind);
@@ -2091,61 +1624,6 @@ describe('calculateFocusedFindRowStates', () => {
     const result = calculateFocusedFindRowStates('find', spans);
     expect(result.detailStates.size).toBe(2);
     expect(result.shouldScrollToFirstUiFindMatch).toBe(true);
-  });
-
-  describe('findNewlyMatchedSpanInfo', () => {
-    it('returns ancestor IDs of newly matching spans comparing prev and current matches', () => {
-      vi.mocked(filterSpans).mockImplementation((_query, spans) =>
-        spans?.some(s => s.spanID === 'leaf' && (s as any).name === 'match') ? new Set(['leaf']) : new Set()
-      );
-      vi.mocked(spanAncestorIds).mockReturnValue(['root', 'parent']);
-      const root = makeSpan({ spanID: 'root', hasChildren: true });
-      const parent = makeSpan({ spanID: 'parent', hasChildren: true });
-      const prevLeaf = makeSpan({ spanID: 'leaf', name: 'unmatched' });
-      const currentLeaf = makeSpan({ spanID: 'leaf', name: 'match' });
-      const { revealedAncestors: revealed } = findNewlyMatchedSpanInfo(
-        'find',
-        [root, parent, prevLeaf],
-        [root, parent, currentLeaf]
-      );
-      expect(revealed).toEqual(new Set(['root', 'parent']));
-    });
-
-    it('returns an empty set when no spans match', () => {
-      vi.mocked(filterSpans).mockReturnValue(new Set());
-      const root = makeSpan({ spanID: 'root', hasChildren: true });
-      const leaf = makeSpan({ spanID: 'leaf' });
-      const { revealedAncestors: revealed } = findNewlyMatchedSpanInfo('find', [root, leaf], [root, leaf]);
-      expect(revealed.size).toBe(0);
-    });
-
-    it('returns an empty set when span was already matching before reload', () => {
-      vi.mocked(filterSpans).mockReturnValue(new Set(['leaf']));
-      const root = makeSpan({ spanID: 'root', hasChildren: true });
-      const leaf = makeSpan({ spanID: 'leaf' });
-      const { revealedAncestors: revealed } = findNewlyMatchedSpanInfo('find', [root, leaf], [root, leaf]);
-      expect(revealed.size).toBe(0);
-    });
-
-    it('reveals newly introduced ancestors for retained matches when a missing parent arrives on reload', () => {
-      vi.mocked(filterSpans).mockReturnValue(new Set(['orphan-leaf']));
-      const orphanLeafPrev = makeSpan({ spanID: 'orphan-leaf' });
-      const root = makeSpan({ spanID: 'root', hasChildren: true });
-      const lateParent = makeSpan({ spanID: 'late-parent', hasChildren: true, parentSpan: root });
-      const orphanLeafCurrent = makeSpan({ spanID: 'orphan-leaf', parentSpan: lateParent });
-
-      vi.mocked(spanAncestorIds).mockImplementation(span => {
-        if (span?.spanID === 'orphan-leaf' && span.parentSpan) return ['late-parent', 'root'];
-        return [];
-      });
-
-      const { revealedAncestors: revealed } = findNewlyMatchedSpanInfo(
-        'find',
-        [orphanLeafPrev],
-        [root, lateParent, orphanLeafCurrent]
-      );
-      expect(revealed).toEqual(new Set(['late-parent', 'root']));
-    });
   });
 });
 

@@ -318,6 +318,7 @@ export function TracePageImpl(props: TProps) {
       resetShortcuts();
       cancelScroll();
       sm.destroy();
+      useTraceTimelineStore.getState().clearTrace();
     };
   }, [adjustViewRange]);
 

@@ -227,17 +227,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(mockProps.setTrace).toHaveBeenCalledWith(newTrace, mockProps.findMatchesIDs);
     });
 
-    it('refreshes the reload baseline when search matches change on the same trace', () => {
-      const { rerender } = render(<VirtualizedTraceViewImpl {...mockProps} />);
-      mockProps.setTrace.mockReset();
-      const matches = new Set([trace.spans[0].spanID]);
-      rerender(<VirtualizedTraceViewImpl {...mockProps} findMatchesIDs={matches} />);
-      expect(mockProps.setTrace).toHaveBeenCalledWith(trace, matches);
-      mockProps.setTrace.mockReset();
-      rerender(<VirtualizedTraceViewImpl {...mockProps} findMatchesIDs={null} />);
-      expect(mockProps.setTrace).toHaveBeenCalledWith(trace, null);
-    });
-
     it('sets a reloaded trace once its filter is resolved, with the matches of that filter', () => {
       const { rerender } = render(<VirtualizedTraceViewImpl {...mockProps} />);
       mockProps.setTrace.mockReset();

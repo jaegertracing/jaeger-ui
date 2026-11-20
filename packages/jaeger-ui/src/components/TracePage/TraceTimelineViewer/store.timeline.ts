@@ -11,7 +11,6 @@ import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
   CollapseTarget,
-  findNewlyMatchedSpanInfo,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
@@ -19,17 +18,16 @@ import {
 type TraceTimelineInteractionStore = {
   traceID: string | null;
   traceSpans: IOtelTrace['spans'] | null;
-  // Last resolved filtered matches, used to identify new matches on reload.
-  traceMatches: ReadonlySet<string> | null;
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
   // The active span filter (RFC 0009). Consumers evaluate it over the trace they render.
   spanFilter: ISpanFilter;
   setSpanFilter: (filter: ISpanFilter) => void;
-  // Resets ephemeral fields for a new trace and optionally focuses the find matches, given as the
-  // search text or as the set of matching span IDs the filter leaves visible.
+  // Focuses find matches only when opening a trace. Same-ID reloads preserve the view state,
+  // apart from pruning details for spans that disappeared.
   setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => void;
+  clearTrace: () => void;
   childrenToggle: (spanID: string) => void;
   expandAll: () => void;
   expandOne: (spans: ReadonlyArray<CollapseTarget>) => void;
@@ -53,7 +51,6 @@ type TraceTimelineInteractionStore = {
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
   traceID: null,
   traceSpans: null,
-  traceMatches: null,
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
@@ -61,30 +58,21 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
   setSpanFilter: (filter: ISpanFilter) => set({ spanFilter: filter }),
   setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => {
-    const { traceID: currentTraceID, traceSpans, traceMatches } = get();
-    if (trace.traceID === currentTraceID && trace.spans === traceSpans) {
-      // Search and filter changes update the reload baseline without refocusing the view.
-      if (typeof matches !== 'string' && (matches ?? null) !== traceMatches) {
-        set({ traceMatches: matches ?? null });
-      }
-      return;
-    }
+    const { traceID: currentTraceID, traceSpans } = get();
+    if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
     const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
 
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
       traceSpans: trace.spans,
-      traceMatches: typeof matches === 'string' ? null : (matches ?? null),
     };
-
-    const isSameTrace = trace.traceID === currentTraceID;
 
     // Across refetches of the same trace, collapse selections persist, while detail states are
     // pruned for spans that no longer exist. The span filter is not touched here at all: the page's
     // span filter hook resolves it from the URL for every trace, and it does so before the
     // timeline mounts, so a reset here would wipe what the URL asked for.
-    if (!isSameTrace) {
+    if (trace.traceID !== currentTraceID) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),
         detailStates: new Map<string, DetailState>(),
@@ -111,44 +99,23 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       }
     }
 
-    if (matches) {
-      if (isSameTrace) {
-        const { newlyMatchedIDs, revealedAncestors } = findNewlyMatchedSpanInfo(
-          matches,
-          traceSpans,
-          trace.spans,
-          traceMatches
-        );
-
-        const childrenHiddenIDs = new Set(get().childrenHiddenIDs);
-        revealedAncestors.forEach(id => childrenHiddenIDs.delete(id));
-
-        const detailStates = new Map(base.detailStates ?? get().detailStates);
-        for (const id of newlyMatchedIDs) {
-          if (!detailStates.has(id)) {
-            detailStates.set(id, DetailState.forDetailPanelMode(detailPanelMode));
-          }
-        }
-
-        if (detailPanelMode === 'sidepanel' && detailStates.size > 1) {
-          const [firstKey, firstState] = detailStates.entries().next().value as [string, DetailState];
-          detailStates.clear();
-          detailStates.set(firstKey, firstState);
-        }
-
-        Object.assign(base, {
-          childrenHiddenIDs,
-          detailStates,
-        });
-      } else {
-        let focused = calculateFocusedFindRowStates(matches, trace.spans);
-        focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
-        Object.assign(base, focused);
-      }
+    if (trace.traceID !== currentTraceID && matches) {
+      let focused = calculateFocusedFindRowStates(matches, trace.spans);
+      focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
+      Object.assign(base, focused);
     }
 
     set(base as Partial<TraceTimelineInteractionStore>);
   },
+
+  clearTrace: () =>
+    set({
+      traceID: null,
+      traceSpans: null,
+      childrenHiddenIDs: new Set<string>(),
+      detailStates: new Map<string, DetailState>(),
+      shouldScrollToFirstUiFindMatch: false,
+    }),
 
   childrenToggle: (spanID: string) => {
     const childrenHiddenIDs = new Set(get().childrenHiddenIDs);
@@ -294,12 +261,6 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     let focused = calculateFocusedFindRowStates(matches, trace.spans, allowHide);
     focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
-    // String focus can reuse the current query without rerunning the match-sync effect.
-    // Preserve its reload baseline until the filter supplies a new match set.
-    if (typeof matches === 'string') {
-      set(focused);
-    } else {
-      set({ ...focused, traceMatches: matches });
-    }
+    set(focused);
   },
 }));

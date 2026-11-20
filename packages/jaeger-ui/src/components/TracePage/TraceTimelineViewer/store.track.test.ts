@@ -275,11 +275,11 @@ describe('timeline analytics adapter', () => {
   // user sees, as #4613 decided for the parent toggle.
   it('reads the detail row from Zustand after a same-ID reload with uiFind', () => {
     resetStores();
-    timeline().setTrace(trace, 'sibling');
+    timeline().setTrace(trace, new Set(['sibling']));
     timeline().detailToggle('sibling');
 
     const reloaded = { ...trace, spans: [...trace.spans] } as IOtelTrace;
-    timeline().setTrace(reloaded, 'sibling');
+    timeline().setTrace(reloaded, new Set(['sibling']));
     expect(timeline().detailStates.has('sibling')).toBe(false);
 
     vi.mocked(trackEvent).mockClear();
@@ -287,20 +287,20 @@ describe('timeline analytics adapter', () => {
     expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_ROW, 'open');
   });
 
-  // A same-ID reload that adds a uiFind match expands the parent in Zustand. The parent toggle
-  // reports the expanded state the user sees (#4613).
+  // A same-ID reload leaves the parent collapsed even when a new match arrives. The parent
+  // toggle reports that preserved state (#4613).
   it('reads the parent toggle from Zustand after a same-ID reload adds a uiFind match', () => {
     resetStores();
-    timeline().setTrace(trace, 'late-match');
+    timeline().setTrace(trace, new Set());
     expect(timeline().childrenHiddenIDs.has('parent')).toBe(true);
 
     const lateMatch = makeSpan('late', 2, parent, { name: 'late-match' });
     const reloaded = { ...trace, spans: [...trace.spans, lateMatch] } as unknown as IOtelTrace;
-    timeline().setTrace(reloaded, 'late-match');
-    expect(timeline().childrenHiddenIDs.has('parent')).toBe(false);
+    timeline().setTrace(reloaded, new Set(['late']));
+    expect(timeline().childrenHiddenIDs.has('parent')).toBe(true);
 
     vi.mocked(trackEvent).mockClear();
     track.trackChildrenToggle('parent');
-    expect(vi.mocked(trackEvent).mock.calls).toEqual([[track.CATEGORY_PARENT, 'close', 1]]);
+    expect(vi.mocked(trackEvent).mock.calls).toEqual([[track.CATEGORY_PARENT, 'open', 1]]);
   });
 });
