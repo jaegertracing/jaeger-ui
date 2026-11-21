@@ -17,7 +17,7 @@ import {
   serviceOpsMetrics,
   serviceMetricsWithOneServiceLatency,
   originInitialState,
-} from '../../../reducers/metrics.mock';
+} from '../metrics.mock';
 import * as track from './index.track';
 
 global.ResizeObserver = jest.fn().mockImplementation(function () {

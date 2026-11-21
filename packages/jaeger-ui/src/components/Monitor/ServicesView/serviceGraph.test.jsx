@@ -17,7 +17,7 @@ import ServiceGraph, {
   renderLines,
   COLORS,
 } from './serviceGraph';
-import { serviceMetrics } from '../../../reducers/metrics.mock';
+import { serviceMetrics } from '../metrics.mock';
 
 const ServiceGraphImpl = ServiceGraph;
 
