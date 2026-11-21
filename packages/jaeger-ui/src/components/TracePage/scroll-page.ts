@@ -4,7 +4,7 @@
 // The browser animates the scroll (`behavior: 'smooth'`). There is no way to ask it where a smooth scroll is
 // headed, so the last target is remembered here to let repeated key presses add up. It is only trusted for
 // `APPEND_WINDOW_MS`, roughly how long a smooth scroll takes, and only while the page is still on the way to it
-// (see `getAppendTarget`).
+// (see `getAppendTarget`). A scroll can run longer than that, so `cancel()` does not use the window.
 const APPEND_WINDOW_MS = 500;
 
 type TLastScroll = {
@@ -15,9 +15,6 @@ type TLastScroll = {
 };
 
 let lastScroll: TLastScroll | undefined;
-
-// TODO(joe): this util can be modified a bit to be generalized (e.g. take in
-// an element as a parameter and use scrollTop instead of window.scrollTo)
 
 function getScrollTop(container: Element | Window): number {
   if (container === window) {
@@ -40,7 +37,21 @@ function prefersReducedMotion(): boolean {
   );
 }
 
+export function cancel() {
+  const last = lastScroll;
+  lastScroll = undefined;
+  if (last) {
+    // A new scroll to the current position replaces the smooth scroll that is still running. It does not matter
+    // that the scroll may have finished already: the page is then already at the current position.
+    scrollToPosition(last.container, getScrollTop(last.container), 'instant');
+  }
+}
+
 function startScroll(container: Element | Window, to: number) {
+  // Only one smooth scroll is tracked, so stop the one on another container instead of leaving it animating.
+  if (lastScroll && lastScroll.container !== container) {
+    cancel();
+  }
   const from = getScrollTop(container);
   const instant = prefersReducedMotion();
   scrollToPosition(container, to, instant ? 'auto' : 'smooth');
@@ -90,13 +101,4 @@ export function scrollBy(yDelta: number, appendToLast = false, container: Elemen
 
 export function scrollTo(y: number, container: Element | Window = window) {
   startScroll(container, y);
-}
-
-export function cancel() {
-  const inProgress = getInProgressScroll();
-  lastScroll = undefined;
-  if (inProgress) {
-    // A new scroll to the current position replaces the smooth scroll that is still running.
-    scrollToPosition(inProgress.container, getScrollTop(inProgress.container), 'instant');
-  }
 }

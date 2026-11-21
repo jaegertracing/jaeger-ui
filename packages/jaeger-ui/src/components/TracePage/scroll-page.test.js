@@ -134,9 +134,17 @@ describe('scroll-page', () => {
       expect(window.scrollTo).not.toHaveBeenCalled();
     });
 
-    it('is a noop once the last scroll has had time to finish', () => {
-      scrollTo(10);
+    it('stops a smooth scroll that is still running after the time appending is allowed for', () => {
+      scrollTo(15000);
       vi.advanceTimersByTime(1000);
+      window.scrollTo.mockClear();
+      cancel();
+      expect(window.scrollTo.mock.calls).toEqual([[{ top: 100, behavior: 'instant' }]]);
+    });
+
+    it('is a noop after the reduced-motion scroll, which is instant', () => {
+      window.matchMedia = vi.fn(() => ({ matches: true }));
+      scrollTo(10);
       window.scrollTo.mockClear();
       cancel();
       expect(window.scrollTo).not.toHaveBeenCalled();
@@ -165,6 +173,29 @@ describe('scroll-page', () => {
       scrollBy(100);
       scrollBy(10, true, container);
       expect(container.scrollTo.mock.calls).toEqual([[{ top: 60, behavior: 'smooth' }]]);
+    });
+
+    it('stops the scroll on the window when an element starts scrolling', () => {
+      scrollBy(100);
+      window.scrollTo.mockClear();
+      scrollBy(10, false, container);
+      expect(window.scrollTo.mock.calls).toEqual([[{ top: 100, behavior: 'instant' }]]);
+      expect(container.scrollTo.mock.calls).toEqual([[{ top: 60, behavior: 'smooth' }]]);
+    });
+
+    it('stops the scroll on an element when the window starts scrolling', () => {
+      scrollBy(10, false, container);
+      container.scrollTo.mockClear();
+      scrollBy(100);
+      expect(container.scrollTo.mock.calls).toEqual([[{ top: 50, behavior: 'instant' }]]);
+      expect(window.scrollTo.mock.calls).toEqual([[{ top: 200, behavior: 'smooth' }]]);
+    });
+
+    it('does not stop anything when the same element scrolls again', () => {
+      scrollBy(10, false, container);
+      container.scrollTo.mockClear();
+      scrollBy(10, true, container);
+      expect(container.scrollTo.mock.calls).toEqual([[{ top: 70, behavior: 'smooth' }]]);
     });
 
     it('cancels the scroll on the element that is scrolling', () => {
