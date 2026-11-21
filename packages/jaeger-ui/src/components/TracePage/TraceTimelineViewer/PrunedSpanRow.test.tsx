@@ -7,20 +7,40 @@ import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import PrunedSpanRow from './PrunedSpanRow';
+import type { TAncestorGuide } from './SpanTreeOffset';
 import { IOtelSpan } from '../../../types/otel';
 
-vi.mock('./SpanTreeOffset', () =>
-  mockDefault(({ span, color }: { span: IOtelSpan; color: string }) => (
-    <span data-testid="span-tree-offset" data-depth={span.depth} data-color={color} />
-  ))
-);
+vi.mock('./SpanTreeOffset', async importOriginal => ({
+  ...(await importOriginal<typeof import('./SpanTreeOffset')>()),
+  default: ({ ancestors, color }: { ancestors: TAncestorGuide[]; color: string }) => (
+    <span
+      data-testid="span-tree-offset"
+      data-depth={ancestors.length}
+      data-color={color}
+      data-parent-id={ancestors[ancestors.length - 1].spanID}
+      data-parent-terminated={String(ancestors[ancestors.length - 1].isTerminated)}
+    />
+  ),
+}));
 
 function makeSpan(depth: number): IOtelSpan {
+  // Chain `depth` ancestors above the span so it sits at that depth.
+  let parentSpan: IOtelSpan | null = null;
+  for (let i = 0; i < depth; i++) {
+    parentSpan = {
+      spanID: `ancestor-${i}`,
+      depth: i,
+      childSpans: [],
+      parentSpan,
+      resource: { serviceName: 'svc-root', attributes: [] },
+    } as unknown as IOtelSpan;
+  }
   return {
     spanID: 'span-1',
     depth,
     hasChildren: true,
     childSpans: [],
+    parentSpan,
     resource: { serviceName: 'svc-a', attributes: [] },
   } as unknown as IOtelSpan;
 }
@@ -65,6 +85,21 @@ describe('PrunedSpanRow', () => {
     const offset = screen.getByTestId('span-tree-offset');
     expect(offset).toHaveAttribute('data-depth', '4');
     expect(offset).toHaveAttribute('data-color', '#bbb');
+  });
+
+  it('draws the placeholder as the last child of parentSpan', () => {
+    render(
+      <PrunedSpanRow
+        parentSpan={makeSpan(1)}
+        prunedChildrenCount={2}
+        prunedErrorCount={0}
+        nameColumnWidth={0.5}
+        timelineBarsVisible={true}
+      />
+    );
+    const offset = screen.getByTestId('span-tree-offset');
+    expect(offset).toHaveAttribute('data-parent-id', 'span-1');
+    expect(offset).toHaveAttribute('data-parent-terminated', 'true');
   });
 
   it('renders label inside endpoint-name (operation name font size)', () => {
