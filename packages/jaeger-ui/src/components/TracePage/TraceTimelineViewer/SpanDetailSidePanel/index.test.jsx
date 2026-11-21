@@ -8,8 +8,10 @@ import '@testing-library/jest-dom';
 import { SpanDetailSidePanelImpl } from './index';
 import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
+import * as track from '../store.track';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER } from '../../spanFilter';
 
 vi.mock('../SpanDetail', () =>
   mockDefault(
@@ -26,9 +28,11 @@ vi.mock('../SpanDetail', () =>
 
 vi.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
 vi.mock('../../../../utils/update-ui-find');
+vi.mock('../store.track');
 
 const mockZustandState = vi.hoisted(() => ({
   detailStates: new Map(),
+  spanFilter: { clauses: [], treeMode: 'remove' },
   detailLogItemToggle: jest.fn(),
   detailLogsToggle: jest.fn(),
   detailProcessToggle: jest.fn(),
@@ -48,11 +52,6 @@ vi.mock('../store', async importOriginal => {
   };
 });
 
-const mockDispatch = vi.hoisted(() => jest.fn());
-vi.mock('react-redux', () => ({
-  useDispatch: () => mockDispatch,
-}));
-
 describe('<SpanDetailSidePanelImpl>', () => {
   let trace;
   let baseProps;
@@ -68,7 +67,8 @@ describe('<SpanDetailSidePanelImpl>', () => {
     };
     // reset Zustand mock state
     mockZustandState.detailStates = new Map();
-    mockDispatch.mockReset();
+    mockZustandState.spanFilter = EMPTY_SPAN_FILTER;
+    vi.clearAllMocks();
     Object.values(mockZustandState).forEach(v => typeof v === 'function' && v.mockReset?.());
   });
 
@@ -89,6 +89,19 @@ describe('<SpanDetailSidePanelImpl>', () => {
     expect(screen.getByTestId('span-detail-mock').dataset.spanId).toBe(secondSpan.spanID);
   });
 
+  it('falls back to the first span the filter shows, and to none when it hides every span', () => {
+    const hideRoot = { verb: 'hide', criterion: { shape: 'text', text: trace.spans[0].spanID } };
+    mockZustandState.spanFilter = { clauses: [hideRoot], treeMode: 'lift' };
+    const { container, unmount } = render(<SpanDetailSidePanelImpl {...baseProps} />);
+    expect(screen.getByTestId('span-detail-mock').dataset.spanId).toBe(trace.spans[1].spanID);
+    unmount();
+    // In remove mode a hidden root takes the whole trace with it.
+    mockZustandState.spanFilter = { clauses: [hideRoot], treeMode: 'remove' };
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    expect(container.firstChild).toBeNull();
+    expect(screen.queryByTestId('span-detail-mock')).toBeNull();
+  });
+
   it('returns null when trace has no spans', () => {
     const emptyTrace = { ...trace, spans: [], spanMap: new Map(), rootSpans: [] };
     const { container } = render(<SpanDetailSidePanelImpl {...baseProps} trace={emptyTrace} />);
@@ -101,11 +114,35 @@ describe('<SpanDetailSidePanelImpl>', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('dual-writes focusUiFindMatches when focusSpan is invoked', () => {
+  it('calls focusUiFindMatches when focusSpan is invoked', () => {
     render(<SpanDetailSidePanelImpl {...baseProps} />);
     fireEvent.click(screen.getByTestId('focus-span-button'));
-    expect(mockDispatch).toHaveBeenCalled();
     expect(mockZustandState.focusUiFindMatches).toHaveBeenCalledWith(baseProps.trace, 'test-find', false);
+  });
+
+  it('tracks each section toggle before updating the store', () => {
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    const props = SpanDetail.mock.lastCall[0];
+    const { spanID } = trace.spans[0];
+    const logItem = { name: 'log' };
+    const cases = [
+      [props.attributesToggle, track.trackDetailTagsToggle, mockZustandState.detailTagsToggle],
+      [props.resourceToggle, track.trackDetailProcessToggle, mockZustandState.detailProcessToggle],
+      [props.eventsToggle, track.trackDetailLogsToggle, mockZustandState.detailLogsToggle],
+    ];
+    cases.forEach(([toggle, tracker, storeAction]) => {
+      toggle(spanID);
+      expect(tracker).toHaveBeenCalledWith(spanID);
+      expect(storeAction).toHaveBeenCalledWith(spanID);
+      expect(tracker.mock.invocationCallOrder[0]).toBeLessThan(storeAction.mock.invocationCallOrder[0]);
+    });
+
+    props.eventItemToggle(spanID, logItem);
+    expect(track.trackDetailLogItemToggle).toHaveBeenCalledWith(spanID, logItem);
+    expect(mockZustandState.detailLogItemToggle).toHaveBeenCalledWith(spanID, logItem);
+    expect(track.trackDetailLogItemToggle.mock.invocationCallOrder[0]).toBeLessThan(
+      mockZustandState.detailLogItemToggle.mock.invocationCallOrder[0]
+    );
   });
 
   it('passes eventsInitialVisibleCount={10} to SpanDetail', () => {

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Verify that the Vite dev server starts without errors.
-# Catches regressions (e.g. dep-optimizer failures) that survive `npm run build`.
+# Catches regressions (e.g. dep-optimizer failures) that survive `pnpm run build`.
 # Exits non-zero if the server emits a pre-transform or internal server error.
 set -euo pipefail
 
@@ -18,7 +18,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "Starting Vite dev server on port $PORT..."
-(cd packages/jaeger-ui && npm run start -- --port "$PORT") >"$LOG" 2>&1 &
+pnpm --filter @jaegertracing/jaeger-ui start -- --port "$PORT" >"$LOG" 2>&1 &
 SERVER_PID=$!
 
 # Wait up to 30s for the "ready in" banner

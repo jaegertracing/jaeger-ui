@@ -135,31 +135,43 @@ def update_package_json(version, dry_run=False):
 
 def run_fmt(dry_run=False):
     if dry_run:
-        print("[Dry Run] Would run 'npm run fmt'")
+        print("[Dry Run] Would run 'pnpm run fmt'")
     else:
         print("Running fmt on the modified files to ensure correct formatting...")
-        run_command(["npm", "run", "fmt", "--", "packages/jaeger-ui/package.json"])
+        run_command(["pnpm", "run", "fmt", "packages/jaeger-ui/package.json"])
 
-def git_commit_and_pr(version, branch_name):
+def git_commit_and_pr(version, branch_name, issue=None):
     print("Committing changes...")
     run_command(["git", "add", "CHANGELOG.md", "packages/jaeger-ui/package.json"])
     commit_msg = f"Prepare release {version}"
     run_command(["git", "commit", "-s", "-m", commit_msg])
-    
+
     print("Pushing branch...")
     run_command(["git", "push", "-u", "origin", branch_name])
-    
+
     print("Creating Pull Request...")
     pr_body = f"Prepare release {version}.\n\nAutomated release preparation."
-    run_command(["gh", "pr", "create", "--title", commit_msg, "--body", pr_body, "--label", "changelog:skip", "--head", branch_name], capture_stdout=False, capture_stderr=False)
+    if issue:
+        # The release is tracked by an issue in the jaegertracing/jaeger repo,
+        # so link back to it with a cross-repository reference.
+        pr_body += f"\n\nPart of jaegertracing/jaeger#{issue}"
+    # Omit --head so gh infers it from the just-pushed current branch and its
+    # tracking remote. Passing a bare branch name made gh look for it in the base
+    # repo, which fails when origin is a fork and the base repo is another remote.
+    run_command(["gh", "pr", "create", "--title", commit_msg, "--body", pr_body, "--label", "changelog:skip"], capture_stdout=False, capture_stderr=False)
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare Jaeger UI release")
     parser.add_argument("--version", required=True, help="Release version (e.g., v2.14.0)")
+    parser.add_argument("--issue", help="Release tracking issue number in jaegertracing/jaeger to link the PR to")
     parser.add_argument("--dry-run", action="store_true", help="Skip git push and PR creation")
     args = parser.parse_args()
 
     version = args.version
+    issue = args.issue.lstrip("#") if args.issue else None
+    if issue is not None and not issue.isdigit():
+        print(f"Error: --issue must be a number, got '{args.issue}'")
+        sys.exit(1)
     
     check_dependencies()
     # check_git_status() # Optional: strict check, but might be annoying in dev. Uncomment if needed.
@@ -175,7 +187,7 @@ def main():
         print("Dry run finished. No changes were made.")
     else:
         branch_name = create_branch(version, dry_run=args.dry_run)
-        git_commit_and_pr(version, branch_name)
+        git_commit_and_pr(version, branch_name, issue)
 
 if __name__ == "__main__":
     main()

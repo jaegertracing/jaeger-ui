@@ -36,13 +36,17 @@ function SafeImage({ alt, title }: React.ImgHTMLAttributes<HTMLImageElement>) {
 // A stable module-level object is required: markdown-to-jsx memoizes its
 // parser on the options reference, so a fresh literal built on every render
 // would defeat that memoization and re-run the compiler on every streamed
-// token. optimizeForStreaming applies to every caller, not just the chat
-// panel -- span attributes rendered in the (future) GenAI span detail tab
-// can be truncated at ingestion, so tolerating unclosed tags is desirable
-// there too.
+// token.
 export const sharedMarkdownOptions: MarkdownToJSX.Options = {
   disableParsingRawHTML: true,
-  optimizeForStreaming: true,
+  // optimizeForStreaming hides a dangling `**` while a reply streams, but it
+  // also deletes unpaired `_` and `*` from finished text, so `customer_id`
+  // became `customerid` in 9.10.2 and `*args and *kwargs` loses both
+  // asterisks in 9.10.4. A flicker is cosmetic and the deletion is permanent,
+  // so the option stays off until upstream leaves finished text alone:
+  // https://github.com/quantizor/markdown-to-jsx/issues/905 (fixed in 9.10.4)
+  // https://github.com/quantizor/markdown-to-jsx/issues/909
+  optimizeForStreaming: false,
   // Without this, markdown-to-jsx drops the wrapper element (and with it the
   // className carrying our styling) whenever the parsed output is a single
   // node -- e.g. any one-sentence reply with no inline formatting. Callers

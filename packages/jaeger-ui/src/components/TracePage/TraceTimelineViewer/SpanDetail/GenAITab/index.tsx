@@ -1,12 +1,1269 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import { Select, Tooltip } from 'antd';
+import Markdown from 'markdown-to-jsx/react';
+import { IoAlertCircleOutline, IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
+import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
-import type { IOtelSpan } from '../../../../../types/otel';
+import {
+  extractGenAiSections,
+  formatTokenCount,
+  tryParseJson,
+  deepParseJson,
+  GenAiAgent,
+  GenAiAttributeSource,
+  GenAiContentEntry,
+  GenAiMemory,
+  GenAiMessage,
+  GenAiPart,
+  GenAiRetrieval,
+  GenAiTokenSources,
+  GenAiTokenUsage,
+  GenAiToolCall,
+  GenAiToolDefinition,
+} from './genAiData';
+import { MessageFormat, useMessageFormatStore } from './message-format-store';
+import AccordionAttributes from '../AccordionAttributes';
+import AttributesTable from '../AttributesTable';
+import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
+import { isEmbeddedMedia, MediaType } from '../../../../../utils/media';
+import jsonViewStyles from '../../../../../utils/jsonViewStyles';
+import CopyIcon from '../../../../common/CopyIcon';
+import { makeAttributes } from '../../../../../model/attributes';
+import type { AttributeValue, IAttribute, IOtelSpan } from '../../../../../types/otel';
+
+import './index.css';
 
 type Props = { span: IOtelSpan };
 
-export default function GenAITab({ span: _span }: Props): React.ReactElement {
-  return <div className="GenAITab">GenAI details coming soon.</div>;
+// Above this length the Markdown view asks before parsing - avoids pathological
+// reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
+// cap since neither does Markdown's block-level reparsing.
+const MARKDOWN_SIZE_LIMIT = 150_000;
+
+// The collapsed summary should not turn an unusually large telemetry attribute into a
+// large text node before CSS has a chance to truncate it.
+const TOOLS_SUMMARY_MAX_CHARS = 200;
+
+// markdown-to-jsx only wraps its output in a block element (a <div>) once it has more
+// than one top-level child; a single short sentence with no other formatting compiles
+// to one inline node, which forceWrapper (see sharedMarkdownOptions) then wraps in a
+// bare <span> instead - and padding/margin on an inline element only shows at the very
+// start/end of the whole run, not around each wrapped line, so a one-paragraph message
+// renders with an indented first line and no padding on the rest. forceBlock makes the
+// compiler always parse content as a block (a <p>), which forceWrapper then always
+// wraps in a real <div>, giving every message the same block box our CSS assumes.
+const genAiMarkdownOptions = { ...sharedMarkdownOptions, forceBlock: true };
+
+/**
+ * Marks a value read from an attribute whose name is not the one the OTel GenAI
+ * conventions define, naming both so a reader can tell the instrumentation is off-spec and
+ * by how much. An exclamation mark rather than the usual "i": the span's data is shown,
+ * but its naming deserves attention.
+ */
+function NonStandardNameMark({ source }: { source: GenAiAttributeSource }) {
+  return (
+    <Tooltip
+      classNames={{ root: 'GenAITab--nonStandardTooltip' }}
+      trigger={['hover', 'focus']}
+      title={
+        <div className="GenAITab--nonStandardHint">
+          <div>Non-standard attribute name</div>
+          <div>
+            Read from <code>{source.key}</code>
+          </div>
+          <div>
+            OTel GenAI conventions: <code>{source.spec}</code>
+          </div>
+        </div>
+      }
+    >
+      <IoAlertCircleOutline
+        className="GenAITab--nonStandardMark"
+        role="img"
+        tabIndex={0}
+        aria-label={`Non-standard attribute name ${source.key}; the OTel GenAI conventions define ${source.spec}`}
+      />
+    </Tooltip>
+  );
+}
+
+function JsonBlock({ value }: { value: unknown }) {
+  // Tool call arguments/results may arrive already parsed or as a JSON-encoded
+  // string, same as gen_ai.input.messages - try to parse strings so they get
+  // the interactive tree view too, not just a raw text dump. tryParseJson only
+  // attempts JSON.parse when the string looks like an object/array literal,
+  // same guard AttributesTable uses, so plain non-JSON strings (the common
+  // case) don't pay for a parse attempt that's guaranteed to throw.
+  const parsed = typeof value === 'string' ? tryParseJson(value) : value;
+  if (typeof parsed !== 'object' || parsed === null) {
+    return <pre className="GenAITab--pre">{String(parsed)}</pre>;
+  }
+  const isSmall = Object.keys(parsed).length <= 10;
+  return (
+    <div className="GenAITab--json">
+      <JsonView
+        data={parsed}
+        shouldExpandNode={isSmall ? allExpanded : collapseAllNested}
+        style={jsonViewStyles}
+      />
+    </div>
+  );
+}
+
+/**
+ * Stands in for content a view will not render until asked, saying why and offering the
+ * way forward.
+ *
+ * A view withholds content when rendering it costs something the reader has not agreed
+ * to pay - parse time for a huge message, a request to a third-party host for a remote
+ * link. Withholding it silently, or disabling the view outright, leaves the reader with
+ * no way to get at their own data, so every such view says what it is holding back and
+ * offers both the render and the plain text.
+ *
+ * Every caller words it the same way - what the content appears to be, then Show <view>
+ * beside Show text - so the reader learns one shape rather than one per view.
+ *
+ * With no onReveal there is nothing left to try, and the plain text is the only way on.
+ */
+function RevealPrompt({
+  notice,
+  value,
+  actionLabel,
+  onReveal,
+  onShowText,
+}: {
+  notice: string;
+  value?: string;
+  actionLabel?: string;
+  onReveal?: () => void;
+  onShowText: () => void;
+}) {
+  return (
+    <div className="GenAITab--revealBlock">
+      <div className="GenAITab--revealNotice">
+        <span className="GenAITab--revealNoticeText">{notice}</span>
+        {value && (
+          <span className="GenAITab--revealValue" title={value}>
+            {value}
+          </span>
+        )}
+      </div>
+      <div className="GenAITab--revealActions">
+        {onReveal && actionLabel && (
+          <button type="button" className="GenAITab--revealButton" onClick={onReveal}>
+            {actionLabel}
+          </button>
+        )}
+        <button type="button" className="GenAITab--revealButton" onClick={onShowText}>
+          Show text
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A message rendered as Markdown, withheld above MARKDOWN_SIZE_LIMIT.
+ *
+ * Markdown's block-level reparsing is what makes a huge message expensive, so a message
+ * over the limit is not parsed until the reader says to. Offering the render beats
+ * disabling the view, which left the formatted text of a large message unreachable.
+ *
+ * The confirmation lives with the component instance, so content arriving later in the
+ * same position is parsed without asking again. That costs one large parse the reader did
+ * not explicitly request, and nothing leaves the browser either way.
+ */
+function MarkdownBlock({ content, onShowText }: { content: string; onShowText: () => void }) {
+  const [renderAnyway, setRenderAnyway] = useState(false);
+
+  if (content.length > MARKDOWN_SIZE_LIMIT && !renderAnyway) {
+    return (
+      <RevealPrompt
+        notice={`Content appears to be Markdown (${Math.round(content.length / 1000)}KB).`}
+        actionLabel="Show Markdown"
+        onReveal={() => setRenderAnyway(true)}
+        onShowText={onShowText}
+      />
+    );
+  }
+
+  return (
+    <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
+      {content}
+    </Markdown>
+  );
+}
+
+/**
+ * The Media view of a message whose whole content is a link to an image or audio clip.
+ *
+ * A remote URL comes from trace data, so whoever instrumented the service chooses what the
+ * browser connects to. Loading it on sight would make opening a span enough to reach a
+ * third-party host and confirm who is reading which trace, so a remote link is offered
+ * rather than fetched. An embedded payload needs no request and so tells no one anything;
+ * the caller shows it immediately.
+ *
+ * The prompt shows the start of the link so the reader can see where it points before
+ * deciding, elided to one line so a data: URI cannot fill the pane. Plain text shows the
+ * value in full, and Copy always copies it.
+ */
+function MediaBlock({
+  src,
+  mediaType,
+  label,
+  shown,
+  onShow,
+  onShowText,
+}: {
+  src: string;
+  mediaType: MediaType;
+  label: string;
+  shown: boolean;
+  onShow: () => void;
+  onShowText: () => void;
+}) {
+  const [loadFailed, setLoadFailed] = useState(false);
+  const noun = mediaType === 'audio' ? 'audio clip' : 'image';
+  const Noun = mediaType === 'audio' ? 'Audio clip' : 'Image';
+
+  if (!shown) {
+    return (
+      <RevealPrompt
+        // What this is leads, and the hedge trails it: the tab recognized a link, from
+        // the value alone, and can be wrong about what it points at.
+        notice={`${Noun} link (maybe):`}
+        value={src}
+        actionLabel={`Show ${noun}`}
+        onReveal={onShow}
+        onShowText={onShowText}
+      />
+    );
+  }
+
+  if (loadFailed) {
+    return <RevealPrompt notice={`${Noun} could not be loaded:`} value={src} onShowText={onShowText} />;
+  }
+
+  return (
+    <div className="GenAITab--revealBlock">
+      {mediaType === 'audio' ? (
+        <audio
+          className="GenAITab--media"
+          src={src}
+          controls
+          aria-label={label}
+          onError={() => setLoadFailed(true)}
+        />
+      ) : (
+        // referrerPolicy: the remote host must not receive the Jaeger URL, which contains
+        // the trace ID. <audio> has no such attribute, so an audio clip cannot be hidden
+        // from its host the same way - one more reason the fetch waits for a click.
+        <img
+          className="GenAITab--media"
+          src={src}
+          alt={label}
+          referrerPolicy="no-referrer"
+          onError={() => setLoadFailed(true)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * What a part's text parses to and which views can therefore show it. Depends on the part
+ * alone, so a message memoizes it once and resolves the chosen view separately.
+ */
+function parsePart(part: GenAiPart) {
+  const parsedJson = tryParseJson(part.text);
+  const isJson = parsedJson !== null && typeof parsedJson === 'object';
+  // deepParseJson hands back the same object when there was nothing to unwrap, so the
+  // deep view is offered exactly when it would show something the plain tree does not.
+  const deepJson = isJson ? deepParseJson(parsedJson) : parsedJson;
+  // Each view can only render content it supports; a requested view that can't falls back.
+  const canRender: Record<MessageFormat, boolean> = {
+    plain: true,
+    markdown: true,
+    json: isJson,
+    'json-deep': isJson && deepJson !== parsedJson,
+    image: part.media?.type === 'image',
+    audio: part.media?.type === 'audio',
+  };
+  return { parsedJson, deepJson, canRender };
+}
+
+/**
+ * Which view a part lands on, given what it parses to and what the reader chose.
+ *
+ * The format belongs to the part rather than to the message around it: a turn carrying a
+ * paragraph and an image has no single answer to "render this as what".
+ */
+function partView(parsed: ReturnType<typeof parsePart>, chosen: MessageFormat | null) {
+  const { canRender } = parsed;
+  // With nothing chosen, a part carrying media opens on it, JSON with JSON strings inside
+  // opens unwrapped, other JSON-parseable content on the plain tree, else plain text
+  // (Markdown is only opt-in).
+  const defaultFormat: MessageFormat = canRender.image
+    ? 'image'
+    : canRender.audio
+      ? 'audio'
+      : canRender['json-deep']
+        ? 'json-deep'
+        : canRender.json
+          ? 'json'
+          : 'plain';
+  const requested = chosen ?? defaultFormat;
+  // A remembered JSON (deep) on JSON with nothing to unwrap still gets the tree the reader
+  // asked for, one step down, rather than dropping all the way to raw text.
+  const format: MessageFormat = canRender[requested]
+    ? requested
+    : requested === 'json-deep' && canRender.json
+      ? 'json'
+      : 'plain';
+  return { ...parsed, format };
+}
+
+// Every view the tab has, in the order they are offered. All six are listed for every
+// part, so the list never changes shape and a reader can see what the tab can do; one
+// that cannot show this part is disabled and says why.
+const VIEWS: { format: MessageFormat; label: string }[] = [
+  { format: 'plain', label: 'Plain text' },
+  { format: 'markdown', label: 'Markdown' },
+  { format: 'json', label: 'JSON' },
+  { format: 'json-deep', label: 'JSON (deep)' },
+  { format: 'image', label: 'Image' },
+  { format: 'audio', label: 'Audio' },
+];
+
+/**
+ * Why a view is offered for a part, or why it is not. Empty for a view that always works,
+ * which needs no explaining.
+ *
+ * Recognizing media is a guess - a URL's extension, or a modality the instrumentation
+ * declared and the tab cannot check - so the hedge is stated where the reader chooses.
+ */
+function viewHint(format: MessageFormat, canRender: Record<MessageFormat, boolean>): string {
+  const available = canRender[format];
+  switch (format) {
+    case 'json':
+      return available ? '' : 'This part is not JSON, so there is no tree to show';
+    case 'json-deep':
+      if (available) {
+        return 'Strings inside the JSON that are themselves JSON are unwrapped into the tree. A string that only looks like JSON is unwrapped too; Copy still gives the original text.';
+      }
+      return canRender.json
+        ? 'No string inside this JSON is itself JSON, so there is nothing to unwrap'
+        : 'This part is not JSON, so there is no tree to show';
+    case 'image':
+      return available
+        ? 'Image (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
+        : 'This part carries no image to show';
+    case 'audio':
+      return available
+        ? 'Audio clip (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
+        : 'This part carries no audio to show';
+    default:
+      return '';
+  }
+}
+
+/**
+ * The view selector for one part, with the part's position beside it when a message holds
+ * several. Its copy buttons sit over the content, in PartBody.
+ */
+function PartControls({
+  view,
+  onFormatChange,
+  controlName,
+  position,
+}: {
+  view: ReturnType<typeof partView>;
+  onFormatChange: (format: MessageFormat) => void;
+  controlName: string;
+  position: string | null;
+}) {
+  return (
+    <div className="GenAITab--partControls">
+      {position !== null && <span className="GenAITab--partLabel">{position}</span>}
+      {/* The chosen view's own explanation is on the control, so the reader does not have
+          to open the list to find out why this part is shown as an image. */}
+      <Tooltip title={viewHint(view.format, view.canRender)} placement="left">
+        <Select<MessageFormat>
+          className="GenAITab--formatSelect"
+          size="small"
+          aria-label={controlName}
+          value={view.format}
+          onChange={onFormatChange}
+          popupMatchSelectWidth={false}
+          options={VIEWS.map(({ format, label }) => ({
+            value: format,
+            label,
+            disabled: !view.canRender[format],
+          }))}
+          // An item's explanation is a Tooltip rather than the title attribute a plain
+          // <option> would carry, which the browser draws too small to read.
+          optionRender={option => {
+            const hint = viewHint(option.value as MessageFormat, view.canRender);
+            const label = <span className="GenAITab--formatOption">{option.data.label}</span>;
+            return hint ? (
+              <Tooltip title={hint} placement="left">
+                {label}
+              </Tooltip>
+            ) : (
+              label
+            );
+          }}
+        />
+      </Tooltip>
+    </div>
+  );
+}
+
+/**
+ * A part's content with its copy buttons over the top-right of it.
+ *
+ * The buttons overlay the content rather than sitting in the control line, as in the
+ * attribute table, so they cost no space while reading and appear only where the value
+ * they copy is. A media part's value is the URL or the data: URI its text only describes,
+ * which is how those bytes are reached.
+ */
+function PartBody({
+  part,
+  view,
+  label,
+  copyJson,
+  revealed,
+  onReveal,
+  onShowText,
+}: {
+  part: GenAiPart;
+  view: ReturnType<typeof partView>;
+  label: string;
+  copyJson: string;
+  revealed: boolean;
+  onReveal: () => void;
+  onShowText: () => void;
+}) {
+  return (
+    <div className="GenAITab--partBody">
+      <span className="GenAITab--copyContainer">
+        <CopyIcon
+          className="GenAITab--copyIcon"
+          copyText={part.media?.src ?? part.text}
+          tooltipTitle="Copy value"
+          buttonText="Copy"
+        />
+        <CopyIcon
+          className="GenAITab--copyIcon"
+          icon={<IoCopyOutline />}
+          copyText={copyJson}
+          tooltipTitle="Copy JSON"
+          buttonText="JSON"
+        />
+      </span>
+      <PartContent
+        part={part}
+        view={view}
+        label={label}
+        revealed={revealed}
+        onReveal={onReveal}
+        onShowText={onShowText}
+      />
+    </div>
+  );
+}
+
+function PartContent({
+  part,
+  view,
+  label,
+  revealed,
+  onReveal,
+  onShowText,
+}: {
+  part: GenAiPart;
+  view: ReturnType<typeof partView>;
+  label: string;
+  revealed: boolean;
+  onReveal: () => void;
+  onShowText: () => void;
+}) {
+  if ((view.format === 'image' || view.format === 'audio') && part.media) {
+    return (
+      <MediaBlock
+        src={part.media.src}
+        mediaType={part.media.type}
+        label={label}
+        // An embedded payload costs no request, so it needs no permission to render.
+        shown={isEmbeddedMedia(part.media.src) || revealed}
+        onShow={onReveal}
+        onShowText={onShowText}
+      />
+    );
+  }
+  if (view.format === 'json') return <JsonBlock value={view.parsedJson} />;
+  if (view.format === 'json-deep') return <JsonBlock value={view.deepJson} />;
+  if (view.format === 'markdown') return <MarkdownBlock content={part.text} onShowText={onShowText} />;
+  return <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{part.text}</pre>;
+}
+
+function MessageBlock({
+  message,
+  source,
+  formatOverride,
+  onFormatChange,
+  messageNumber,
+}: {
+  message: GenAiMessage;
+  // Set when the message was read from a non-spec attribute name, so the header can say so.
+  source?: GenAiAttributeSource;
+  // Remembered format for this message's attribute, seeding each part's initial view; null
+  // to use the content-derived default.
+  formatOverride: MessageFormat | null;
+  onFormatChange: (format: MessageFormat) => void;
+  messageNumber: number;
+}) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Chosen view per part, and the sources the reader has asked to load. Both are held here
+  // rather than in the rows, which unmount whenever a view switches away from Media:
+  // without that, going to Plain text and back would ask again for an image that was on
+  // screen a moment ago. Revealed sources are compared by value, so content arriving later
+  // in this position is never shown on a previous part's say-so.
+  const [formats, setFormats] = useState<Record<number, MessageFormat>>({});
+  // The stored preference seeds this message once, at mount. Read live it would be a
+  // subscription shared with every other message on the same attribute, so using one
+  // dropdown would move all of them.
+  const [seededFormat] = useState(formatOverride);
+  const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
+  const role = message.role || 'message';
+  const isSinglePart = message.parts.length === 1;
+  // Parsing a part's text (and, for JSON, walking the result) and restringifying the
+  // message for its copy button depend on the parts alone, so both are done once per
+  // message rather than for every part on every render; choosing a view only re-resolves
+  // the format against the parsed result.
+  const parsedParts = useMemo(() => message.parts.map(parsePart), [message.parts]);
+  const copyJsons = useMemo(
+    () =>
+      message.parts.length === 1
+        ? [JSON.stringify({ role: message.role, parts: message.parts }, null, 2)]
+        : message.parts.map(part => JSON.stringify(part, null, 2)),
+    [message.role, message.parts]
+  );
+  const views = parsedParts.map((parsed, i) => partView(parsed, formats[i] ?? seededFormat));
+
+  const controlsFor = (part: GenAiPart, i: number) => (
+    <PartControls
+      view={views[i]}
+      onFormatChange={format => {
+        setFormats({ ...formats, [i]: format });
+        onFormatChange(format);
+      }}
+      // A single-part message has one thing to name, so its control is named for the
+      // message; several parts each need naming apart for a screen reader.
+      controlName={
+        isSinglePart
+          ? `Content format for message ${messageNumber} (${role})`
+          : `Content format for part ${i + 1} of message ${messageNumber} (${role})`
+      }
+      position={isSinglePart ? null : `Part ${i + 1} of ${message.parts.length}`}
+    />
+  );
+
+  return (
+    <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
+      <div className="GenAITab--messageHeader">
+        <span className="GenAITab--messageHeaderLead">
+          <button
+            type="button"
+            className="GenAITab--messageToggle"
+            aria-expanded={!isCollapsed}
+            aria-label={`Message ${messageNumber} (${role})`}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? (
+              <IoChevronForward className="GenAITab--messageToggleIcon" />
+            ) : (
+              <IoChevronDown className="GenAITab--messageToggleIcon" />
+            )}
+            <span className="GenAITab--messageRole">{role}</span>
+          </button>
+          {/* Beside the toggle, not inside it: a mark inside the button would join its
+              accessible name and collapse the message when clicked. */}
+          {source && <NonStandardNameMark source={source} />}
+        </span>
+        {/* One part means one set of controls, which belong on the message's own line
+            rather than taking a row of their own. Several parts each carry their own. */}
+        {isSinglePart && !isCollapsed && controlsFor(message.parts[0], 0)}
+      </div>
+      {isCollapsed ? (
+        // A folded message still has to be identifiable, so it keeps its first line.
+        // The whole value stays in the DOM for browser find-in-page, clipped in CSS.
+        <div className="GenAITab--messagePreview">{message.content}</div>
+      ) : (
+        <div className="GenAITab--messageParts">
+          {message.parts.map((part, i) => {
+            const view = views[i];
+            return (
+              <div
+                className="GenAITab--messagePart"
+                key={part.media ? `${i}-${part.media.src}` : `${i}-text`}
+              >
+                {!isSinglePart && controlsFor(part, i)}
+                <PartBody
+                  part={part}
+                  view={view}
+                  label={`${part.media?.type === 'audio' ? 'Audio' : 'Image'} in ${
+                    isSinglePart ? '' : `part ${i + 1} of `
+                  }message ${messageNumber} (${role})`}
+                  copyJson={copyJsons[i]}
+                  revealed={part.media !== undefined && revealed.has(part.media.src)}
+                  onReveal={() => part.media && setRevealed(new Set(revealed).add(part.media.src))}
+                  onShowText={() => setFormats({ ...formats, [i]: 'plain' })}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LLMDetails({
+  operation,
+  provider,
+  model,
+  isLlmCall,
+  isOpen,
+  onToggle,
+}: {
+  operation?: string;
+  provider?: string;
+  model?: string;
+  isLlmCall: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const data = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (operation) entries.push({ key: 'Operation', value: operation });
+    if (provider) entries.push({ key: 'Provider', value: provider });
+    if (model) entries.push({ key: 'Model', value: model });
+    return makeAttributes(entries);
+  }, [operation, provider, model]);
+  return (
+    <AccordionAttributes
+      className="GenAITab--section"
+      // classifySpan() can also resolve to AGENT/TOOL_CALL/RETRIEVAL, which can carry
+      // their own backing provider/model per the OTel GenAI semconv - captioning the
+      // section "LLM" would misrepresent those as LLM calls, so it's scoped to spans
+      // classifySpan() actually identifies as one.
+      label={isLlmCall ? 'LLM' : 'Model'}
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
+  );
+}
+
+// Map attribute keys to more reader-friendly labels.
+const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
+  name: 'Name',
+  version: 'Version',
+  id: 'ID',
+  description: 'Description',
+};
+
+// name first: AccordionAttributes shows the first entries as a one-line preview when
+// collapsed, so leading with name gives high signal without expanding the section.
+const AGENT_FIELD_ORDER: ReadonlyArray<keyof GenAiAgent> = ['name', 'id', 'version', 'description'];
+
+function AgentDetails({
+  agent,
+  isOpen,
+  onToggle,
+}: {
+  agent: GenAiAgent;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const data = useMemo(
+    () =>
+      makeAttributes(
+        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map((key): IAttribute => ({
+          key: AGENT_LABELS[key] ?? key,
+          value: agent[key] as AttributeValue,
+        }))
+      ),
+    [agent]
+  );
+  return (
+    <AccordionAttributes
+      className="GenAITab--section"
+      label="Agent"
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
+  );
+}
+
+// Cosmetic only - a key missing from here still renders, just under its raw
+// field name instead of a friendly label, so a future token-usage field
+// shows up automatically without needing a matching entry added here.
+const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
+  inputTokens: 'Input',
+  outputTokens: 'Output',
+  reasoningOutputTokens: 'Reasoning',
+  cacheReadInputTokens: 'Cached (read)',
+  cacheWriteInputTokens: 'Cached (write)',
+  textInputTokens: 'Input (text)',
+  imageInputTokens: 'Input (image)',
+  audioInputTokens: 'Input (audio)',
+  textOutputTokens: 'Output (text)',
+  imageOutputTokens: 'Output (image)',
+  audioOutputTokens: 'Output (audio)',
+  textCacheReadInputTokens: 'Cached (read, text)',
+  imageCacheReadInputTokens: 'Cached (read, image)',
+  audioCacheReadInputTokens: 'Cached (read, audio)',
+};
+
+function TokenDetails({ usage, sources }: { usage: GenAiTokenUsage; sources: GenAiTokenSources }) {
+  return (
+    <div className="GenAITab--tokens">
+      <span className="GenAITab--tokensPrefix">Tokens:</span>
+      {(Object.keys(usage) as Array<keyof GenAiTokenUsage>).map(key => {
+        const value = usage[key];
+        if (value == null) return null;
+        const source = sources[key];
+        return (
+          <span key={key} className="GenAITab--tokenItem">
+            <span className="GenAITab--tokenLabel">{TOKEN_LABELS[key] ?? key}</span> {formatTokenCount(value)}
+            {source && <NonStandardNameMark source={source} />}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ConversationDetails({
+  systemInstructions,
+  inputMessages,
+  outputMessages,
+  sources,
+}: {
+  systemInstructions?: string;
+  inputMessages: GenAiMessage[];
+  outputMessages: GenAiMessage[];
+  sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
+}) {
+  // The store remembers the last format chosen for each attribute name and seeds every
+  // message of that attribute as it mounts; each message owns its view from then on.
+  // useMessageFormatStore.overrides already merges in-memory and persisted state, so
+  // there's no separate read-then-merge step here.
+  const overrides = useMessageFormatStore(state => state.overrides);
+  const setFormat = useMessageFormatStore(state => state.setFormat);
+
+  const getFormatOverride = (attributeKey: string): MessageFormat | null => overrides[attributeKey] ?? null;
+
+  // Flattened into one ordered list (rather than three separate blocks) so each
+  // message can get a stable, unique position number for its format dropdown's
+  // accessible name - with per-role select elements otherwise indistinguishable
+  // to a screen reader when a conversation has multiple messages. Built via push
+  // rather than spread so each pushed object literal stays contextually typed
+  // against GenAiMessage's role union, instead of widening to a plain string.
+  //
+  // attributeKey stays the spec name when the messages were read from a fallback name:
+  // the remembered format is a preference for how to view input or output messages, and
+  // the store hydrates that closed set of names.
+  const messages: Array<{
+    key: string;
+    message: GenAiMessage;
+    attributeKey: string;
+    source?: GenAiAttributeSource;
+  }> = [];
+  if (systemInstructions) {
+    messages.push({
+      key: 'system',
+      message: { role: 'system', content: systemInstructions, parts: [{ text: systemInstructions }] },
+      attributeKey: 'gen_ai.system_instructions',
+    });
+  }
+  inputMessages.forEach((message, i) => {
+    messages.push({
+      key: `input-${i}`,
+      message,
+      attributeKey: 'gen_ai.input.messages',
+      source: sources.input,
+    });
+  });
+  outputMessages.forEach((message, i) => {
+    messages.push({
+      key: `output-${i}`,
+      message: { ...message, role: message.role || 'assistant' },
+      attributeKey: 'gen_ai.output.messages',
+      source: sources.output,
+    });
+  });
+
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Conversation</h3>
+      {messages.map(({ key, message, attributeKey, source }, i) => (
+        <MessageBlock
+          key={key}
+          message={message}
+          source={source}
+          formatOverride={getFormatOverride(attributeKey)}
+          onFormatChange={f => setFormat(attributeKey, f)}
+          messageNumber={i + 1}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ToolParameters({ parameters, toolName }: { parameters: unknown; toolName: string }) {
+  const [isSchemaOpen, setIsSchemaOpen] = useState(false);
+  const parsed = typeof parameters === 'string' ? tryParseJson(parameters) : parameters;
+
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    'type' in parsed &&
+    typeof parsed.type === 'string' &&
+    parsed.type.toLowerCase() === 'object' &&
+    'properties' in parsed &&
+    typeof parsed.properties === 'object' &&
+    parsed.properties !== null &&
+    !Array.isArray(parsed.properties)
+  ) {
+    const props = parsed.properties as Record<string, unknown>;
+    const parsedObj = parsed as Record<string, unknown>;
+    const required = Array.isArray(parsedObj.required) ? parsedObj.required : [];
+
+    return (
+      <>
+        <div className="GenAITab--paramTableContainer">
+          <table className="GenAITab--paramTable">
+            <caption className="GenAITab--paramTableCaption">Parameters for {toolName}</caption>
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(props).map(([key, propDef]) => {
+                const isRequired = required.includes(key);
+                const def =
+                  typeof propDef === 'object' && propDef !== null ? (propDef as Record<string, unknown>) : {};
+                return (
+                  <tr key={key}>
+                    <td className="GenAITab--paramNameColumn">{key}</td>
+                    <td>
+                      {typeof def.type === 'string' && (
+                        <span className="GenAITab--paramTypeBadge">{def.type}</span>
+                      )}
+                    </td>
+                    <td>
+                      {isRequired ? (
+                        <span className="GenAITab--paramRequiredBadge">Yes</span>
+                      ) : (
+                        <span className="GenAITab--paramOptionalBadge">No</span>
+                      )}
+                    </td>
+                    <td className="GenAITab--paramDescColumn">
+                      {typeof def.description === 'string' && <div>{def.description}</div>}
+                      {Array.isArray(def.enum) && (
+                        <div className="GenAITab--paramEnum">
+                          Allowed values: <code>{def.enum.map(formatEnumValue).join(', ')}</code>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <details
+          className="GenAITab--paramSchema"
+          open={isSchemaOpen}
+          onToggle={event => setIsSchemaOpen(event.currentTarget.open)}
+        >
+          <summary>Full schema</summary>
+          {isSchemaOpen && <JsonBlock value={parsed} />}
+        </details>
+      </>
+    );
+  }
+
+  return <JsonBlock value={parsed} />;
+}
+
+function formatEnumValue(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value === null) return 'null';
+  if (typeof value === 'object' || typeof value === 'function') {
+    try {
+      return JSON.stringify(value) ?? '[unserializable]';
+    } catch {
+      return '[unserializable]';
+    }
+  }
+  return String(value);
+}
+
+function toolLabel(tool: GenAiToolDefinition): string {
+  return tool.name || 'Tool';
+}
+
+function asDisplayAttributeValue(value: unknown): AttributeValue {
+  if (value == null) return String(value);
+  if (typeof value === 'object' || typeof value === 'function') {
+    try {
+      return JSON.stringify(value) ?? '[unserializable]';
+    } catch {
+      return '[unserializable]';
+    }
+  }
+  return value as AttributeValue;
+}
+
+function formatToolsSummary(tools: GenAiToolDefinition[]): string {
+  if (tools.length === 0) return 'No tools defined';
+  const labels: string[] = [];
+  let textLength = 0;
+  for (const tool of tools) {
+    const label = toolLabel(tool);
+    textLength += label.length + (labels.length ? 2 : 0);
+    if (textLength > TOOLS_SUMMARY_MAX_CHARS) return `${tools.length.toLocaleString()} tools`;
+    labels.push(label);
+  }
+  return labels.join(', ');
+}
+
+function SingleToolDetails({ tool }: { tool: GenAiToolDefinition }) {
+  const data = useMemo(() => {
+    const entries: IAttribute[] = [];
+    const label = tool.name || 'Tool';
+    if ('raw' in tool) {
+      if (typeof tool.raw === 'object' && tool.raw !== null) {
+        const rawEntries = Object.entries(tool.raw as Record<string, unknown>);
+        rawEntries.forEach(([k, v]) => {
+          entries.push({ key: k, value: asDisplayAttributeValue(v) });
+        });
+        if (rawEntries.length === 0) {
+          entries.push({ key: 'Value', value: asDisplayAttributeValue(tool.raw) });
+        }
+      } else {
+        entries.push({
+          key: 'Value',
+          value: asDisplayAttributeValue(tool.raw),
+        });
+      }
+    } else {
+      entries.push({ key: 'Name', value: label });
+      if (tool.type) entries.push({ key: 'Type', value: tool.type });
+      if (tool.description) entries.push({ key: 'Description', value: tool.description });
+      if (tool.metadata) {
+        Object.entries(tool.metadata).forEach(([key, value]) => {
+          entries.push({ key, value: asDisplayAttributeValue(value) });
+        });
+      }
+    }
+    return makeAttributes(entries);
+  }, [tool]);
+
+  return (
+    <div className="GenAITab--toolItem">
+      <AttributesTable data={data} linksGetter={null} />
+      {tool.parameters !== undefined && (
+        <div className="GenAITab--toolParametersWrapper">
+          <ToolParameters parameters={tool.parameters} toolName={toolLabel(tool)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToolsSection({
+  tools,
+  isOpen,
+  onToggle,
+}: {
+  tools: GenAiToolDefinition[];
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="GenAITab--section u-tx-ellipsis">
+      <button
+        type="button"
+        className="AccordionAttributes--header GenAITab--toolsToggle"
+        aria-expanded={isOpen}
+        onClick={onToggle}
+      >
+        {isOpen ? <IoChevronDown className="u-align-icon" /> : <IoChevronForward className="u-align-icon" />}
+        <strong>Tools{isOpen || ':'}</strong>
+        {!isOpen && <span className="GenAITab--toolsSummary">{formatToolsSummary(tools)}</span>}
+      </button>
+      {isOpen && (
+        <div className="GenAITab--toolsContainer">
+          {tools.length === 0 ? (
+            <div>No tools defined.</div>
+          ) : (
+            tools.map((tool, i) => <SingleToolDetails key={`${toolLabel(tool)}-${i}`} tool={tool} />)
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * One retrieved document or memory record: its content shown prominently, sharing the
+ * message box styling so it reads consistently with the rest of the tab, followed by
+ * whatever other fields it carries (score, metadata, id, ...) in an attributes table -
+ * present only when there is at least one such field, per neither schema fixing a set.
+ */
+function ContentEntryCard({ label, entry }: { label: string; entry: GenAiContentEntry }) {
+  const restAttributes = useMemo(
+    () =>
+      makeAttributes(
+        Object.entries(entry.rest).map(([key, value]): IAttribute => ({
+          key,
+          // AttributesTable expects span attribute values: a direct null (id, score, ... may
+          // legitimately be null) crashes it, and an object or array (e.g. metadata) copies as
+          // "[object Object]" or breaks the header renderer. A JSON string still renders as a
+          // tree, since the table parses it back.
+          value:
+            value === null
+              ? 'null'
+              : typeof value === 'object'
+                ? JSON.stringify(value)
+                : (value as AttributeValue),
+        }))
+      ),
+    [entry]
+  );
+  return (
+    <div className="GenAITab--message">
+      <div className="GenAITab--messageHeader">
+        <span className="GenAITab--messageRole">{label}</span>
+      </div>
+      {entry.content && (
+        <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{entry.content}</pre>
+      )}
+      {restAttributes.size > 0 && <AttributesTable data={restAttributes} linksGetter={null} />}
+    </div>
+  );
+}
+
+function RetrievalDetails({ queryText, topK, dataSourceId, documents }: GenAiRetrieval) {
+  const metaData = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (dataSourceId !== undefined) entries.push({ key: 'Data source', value: dataSourceId });
+    if (queryText !== undefined) entries.push({ key: 'Query', value: queryText });
+    if (topK !== undefined) entries.push({ key: 'Top K', value: topK });
+    return makeAttributes(entries);
+  }, [queryText, topK, dataSourceId]);
+
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Retrieved documents</h3>
+      {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {documents?.length === 0 && <div className="GenAITab--empty">No documents returned.</div>}
+      {documents?.map((doc, i) => (
+        <ContentEntryCard key={i} label={`Document ${i + 1}`} entry={doc} />
+      ))}
+    </div>
+  );
+}
+
+function MemoryDetails({ queryText, storeId, recordCount, records }: GenAiMemory) {
+  const metaData = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (storeId !== undefined) entries.push({ key: 'Store', value: storeId });
+    if (queryText !== undefined) entries.push({ key: 'Query', value: queryText });
+    if (recordCount !== undefined) entries.push({ key: 'Record count', value: recordCount });
+    return makeAttributes(entries);
+  }, [queryText, storeId, recordCount]);
+
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Memory</h3>
+      {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {records?.length === 0 && <div className="GenAITab--empty">No records returned.</div>}
+      {records?.map((record, i) => (
+        <ContentEntryCard key={i} label={`Record ${i + 1}`} entry={record} />
+      ))}
+    </div>
+  );
+}
+
+function ToolCallDetails({
+  id,
+  name,
+  arguments: args,
+  result,
+  isOpen,
+  onToggle,
+}: GenAiToolCall & { isOpen: boolean; onToggle: () => void }) {
+  const data = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (id) entries.push({ key: 'ID', value: id });
+    if (args !== undefined) entries.push({ key: 'Arguments', value: asDisplayAttributeValue(args) });
+    if (result !== undefined) entries.push({ key: 'Result', value: asDisplayAttributeValue(result) });
+    return makeAttributes(entries);
+  }, [id, args, result]);
+  return (
+    <AccordionAttributes
+      className="GenAITab--section"
+      label={`Tool Call${name ? `: ${name}` : ''}`}
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
+  );
+}
+
+// The set of GenAiSection types is closed and authored in this same module,
+// so this is dead code today - every variant extractGenAiSections can
+// currently produce has an explicit case above it. It costs nothing while the
+// switch stays exhaustive, and only ever runs if that invariant is broken (a
+// future section type added to the registry without a matching case here).
+// Per the no-data-hiding principle, an ugly-but-honest key/value dump beats
+// silently rendering nothing.
+function UnknownDetails({
+  type,
+  data: rawData,
+  isOpen,
+  onToggle,
+}: {
+  type: string;
+  data: Record<string, unknown>;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const data = useMemo(
+    () =>
+      makeAttributes(
+        Object.entries(rawData).map(([key, value]): IAttribute => ({ key, value: value as AttributeValue }))
+      ),
+    [rawData]
+  );
+  return (
+    <AccordionAttributes
+      className="GenAITab--section"
+      label={type}
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
+  );
+}
+
+export default function GenAITab({ span }: Props): React.ReactElement {
+  const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
+  const hasOnlyOtherSection = sections.length === 1 && sections[0].type === 'other';
+  // LLM/Agent/Tools/Tool Call/Unknown default open since they're primary content for the
+  // span, unlike Other GenAI Attributes which is genuinely secondary overflow data.
+  const [isLlmOpen, setIsLlmOpen] = useState(true);
+  const [isAgentOpen, setIsAgentOpen] = useState(true);
+  const [isToolsOpen, setIsToolsOpen] = useState(true);
+  const [isToolCallOpen, setIsToolCallOpen] = useState(true);
+  const [isUnknownOpen, setIsUnknownOpen] = useState(true);
+  const [isOtherOpen, setIsOtherOpen] = useState(hasOnlyOtherSection);
+
+  if (sections.length === 0) {
+    return <div className="GenAITab--empty">No GenAI-specific attributes found on this span.</div>;
+  }
+
+  return (
+    <div className="GenAITab">
+      {sections.map(section => {
+        switch (section.type) {
+          case 'agent':
+            return (
+              <AgentDetails
+                key="agent"
+                agent={section.data}
+                isOpen={isAgentOpen}
+                onToggle={() => setIsAgentOpen(o => !o)}
+              />
+            );
+          case 'meta':
+            return (
+              <LLMDetails
+                key="meta"
+                {...section.data}
+                isLlmCall={span.genAIKind === 'LLM_CALL'}
+                isOpen={isLlmOpen}
+                onToggle={() => setIsLlmOpen(o => !o)}
+              />
+            );
+          case 'tokens':
+            return <TokenDetails key="tokens" usage={section.data} sources={section.sources} />;
+          case 'conversation':
+            return <ConversationDetails key="conversation" {...section.data} sources={section.sources} />;
+          case 'retrieval':
+            return <RetrievalDetails key="retrieval" {...section.data} />;
+          case 'memory':
+            return <MemoryDetails key="memory" {...section.data} />;
+          case 'tools':
+            return (
+              <ToolsSection
+                key="tools"
+                tools={section.data.tools}
+                isOpen={isToolsOpen}
+                onToggle={() => setIsToolsOpen(o => !o)}
+              />
+            );
+          case 'toolCall':
+            return (
+              <ToolCallDetails
+                key="toolCall"
+                {...section.data}
+                isOpen={isToolCallOpen}
+                onToggle={() => setIsToolCallOpen(o => !o)}
+              />
+            );
+          case 'other':
+            return (
+              <AccordionAttributes
+                key="other"
+                className="GenAITab--otherAttributes"
+                data={section.data.attributes}
+                label="Other GenAI Attributes"
+                linksGetter={null}
+                isOpen={isOtherOpen}
+                onToggle={() => setIsOtherOpen(o => !o)}
+              />
+            );
+          default:
+            return (
+              <UnknownDetails
+                key={(section as { type: string }).type}
+                type={(section as { type: string }).type}
+                data={(section as { data: Record<string, unknown> }).data}
+                isOpen={isUnknownOpen}
+                onToggle={() => setIsUnknownOpen(o => !o)}
+              />
+            );
+        }
+      })}
+    </div>
+  );
 }

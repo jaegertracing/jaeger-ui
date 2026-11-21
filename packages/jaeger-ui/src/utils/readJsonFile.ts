@@ -1,8 +1,6 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import JaegerAPI from '../api/jaeger';
-
 function tryParseMultiLineInput(input: string): any[] {
   const jsonStrings = input.split('\n').filter((line: string) => line.trim() !== '');
   const parsedObjects: any[] = [];
@@ -21,12 +19,16 @@ function tryParseMultiLineInput(input: string): any[] {
   return parsedObjects;
 }
 
-export default function readJsonFile(fileList: { file: File }): Promise<string> {
+export default function readJsonFile(fileList: { file: File }): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result !== 'string') {
         reject(new Error('Invalid result type'));
+        return;
+      }
+      if (reader.result.trim() === '') {
+        reject(new Error('The JSON file is empty'));
         return;
       }
       let traceObj;
@@ -40,27 +42,12 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
           return;
         }
       }
-      if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
-        const mergedResourceSpans = traceObj.reduce((acc, obj) => {
-          acc.push(...obj.resourceSpans);
-          return acc;
-        }, []);
-
-        traceObj = { resourceSpans: mergedResourceSpans };
+      if (traceObj === null || typeof traceObj !== 'object') {
+        reject(new Error('Invalid JSON trace format'));
+        return;
       }
 
-      if ('resourceSpans' in traceObj) {
-        JaegerAPI.transformOTLP(traceObj)
-          .then((result: string) => {
-            resolve(result);
-          })
-          .catch((err: unknown) => {
-            const cause = err instanceof Error ? `: ${err.message}` : '';
-            reject(new Error(`Error converting OTLP trace to Jaeger${cause}`, { cause: err }));
-          });
-      } else {
-        resolve(traceObj);
-      }
+      resolve(traceObj);
     };
     reader.onerror = () => {
       const errMessage = reader.error ? `: ${String(reader.error)}` : '';

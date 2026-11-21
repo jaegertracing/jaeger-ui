@@ -14,7 +14,7 @@
 
 The UI supports customization via custom configuration as either JSON or Javascript file. Refer to [documentation](https://www.jaegertracing.io/docs/latest/deployment/frontend-ui/) for the full syntax.
 
-The configuration is loaded into a `Config` object (see [src/types/config.tsx](./src/types/config.tsx) for the complete schema). This object is returned by the top-level function `getJaegerUiConfig` defined in [index.html](./index.html). By default this function just returns null, but its source is manipulated by the Jaeger backend such that the values are injected dynamically via search-replace. The returned value is then merged with [defaults](./src/utils/config/get-config.tsx) into the redux `state.config`.
+The configuration is loaded into a `Config` object (see [src/types/config.tsx](./src/types/config.tsx) for the complete schema). This object is returned by the top-level function `getJaegerUiConfig` defined in [index.html](./index.html). By default this function just returns null, but its source is manipulated by the Jaeger backend such that the values are injected dynamically via search-replace. The returned value is then merged with [defaults](./src/utils/config/get-config.ts) once and memoized; components read it through the `useConfig()` hook.
 
 ### Configuration as JSON
 
@@ -26,7 +26,7 @@ When the config file has `.js` extension, the `jaeger` binary looks for the comm
 
 ### Configuration for Local Development
 
-When running the UI in development mode via `npm start`, you can provide custom configuration without running the Jaeger backend. Create one of the following files in the `packages/jaeger-ui` directory:
+When running the UI in development mode via `pnpm start`, you can provide custom configuration without running the Jaeger backend. Create one of the following files in the `packages/jaeger-ui` directory:
 
 1. **`jaeger-ui.config.json`** - A JSON file containing your config object:
 
@@ -75,6 +75,22 @@ When running the UI in development mode via `npm start`, you can provide custom 
 An example JSON config file is provided at [jaeger-ui.config.example.json](./jaeger-ui.config.example.json). You can copy it to `jaeger-ui.config.json` and modify it as needed.
 
 These local config files are ignored by git (see `.gitignore`).
+
+#### Backend capabilities in development
+
+The query service reports what its storage supports — archive storage, metrics storage, searching without a service name — by search-replacing a capability blob into the `index.html` it serves. `pnpm start` serves this repository's `index.html` instead and proxies only the API paths, so that blob does not arrive on its own. The dev server therefore asks the proxied query service for its `index.html` and reads the blob out of it, which makes the UI behave as it would when the same backend serves it.
+
+A `backendCapabilities` block in your local config file overrides what the backend reports, so you can exercise a capability the backend at hand does not have:
+
+```json
+{
+  "backendCapabilities": {
+    "searchWithoutServiceName": true
+  }
+}
+```
+
+With no backend running, capabilities fall back to the compile-time defaults in `src/constants/default-config.ts`.
 
 ### Ask Jaeger assistant
 

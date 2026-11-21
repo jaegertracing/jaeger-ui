@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { create } from 'zustand';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 import { toApiError } from '../types/api-error';
 import {
   ErrorTraceArchive,
@@ -25,7 +25,7 @@ export const useArchiveStore = create<ArchiveStore>((set, _get) => ({
       archives: { ...s.archives, [traceId]: { isArchiving: true } satisfies LoadingTraceArchive },
     }));
     try {
-      await JaegerAPI.archiveTrace(traceId);
+      await jaegerClient.archiveTrace(traceId);
       set(s => ({
         archives: {
           ...s.archives,

@@ -1,8 +1,14 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { BatchSpanProcessor, TraceIdRatioBasedSampler } from '@opentelemetry/sdk-trace-base';
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { context, propagation, trace } from '@opentelemetry/api';
+import { CompositePropagator, W3CBaggagePropagator, W3CTraceContextPropagator } from '@opentelemetry/core';
+import {
+  BatchSpanProcessor,
+  StackContextManager,
+  TraceIdRatioBasedSampler,
+  TracerProvider,
+} from '@opentelemetry/sdk-trace';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { DocumentLoadInstrumentation } from '@opentelemetry/instrumentation-document-load';
@@ -37,7 +43,7 @@ export function initTracing(): void {
 
   const endpoint = prefixUrl(OTLP_TRACES_PATH);
 
-  const provider = new WebTracerProvider({
+  const provider = new TracerProvider({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: cfg.serviceName ?? 'jaeger-ui',
       [ATTR_SERVICE_VERSION]: version,
@@ -48,11 +54,20 @@ export function initTracing(): void {
         inactivityMs:
           cfg.sessionInactivityMinutes != null ? cfg.sessionInactivityMinutes * 60_000 : undefined,
       }),
-      new BatchSpanProcessor(new OTLPTraceExporter({ url: endpoint })),
+      new BatchSpanProcessor({ exporter: new OTLPTraceExporter({ url: endpoint }) }),
     ],
   });
 
-  provider.register();
+  // The trace SDK does not register itself with the API. The context manager
+  // links child spans to their parent within the page, and the propagators let
+  // the fetch instrumentation inject trace context into outgoing requests.
+  trace.setGlobalTracerProvider(provider);
+  context.setGlobalContextManager(new StackContextManager().enable());
+  propagation.setGlobalPropagator(
+    new CompositePropagator({
+      propagators: [new W3CTraceContextPropagator(), new W3CBaggagePropagator()],
+    })
+  );
 
   registerInstrumentations({
     instrumentations: [

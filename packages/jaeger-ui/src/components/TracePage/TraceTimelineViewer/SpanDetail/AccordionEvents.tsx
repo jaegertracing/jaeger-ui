@@ -11,14 +11,15 @@ import AccordionAttributes from './AccordionAttributes';
 import { formatDuration } from '../../../../utils/date';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IEvent, IAttribute } from '../../../../types/otel';
+import { IEvent, IAttributes } from '../../../../types/otel';
 
 import './AccordionEvents.css';
+import accordionToggle from './accordionToggle';
 
 type AccordionEventsProps = {
   interactive?: boolean;
   isOpen: boolean;
-  linksGetter?: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  linksGetter?: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
   events: ReadonlyArray<IEvent>;
   onItemToggle?: (event: IEvent) => void;
   onToggle?: () => void;
@@ -125,7 +126,7 @@ export default function AccordionEvents({
     HeaderComponent = 'a';
     headerProps = {
       'aria-checked': isOpen,
-      onClick: onToggle,
+      onClick: accordionToggle(onToggle),
       role: 'switch',
     };
   }
@@ -148,6 +149,8 @@ export default function AccordionEvents({
               const labelContent = useOtelTerms ? `${event.name} (${durationLabel})` : durationLabel;
               return (
                 <AccordionAttributes
+                  // `i` is necessary in the key because timestamps can repeat
+                  
                   key={`${event.timestamp}-${i}`}
                   className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
                   data={event.attributes}

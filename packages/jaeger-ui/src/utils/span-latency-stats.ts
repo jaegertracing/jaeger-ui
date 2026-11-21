@@ -1,0 +1,94 @@
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+import { IOtelSpan } from '../types/otel';
+
+// Number of color steps in the heatmap scale, matching --heatmap-1 … --heatmap-7 in vars.css.
+// The count is odd so that the middle step is a neutral color for spans at the median.
+export const HEATMAP_STEPS = 7;
+
+// Duration ratio to the group median at which the scale saturates: half the median or less is
+// the fastest step, twice the median or more is the slowest.
+const HEATMAP_SATURATION_RATIO = 2;
+
+// Spans within this relative distance of the median stay neutral, so near-equal durations such
+// as a retry pair at 10ms and 10.1ms don't show up as one fast and one slow span.
+const HEATMAP_NEUTRAL_SPREAD = 0.1;
+
+// Spans within this many microseconds of the median also stay neutral. A ratio means little at
+// that scale, and without the floor a tiny or zero median would pin a span only a few
+// microseconds slower to the slowest step. The ratio also uses it as the smallest median, so with
+// a zero median a 15µs span stays on the slope instead of sharing the slowest step with a 10s span.
+const HEATMAP_NEUTRAL_FLOOR_US = 10;
+
+const SIDE_STEPS = (HEATMAP_STEPS - 1) / 2;
+
+// Two services can share an operation name, so peers are matched on both.
+function operationKey(span: IOtelSpan): string {
+  return `${span.resource.serviceName}\u0000${span.name}`;
+}
+
+function median(sorted: number[]): number {
+  const mid = sorted.length >>> 1;
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/**
+ * Scores each span's duration against the median duration of its group: all spans in the trace,
+ * itself included, with the same service and operation. The score is log(duration / median) on
+ * a base of HEATMAP_SATURATION_RATIO, clamped to [-1, 1]: 0 is the median, -1 is half of it or
+ * less, and 1 is twice it or more. Spans within HEATMAP_NEUTRAL_SPREAD of the median, or within
+ * HEATMAP_NEUTRAL_FLOOR_US of it, score exactly 0, and a median below HEATMAP_NEUTRAL_FLOOR_US
+ * is raised to it before taking the ratio. The spread is checked on the durations rather
+ * than on the log score, because a log band symmetric around 0 would be narrower than 10% on the
+ * fast side: 0.91x the median is within 10% but scores below -log2(1.1).
+ * Spans whose operation occurs only once have no peers to compare against and are left out of
+ * the map.
+ */
+export function computeLatencyScores(spans: ReadonlyArray<IOtelSpan>): Map<string, number> {
+  const groups = new Map<string, number[]>();
+  for (const span of spans) {
+    const key = operationKey(span);
+    const durations = groups.get(key);
+    if (durations) durations.push(span.duration);
+    else groups.set(key, [span.duration]);
+  }
+  const medians = new Map<string, number>();
+  for (const [key, durations] of groups) {
+    if (durations.length < 2) continue;
+    durations.sort((a, b) => a - b);
+    medians.set(key, median(durations));
+  }
+
+  const result = new Map<string, number>();
+  for (const span of spans) {
+    const med = medians.get(operationKey(span));
+    if (med === undefined) continue;
+    let score: number;
+    const delta = Math.abs(span.duration - med);
+    if (delta < HEATMAP_NEUTRAL_FLOOR_US || delta <= med * HEATMAP_NEUTRAL_SPREAD) score = 0;
+    // A zero duration has no finite ratio, so it sits at the fast end of the scale.
+    else if (span.duration <= 0) score = -1;
+    else
+      score =
+        Math.log(span.duration / Math.max(med, HEATMAP_NEUTRAL_FLOOR_US)) /
+        Math.log(HEATMAP_SATURATION_RATIO);
+    result.set(span.spanID, Math.max(-1, Math.min(1, score)));
+  }
+  return result;
+}
+
+/**
+ * Maps a latency score to a heatmap color token. A score of 0, which computeLatencyScores gives
+ * to spans inside the neutral spread, gets the middle step, and the rest spread evenly over the
+ * fast and slow halves. A missing score
+ * means the span has no peers, which gets its own color rather than a spot on the scale.
+ */
+export function heatmapColor(score: number | undefined): string {
+  if (score === undefined) return 'var(--heatmap-no-peers)';
+  const middle = SIDE_STEPS + 1;
+  const magnitude = Math.min(1, Math.abs(score));
+  if (Number.isNaN(magnitude) || magnitude === 0) return `var(--heatmap-${middle})`;
+  const offset = Math.max(1, Math.ceil(magnitude * SIDE_STEPS));
+  return `var(--heatmap-${score < 0 ? middle - offset : middle + offset})`;
+}

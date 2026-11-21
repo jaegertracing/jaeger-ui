@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { create } from 'zustand';
+import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
 import type { SpanDetailPanelMode } from '../../../types/config';
 import getConfig from '../../../utils/config/get-config';
+import storage from '../../../utils/storage';
 import {
   MIN_TIMELINE_COLUMN_WIDTH,
   SIDE_PANEL_WIDTH_MAX,
@@ -12,7 +14,7 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
 
-export function getMaxNameColumnWidth(opts: {
+function getMaxNameColumnWidth(opts: {
   detailPanelMode: string;
   timelineBarsVisible: boolean;
   sidePanelWidth: number;
@@ -26,48 +28,94 @@ export function getMaxNameColumnWidth(opts: {
   return Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
 }
 
-type TraceTimelineLayoutPrefsStore = {
+// The layout settings. The displayed layout has a value for each one. The saved preferences are
+// `Partial<LayoutSettings>`, in which a setting is absent until the user chooses it.
+type LayoutSettings = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
   timelineBarsVisible: boolean;
+  heatmapEnabled: boolean;
+};
+
+export type LayoutUpdateOptions = {
+  persist?: boolean;
+};
+
+type DisplayedLayoutStore = LayoutSettings & {
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
-  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
-  setTimelineBarsVisible: (visible: boolean) => void;
+  // With `persist: false` the view changes without writing to localStorage.
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, options?: LayoutUpdateOptions) => void;
+  setTimelineBarsVisible: (visible: boolean, options?: LayoutUpdateOptions) => void;
+  toggleHeatmap: () => void;
 };
 
-// Reads user layout preferences from localStorage and merges them with config-driven defaults.
-// Mirrors the logic that was previously in TraceTimelineViewer/duck.ts `newInitialState()`.
-export function getInitialLayoutState(): Pick<
-  TraceTimelineLayoutPrefsStore,
-  'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible'
-> {
+// Single namespaced localStorage key holding the JSON-serialized prefs (replaces the four raw keys).
+const STORAGE_KEY = 'jaeger.layout';
+const STORAGE_VERSION = 1;
+
+// Reads the legacy unprefixed keys into a partial LayoutSettings, or returns null when none are present.
+// Used as a one-time fallback on first load before the namespaced key exists.
+function readLegacyLayoutPrefs(): Partial<LayoutSettings> | null {
+  const rawSpanNameColumnWidth = storage.getItem('spanNameColumnWidth');
+  const rawSidePanelWidth = storage.getItem('sidePanelWidth');
+  const rawDetailPanelMode = storage.getItem('detailPanelMode');
+  const rawTimelineVisible = storage.getItem('timelineVisible');
+
+  if (
+    rawSpanNameColumnWidth === null &&
+    rawSidePanelWidth === null &&
+    rawDetailPanelMode === null &&
+    rawTimelineVisible === null
+  ) {
+    return null;
+  }
+
+  const prefs: Partial<LayoutSettings> = {};
+  const parsedSpanNameColumnWidth = parseFloat(rawSpanNameColumnWidth ?? '');
+  if (!Number.isNaN(parsedSpanNameColumnWidth)) {
+    prefs.spanNameColumnWidth = parsedSpanNameColumnWidth;
+  }
+  const parsedSidePanelWidth = parseFloat(rawSidePanelWidth ?? '');
+  if (!Number.isNaN(parsedSidePanelWidth)) {
+    prefs.sidePanelWidth = parsedSidePanelWidth;
+  }
+  if (rawDetailPanelMode === 'sidepanel' || rawDetailPanelMode === 'inline') {
+    prefs.detailPanelMode = rawDetailPanelMode;
+  }
+  if (rawTimelineVisible !== null) {
+    prefs.timelineBarsVisible = rawTimelineVisible !== 'false';
+  }
+  return prefs;
+}
+
+// Resolves saved choices against configuration defaults and the available column widths.
+function normalizeLayoutPrefs(stored: Partial<LayoutSettings>): LayoutSettings {
   const { traceTimeline } = getConfig();
 
   let detailPanelMode: SpanDetailPanelMode = 'inline';
   if (traceTimeline?.enableSidePanel) {
-    const stored = localStorage.getItem('detailPanelMode');
-    if (stored === 'sidepanel') {
+    if (stored.detailPanelMode === 'sidepanel') {
       detailPanelMode = 'sidepanel';
-    } else if (traceTimeline.defaultDetailPanelMode === 'sidepanel' && stored === null) {
+    } else if (traceTimeline.defaultDetailPanelMode === 'sidepanel' && stored.detailPanelMode === undefined) {
       detailPanelMode = 'sidepanel';
     }
   }
 
-  // localStorage key kept as 'timelineVisible' for backward compatibility with stored user preferences.
-  const storedTimelineVisible = localStorage.getItem('timelineVisible');
-  const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
+  const timelineBarsVisible = stored.timelineBarsVisible ?? true;
 
-  const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
-  let spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
-    ? 0.25
-    : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
+  let spanNameColumnWidth =
+    stored.spanNameColumnWidth === undefined
+      ? 0.25
+      : Math.min(
+          Math.max(stored.spanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN),
+          SPAN_NAME_COLUMN_WIDTH_MAX
+        );
 
-  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
-  const sidePanelWidthExplicit = !Number.isNaN(parsedSidePanelWidth);
-  const rawSidePanelWidth = sidePanelWidthExplicit ? parsedSidePanelWidth : (1 - spanNameColumnWidth) / 2;
+  const sidePanelWidthExplicit = stored.sidePanelWidth !== undefined;
+  const rawSidePanelWidth = stored.sidePanelWidth ?? (1 - spanNameColumnWidth) / 2;
   let sidePanelWidth = Math.min(Math.max(rawSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
 
   // The two stored widths must leave room for the timeline column.
@@ -100,17 +148,87 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible };
+  const heatmapEnabled = stored.heatmapEnabled ?? false;
+
+  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, heatmapEnabled };
 }
 
-export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set, get) => ({
-  ...getInitialLayoutState(),
+// Storage is untrusted input. Copy only valid preference values, never actions or other store fields.
+function readLayoutPrefs(value: unknown): Partial<LayoutSettings> {
+  if (!value || typeof value !== 'object') return {};
+  const stored = value as Partial<LayoutSettings>;
+  const prefs: Partial<LayoutSettings> = {};
+  if (typeof stored.spanNameColumnWidth === 'number' && Number.isFinite(stored.spanNameColumnWidth)) {
+    prefs.spanNameColumnWidth = stored.spanNameColumnWidth;
+  }
+  if (typeof stored.sidePanelWidth === 'number' && Number.isFinite(stored.sidePanelWidth)) {
+    prefs.sidePanelWidth = stored.sidePanelWidth;
+  }
+  if (stored.detailPanelMode === 'inline' || stored.detailPanelMode === 'sidepanel') {
+    prefs.detailPanelMode = stored.detailPanelMode;
+  }
+  if (typeof stored.timelineBarsVisible === 'boolean') {
+    prefs.timelineBarsVisible = stored.timelineBarsVisible;
+  }
+  if (typeof stored.heatmapEnabled === 'boolean') {
+    prefs.heatmapEnabled = stored.heatmapEnabled;
+  }
+  return prefs;
+}
+
+// Keep the stored version intact so persist can run migrations before resolving the layout.
+// This store migrates from the old keys when `jaeger.layout` is missing or invalid, so they stay
+// in localStorage.
+const layoutPrefsStorage: PersistStorage<Partial<LayoutSettings>> = {
+  getItem: name => {
+    const raw = storage.getItem(name);
+    if (raw !== null) {
+      try {
+        const parsed = JSON.parse(raw) as StorageValue<Partial<LayoutSettings>>;
+        if (parsed && parsed.state && typeof parsed.state === 'object' && !Array.isArray(parsed.state)) {
+          return parsed;
+        }
+      } catch {
+        // Invalid JSON: try the old keys instead.
+      }
+      storage.removeItem(name);
+    }
+    const legacy = readLegacyLayoutPrefs();
+    return legacy ? { state: legacy, version: 0 } : null;
+  },
+  setItem: (name, value) => storage.setItem(name, JSON.stringify(value)),
+  removeItem: name => storage.removeItem(name),
+};
+
+// This store holds the preferences that the user chose, as saved in localStorage. Resolved defaults
+// stay out of it, because saving them would turn untouched fields into explicit preferences and
+// change the next load's layout.
+export const useSavedLayoutPrefsStore = create<Partial<LayoutSettings>>()(
+  persist(() => ({}), {
+    name: STORAGE_KEY,
+    version: STORAGE_VERSION,
+    storage: layoutPrefsStorage,
+    // Loading starts below, after the listener that updates the displayed layout is registered.
+    skipHydration: true,
+    // Version 0 is the same four preferences read from the old, separate keys.
+    migrate: persisted => readLayoutPrefs(persisted),
+    merge: (persisted, current) => readLayoutPrefs(persisted ?? current),
+  })
+);
+
+// The displayed layout is kept apart from the saved preferences so that a layout taken from a URL
+// can be shown without being saved. Only `applyDetailPanelModeToLayout` and `setTimelineBarsVisible`
+// take `persist: false`, because only their settings can come from a URL. Each setter saves before
+// it changes the displayed layout, so that a subscriber of this store that calls a setter in response does not
+// have its newer choice overwritten by the older one.
+export const useDisplayedLayoutStore = create<DisplayedLayoutStore>()((set, get) => ({
+  ...normalizeLayoutPrefs({}),
 
   setSpanNameColumnWidth: (width: number) => {
     const { detailPanelMode, sidePanelWidth, timelineBarsVisible } = get();
     const maxWidth = getMaxNameColumnWidth({ detailPanelMode, sidePanelWidth, timelineBarsVisible });
     const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
-    localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
+    useSavedLayoutPrefsStore.setState({ spanNameColumnWidth });
     set({ spanNameColumnWidth });
   },
 
@@ -121,22 +239,44 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
       : 1 - spanNameColumnWidth;
     const maxWidth = Math.max(SIDE_PANEL_WIDTH_MIN, Math.min(SIDE_PANEL_WIDTH_MAX, availableWidth));
     const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), maxWidth);
-    localStorage.setItem('sidePanelWidth', sidePanelWidth.toString());
+    useSavedLayoutPrefsStore.setState({ sidePanelWidth });
     set({ sidePanelWidth });
   },
 
-  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => {
-    localStorage.setItem('detailPanelMode', mode);
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, options: LayoutUpdateOptions = {}) => {
     let { spanNameColumnWidth, sidePanelWidth, timelineBarsVisible } = get();
     if (mode === 'sidepanel') {
-      const maxWidth = getMaxNameColumnWidth({ detailPanelMode: mode, sidePanelWidth, timelineBarsVisible });
+      const maxWidth = getMaxNameColumnWidth({
+        detailPanelMode: mode,
+        sidePanelWidth,
+        timelineBarsVisible,
+      });
       spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
+    }
+    if (options.persist !== false) {
+      useSavedLayoutPrefsStore.setState({ detailPanelMode: mode });
     }
     set({ detailPanelMode: mode, spanNameColumnWidth });
   },
 
-  setTimelineBarsVisible: (visible: boolean) => {
-    localStorage.setItem('timelineVisible', String(visible));
+  setTimelineBarsVisible: (visible: boolean, options: LayoutUpdateOptions = {}) => {
+    if (options.persist !== false) {
+      useSavedLayoutPrefsStore.setState({ timelineBarsVisible: visible });
+    }
     set({ timelineBarsVisible: visible });
   },
+
+  toggleHeatmap: () => {
+    const heatmapEnabled = !get().heatmapEnabled;
+    useSavedLayoutPrefsStore.setState({ heatmapEnabled });
+    set({ heatmapEnabled });
+  },
 }));
+
+// The displayed layout starts as the saved preferences resolved against the configuration defaults.
+useSavedLayoutPrefsStore.persist.onFinishHydration(savedPrefs => {
+  useDisplayedLayoutStore.setState(normalizeLayoutPrefs(savedPrefs));
+});
+void useSavedLayoutPrefsStore.persist.rehydrate();
+
+export { normalizeLayoutPrefs };

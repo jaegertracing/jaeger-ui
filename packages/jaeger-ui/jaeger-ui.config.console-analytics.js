@@ -23,7 +23,7 @@ function consoleAnalytics(config, versionShort, versionLong) {
       log('log', 'init — version:', versionShort + ' / ' + versionLong);
     },
 
-    // Return true to activate the Redux tracking middleware.
+    // Return true to activate the analytics trackers.
     isEnabled: function () {
       return true;
     },
@@ -70,7 +70,7 @@ function UIConfig() {
     // In production, the jaeger binary injects it via a separate search-replace on
     // JAEGER_BACKEND_CAPABILITIES (independent of UIConfig); the UI config value is ignored.
     // In dev mode, the Vite plugin evaluates UIConfig() and injects backendCapabilities
-    // into the same placeholder, so setting it here works with `npm start`.
+    // into the same placeholder, so setting it here works with `pnpm start`.
     // backendCapabilities: { archiveStorage: true, aiAssistant: true }
   };
 }

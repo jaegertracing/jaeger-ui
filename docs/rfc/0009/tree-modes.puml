@@ -1,0 +1,34 @@
+' The same ten-span tree under the two tree modes (RFC 0009, "Presentation").
+' Bold rows are GenAI spans. The ⤷ glyph marks a lifted row, and the badge on execute_tool is the
+' error of the hidden auth-service span credited to its nearest visible ancestor.
+@startsalt
+{
+  <b>Full trace</b> | . | <b>Hide service mcp-gateway, remove subtree</b> | . | <b>Hide Non-GenAI, lift children</b>
+  {T
+   + api-edge  GET /chat
+   ++ graphql-gateway  mutation
+   +++ <b>invoke_agent  triage-agent</b>
+   ++++ <b>chat  claude</b>
+   +++++ POST /v1/messages
+   ++++ <b>execute_tool  get_metrics</b>
+   +++++ mcp-gateway  tools/call
+   ++++++ auth-service  verify <color:#c92a2a>error</color>
+   ++++++ <b>invoke_agent  summarizer</b>
+   +++++++ <b>chat  claude</b>
+  } | . | {T
+   + api-edge  GET /chat
+   ++ graphql-gateway  mutation
+   +++ <b>invoke_agent  triage-agent</b>
+   ++++ <b>chat  claude</b>
+   +++++ POST /v1/messages
+   ++++ <b>execute_tool  get_metrics</b>
+   +++++ <i><color:#868e96>4 spans pruned, 1 error</color></i>
+  } | . | {T
+   + <b>invoke_agent  triage-agent</b>
+   ++ <b>chat  claude</b>
+   ++ <b>execute_tool  get_metrics</b> <color:#c92a2a>1 hidden error</color>
+   +++ <color:#868e96>⤷</color> <b>invoke_agent  summarizer</b>
+   ++++ <b>chat  claude</b>
+  }
+}
+@endsalt

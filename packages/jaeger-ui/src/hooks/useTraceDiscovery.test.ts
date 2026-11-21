@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useServices, useSpanNames, useSearchTraces } from './useTraceDiscovery';
 import { jaegerClient } from '../api/v3/client';
+import { trackSearchLatency } from '../components/SearchTracePage/SearchResults/index.track';
 import type { SearchQuery } from '../types/search';
 
 vi.mock('../api/v3/client', () => ({
@@ -14,6 +15,10 @@ vi.mock('../api/v3/client', () => ({
     fetchSpanNames: vi.fn(),
     fetchTraceSummaries: vi.fn(),
   },
+}));
+
+vi.mock('../components/SearchTracePage/SearchResults/index.track', () => ({
+  trackSearchLatency: vi.fn(),
 }));
 
 describe('useTraceDiscovery', () => {
@@ -366,7 +371,27 @@ describe('useTraceDiscovery', () => {
       });
 
       expect(jaegerClient.fetchTraceSummaries).toHaveBeenCalledWith(query);
-      expect(result.current.data).toEqual({ results: mockSummaries, query });
+      expect(result.current.data).toEqual({
+        results: mockSummaries,
+        query,
+        searchLatency: expect.any(Number),
+      });
+    });
+
+    it('measures and tracks the search request latency', async () => {
+      (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+      const { result } = renderHook(() => useSearchTraces(query), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data?.searchLatency).toEqual(expect.any(Number));
+      expect(result.current.data?.searchLatency).toBeGreaterThanOrEqual(0);
+      expect(trackSearchLatency).toHaveBeenCalledWith(expect.any(Number));
     });
 
     it('uses a queryKey parameterized by the query', async () => {
@@ -447,13 +472,21 @@ describe('useTraceDiscovery', () => {
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
       });
-      expect(result.current.data).toEqual({ results: mockSummaries, query });
+      expect(result.current.data).toEqual({
+        results: mockSummaries,
+        query,
+        searchLatency: expect.any(Number),
+      });
 
       // Switch to null (simulates TopNav navigation to bare /search)
       rerender({ q: null });
 
       // Should surface the cached result via effectiveQuery derived from dataUpdatedAt
-      expect(result.current.data).toEqual({ results: mockSummaries, query });
+      expect(result.current.data).toEqual({
+        results: mockSummaries,
+        query,
+        searchLatency: expect.any(Number),
+      });
       expect(jaegerClient.fetchTraceSummaries).toHaveBeenCalledTimes(1);
     });
 

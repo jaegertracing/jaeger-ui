@@ -206,19 +206,17 @@ describe('OtelSpanFacade', () => {
   });
 
   it('maps attributes from tags', () => {
-    expect(facade.attributes).toContainEqual({ key: 'http.method', value: 'GET' });
+    expect(facade.attributes.entries()).toContainEqual({ key: 'http.method', value: 'GET' });
   });
 
   it('maps events from logs', () => {
     expect(facade.events).toHaveLength(1);
-    expect(facade.events[0]).toMatchObject({
-      timestamp: 1100,
-      name: 'test-event',
-      attributes: [
-        { key: 'event', value: 'test-event' },
-        { key: 'foo', value: 'bar' },
-      ],
-    });
+    expect(facade.events[0].timestamp).toBe(1100);
+    expect(facade.events[0].name).toBe('test-event');
+    expect(facade.events[0].attributes.entries()).toEqual([
+      { key: 'event', value: 'test-event' },
+      { key: 'foo', value: 'bar' },
+    ]);
   });
 
   describe('links calculation', () => {
@@ -268,11 +266,7 @@ describe('OtelSpanFacade', () => {
       expect(link?.traceID).toBe('trace-1');
     });
 
-    it('includes FOLLOWS_FROM reference even if it is used as parent (fallback)', () => {
-      // If no CHILD_OF exists, FOLLOWS_FROM might be used as parent,
-      // it would be standard for async spans like in producer/consumer.
-      // So if a FOLLOWS_FROM becomes the parent, it should be excluded from links.
-
+    it('consumes the FOLLOWS_FROM reference selected as the parent', () => {
       const span: Span = {
         ...mockLegacySpan,
         traceID: 'trace-1',
@@ -290,7 +284,7 @@ describe('OtelSpanFacade', () => {
 
   it('maps resource from process', () => {
     expect(facade.resource.serviceName).toBe('test-service');
-    expect(facade.resource.attributes).toContainEqual({ key: 'res-tag', value: 'res-val' });
+    expect(facade.resource.attributes.entries()).toContainEqual({ key: 'res-tag', value: 'res-val' });
   });
 
   it('maps instrumentation scope from tags', () => {
@@ -303,5 +297,30 @@ describe('OtelSpanFacade', () => {
     expect(facade.childSpans).toEqual([]);
     expect(facade.relativeStartTime).toBe(100);
     expect(facade.inboundLinks[0].spanID).toBe('sub-ref-1');
+  });
+
+  describe('handling missing or undefined fields in legacy span', () => {
+    it('gracefully handles missing tags, references, logs, and subsidiarilyReferencedBy', () => {
+      const minimalSpan = {
+        traceID: 'trace-minimal',
+        spanID: 'span-minimal',
+        operationName: 'minimal-op',
+        startTime: 1000,
+        duration: 500,
+        processID: 'p1',
+        depth: 0,
+        relativeStartTime: 0,
+        process: { serviceName: 'min-svc', tags: [] },
+      } as unknown as Span;
+
+      const spanFacade = new OtelSpanFacade(minimalSpan);
+      expect(spanFacade.traceID).toBe('trace-minimal');
+      expect(spanFacade.parentSpanID).toBeUndefined();
+      expect(spanFacade.events).toEqual([]);
+      expect(spanFacade.links).toEqual([]);
+      expect(spanFacade.inboundLinks).toEqual([]);
+      expect(spanFacade.status.code).toBe(StatusCode.OK);
+      expect(spanFacade.instrumentationScope.name).toBe('unknown');
+    });
   });
 });

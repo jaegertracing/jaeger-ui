@@ -25,7 +25,6 @@ export default defineConfig({
   },
   lint: {
     plugins: ['oxc', 'typescript', 'unicorn', 'react', 'jest', 'import'],
-    jsPlugins: ['eslint-plugin-react-x'],
     categories: {
       correctness: 'warn',
     },
@@ -34,6 +33,8 @@ export default defineConfig({
       es2026: true,
     },
     ignorePatterns: [
+      // RFC prototypes are checked in for reference and are not held to the lint rules.
+      'docs/rfc/*/prototype/**',
       'packages/*/dist/**',
       'packages/*/lib/**',
       'packages/*/build/**',
@@ -120,8 +121,8 @@ export default defineConfig({
       'react/no-children-prop': 'error',
       'unicorn/no-useless-spread': 'error',
       'unicorn/no-new-array': 'error',
-      'react-x/rules-of-hooks': 'error',
-      'react-x/exhaustive-deps': 'error',
+      'react/rules-of-hooks': 'error',
+      'react/exhaustive-deps': 'error',
       'jest/no-disabled-tests': 'warn',
       'jest/no-focused-tests': 'error',
       'jest/no-identical-title': 'error',
