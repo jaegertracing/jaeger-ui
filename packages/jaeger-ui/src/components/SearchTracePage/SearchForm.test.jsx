@@ -424,12 +424,16 @@ describe('submitForm()', () => {
   });
 });
 
-function renderForm(ui) {
-  return render(
+function wrapForm(ui) {
+  return (
     <AppQueryClientProvider>
       <MemoryRouter>{ui}</MemoryRouter>
     </AppQueryClientProvider>
   );
+}
+
+function renderForm(ui) {
+  return render(wrapForm(ui));
 }
 
 describe('<SearchForm>', () => {
@@ -907,6 +911,128 @@ describe('SearchForm onChange handlers', () => {
       fireEvent.change(maxDurationInput, { target: { value: '5s' } });
     });
     await waitFor(() => expect(maxDurationInput.value).toBe('5s'));
+  });
+
+  it('waits for a span-name refetch before validating the carried operation', async () => {
+    let svcBResult = {
+      data: [{ name: 'C', spanKind: 'server' }],
+      isFetching: true,
+      isSuccess: true,
+      error: null,
+    };
+    useSpanNames.mockImplementation(service =>
+      service === 'svcB'
+        ? svcBResult
+        : {
+            data: [{ name: 'A', spanKind: 'server' }],
+            isFetching: false,
+            isSuccess: true,
+            error: null,
+          }
+    );
+
+    const form = () => <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />;
+    const { rerender } = renderForm(form());
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.service('svcB');
+    });
+
+    await waitFor(() => expect(SearchableSelect.values.service).toBe('svcB'));
+    expect(SearchableSelect.values.operation).toBe('A');
+
+    svcBResult = {
+      data: [
+        { name: 'A', spanKind: 'server' },
+        { name: 'C', spanKind: 'client' },
+      ],
+      isFetching: false,
+      isSuccess: true,
+      error: null,
+    };
+    rerender(wrapForm(form()));
+
+    await waitFor(() => expect(SearchableSelect.values.operation).toBe('A'));
+  });
+
+  it('resets the carried operation after the new service names finish loading without it', async () => {
+    let svcBResult = {
+      data: [{ name: 'A', spanKind: 'server' }],
+      isFetching: true,
+      isSuccess: true,
+      error: null,
+    };
+    useSpanNames.mockImplementation(service =>
+      service === 'svcB'
+        ? svcBResult
+        : {
+            data: [{ name: 'A', spanKind: 'server' }],
+            isFetching: false,
+            isSuccess: true,
+            error: null,
+          }
+    );
+
+    const form = () => <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />;
+    const { rerender } = renderForm(form());
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.service('svcB');
+    });
+    await waitFor(() => expect(SearchableSelect.values.service).toBe('svcB'));
+    expect(SearchableSelect.values.operation).toBe('A');
+
+    svcBResult = {
+      data: [{ name: 'C', spanKind: 'server' }],
+      isFetching: false,
+      isSuccess: true,
+      error: null,
+    };
+    rerender(wrapForm(form()));
+
+    await waitFor(() => expect(SearchableSelect.values.operation).toBe(ALL_OPERATIONS));
+  });
+
+  it('keeps an operation explicitly selected while span names are refetching', async () => {
+    let svcBResult = {
+      data: [{ name: 'A', spanKind: 'server' }],
+      isFetching: true,
+      isSuccess: true,
+      error: null,
+    };
+    useSpanNames.mockImplementation(service =>
+      service === 'svcB'
+        ? svcBResult
+        : {
+            data: [{ name: 'A', spanKind: 'server' }],
+            isFetching: false,
+            isSuccess: true,
+            error: null,
+          }
+    );
+
+    const form = () => <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />;
+    const { rerender } = renderForm(form());
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.service('svcB');
+    });
+    await waitFor(() => expect(SearchableSelect.values.service).toBe('svcB'));
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.operation('C');
+    });
+    expect(SearchableSelect.values.operation).toBe('C');
+
+    svcBResult = {
+      data: [{ name: 'C', spanKind: 'server' }],
+      isFetching: false,
+      isSuccess: true,
+      error: null,
+    };
+    rerender(wrapForm(form()));
+
+    await waitFor(() => expect(SearchableSelect.values.operation).toBe('C'));
   });
 });
 
