@@ -730,15 +730,6 @@ describe('trace timeline zustand stores', () => {
           detailPanelMode: 'inline',
         });
       });
-
-      it('keeps the side panel disabled when a setter requests it', () => {
-        vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: false } } as ReturnType<
-          typeof getConfig
-        >);
-        useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
-        expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('inline');
-        expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(0.25);
-      });
     });
 
     describe('toggleHeatmap', () => {
@@ -764,20 +755,6 @@ describe('trace timeline zustand stores', () => {
   });
 
   describe('setDetailPanelMode coordinator', () => {
-    it('does not trim open details when the side panel is disabled', () => {
-      vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: false } } as ReturnType<
-        typeof getConfig
-      >);
-      const detailStates = new Map([
-        ['span-1', new DetailState()],
-        ['span-2', new DetailState()],
-      ]);
-      useTraceTimelineStore.setState({ detailStates });
-      setDetailPanelMode('sidepanel', { persist: false });
-      expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('inline');
-      expect(useTraceTimelineStore.getState().detailStates).toBe(detailStates);
-    });
-
     it('updates detailPanelMode and persists to localStorage', () => {
       setDetailPanelMode('sidepanel');
       expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');

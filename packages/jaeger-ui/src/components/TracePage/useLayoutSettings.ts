@@ -34,10 +34,14 @@ export function useLayoutSettings(
   heuristics: Partial<UrlLayoutSettings> = {}
 ) {
   const navigate = useNavigate();
-  const savedPrefs = useSavedLayoutPrefsStore(state => state);
+  const savedTimeline = useSavedLayoutPrefsStore(state => state.timelineBarsVisible);
+  const savedMode = useSavedLayoutPrefsStore(state => state.detailPanelMode);
   const displayedTimeline = useDisplayedLayoutStore(state => state.timelineBarsVisible);
   const displayedMode = useDisplayedLayoutStore(state => state.detailPanelMode);
-  const defaults = useMemo(() => normalizeLayoutPrefs(savedPrefs), [savedPrefs]);
+  const defaults = useMemo(
+    () => normalizeLayoutPrefs({ timelineBarsVisible: savedTimeline, detailPanelMode: savedMode }),
+    [savedTimeline, savedMode]
+  );
   const url = parseLayoutSettingsFromUrl(location.search ?? '');
   const timelineBarsVisible = resolveSetting(
     url.timelineBarsVisible,
@@ -47,7 +51,7 @@ export function useLayoutSettings(
   const detailPanelMode = resolveSetting(
     url.detailPanelMode === 'sidepanel' && !enableSidePanel ? null : url.detailPanelMode,
     heuristics.detailPanelMode === 'sidepanel' && !enableSidePanel ? null : heuristics.detailPanelMode,
-    enableSidePanel ? defaults.detailPanelMode : 'inline'
+    defaults.detailPanelMode
   );
 
   useLayoutEffect(() => {
@@ -59,7 +63,7 @@ export function useLayoutSettings(
     if (layout.detailPanelMode !== detailPanelMode.value) {
       setDetailPanelMode(detailPanelMode.value, { persist: false });
     }
-  }, [location.pathname, timelineBarsVisible.value, detailPanelMode.value, displayedTimeline, displayedMode]);
+  }, [timelineBarsVisible.value, detailPanelMode.value, displayedTimeline, displayedMode]);
 
   const updateUrl = useCallback(
     (settings: Partial<UrlLayoutSettings>) => {
@@ -83,11 +87,10 @@ export function useLayoutSettings(
 
   const updateDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
-      const allowedMode = enableSidePanel ? mode : 'inline';
-      setDetailPanelMode(allowedMode, { persist: false });
-      updateUrl({ detailPanelMode: allowedMode });
+      setDetailPanelMode(mode, { persist: false });
+      updateUrl({ detailPanelMode: mode });
     },
-    [enableSidePanel, updateUrl]
+    [updateUrl]
   );
 
   return {

@@ -200,11 +200,10 @@ export function TracePageImpl(props: TProps) {
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
-      const allowedMode = enableSidePanel ? mode : 'inline';
-      trackDetailPanelMode(allowedMode);
-      updateDetailPanelMode(allowedMode);
+      trackDetailPanelMode(mode);
+      updateDetailPanelMode(mode);
     },
-    [enableSidePanel, updateDetailPanelMode]
+    [updateDetailPanelMode]
   );
 
   const setTimelineBarsVisible = useCallback(

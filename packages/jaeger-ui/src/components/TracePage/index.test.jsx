@@ -1318,16 +1318,6 @@ describe('<TracePage>', () => {
       expect(trackDetailPanelMode).not.toHaveBeenCalled();
     });
 
-    it('tracks the applied inline mode when the side panel is disabled', () => {
-      mockDisplayedLayoutStore.detailPanelMode = 'inline';
-      render(<TracePage {...defaultProps} enableSidePanel={false} />);
-      capturedHeaderProps.onDetailPanelModeToggle();
-
-      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline', { persist: false });
-      expect(trackDetailPanelMode).toHaveBeenCalledWith('inline');
-      expect(trackDetailPanelMode).not.toHaveBeenCalledWith('sidepanel');
-    });
-
     it('writes a manual timeline toggle to the URL and preserves the other view parameters', () => {
       const location = {
         pathname: '/trace/one',
