@@ -40,7 +40,7 @@ export interface IOtlpSpanSpec {
   warnings?: ReadonlyArray<string>;
 }
 
-interface IOtlpTraceOptions {
+export interface IOtlpTraceOptions {
   traceId?: string;
   scope?: ScopeSpansWire['scope'];
   /** Attributes added to every resource after `service.name`. */
@@ -57,6 +57,8 @@ const DEFAULT_SERVICE = 'service';
 const BASE_MICROS = BigInt(FIXTURE_BASE_TIME);
 const MAX_MICROS = BigInt(Number.MAX_SAFE_INTEGER);
 const TRACE_ID = /^(?!0+$)[0-9a-f]{32}$/i;
+const WARNINGS_KEY = '@jaeger@warnings';
+const SERVICE_KEY = 'service.name';
 
 const KIND_NUMBERS: Readonly<Record<string, number>> = {
   [SpanKind.UNSPECIFIED]: 0,
@@ -73,8 +75,12 @@ const STATUS_NUMBERS: Readonly<Record<string, number>> = {
   [StatusCode.ERROR]: 2,
 };
 
+function invalid(owner: string, message: string): never {
+  throw new Error(`Invalid ${owner}: ${message}`);
+}
+
 function fail(id: string, message: string): never {
-  throw new Error(`Invalid span ${id}: ${message}`);
+  return invalid(`span ${id}`, message);
 }
 
 function offset(value: number, field: string, id: string): bigint {
@@ -107,10 +113,16 @@ function lookup(table: Readonly<Record<string, number>>, value: string, field: s
   return table[value];
 }
 
-function toAttributes(attributes: TAttributes = {}, id: string): KeyValueWire[] {
+function toAttributes(attributes: TAttributes = {}, owner: string, reserved?: string): KeyValueWire[] {
   return Object.entries(attributes).map(([key, value]) => {
+    if (key === reserved) {
+      invalid(owner, `attribute ${key} is reserved`);
+    }
+    if (!['string', 'number', 'boolean'].includes(typeof value)) {
+      invalid(owner, `attribute ${key} must be a string, number or boolean`);
+    }
     if (typeof value === 'number' && !Number.isFinite(value)) {
-      fail(id, `attribute ${key} must be a finite number`);
+      invalid(owner, `attribute ${key} must be a finite number`);
     }
     return { key, value: attributeValue(value) };
   });
@@ -121,21 +133,25 @@ export function makeOtlpSpan(spec: IOtlpSpanSpec, traceId: string = DEFAULT_TRAC
   const { id, parent, name = 'operation', kind, start = 0, duration = 1000, status } = spec;
   const wireTraceId = traceIdFor(traceId, id);
   const startMicros = offset(start, 'start', id);
+  const spanId = spanIDForWire(id);
+  if (parent !== undefined && spanIDForWire(parent) === spanId) {
+    fail(id, 'a span cannot be its own parent');
+  }
   return {
     traceId: wireTraceId,
-    spanId: spanIDForWire(id),
+    spanId,
     ...(parent === undefined ? {} : { parentSpanId: spanIDForWire(parent) }),
     name,
     ...(kind === undefined ? {} : { kind: lookup(KIND_NUMBERS, kind, 'kind', id) }),
     startTimeUnixNano: timestamp(startMicros, 'start', id),
     endTimeUnixNano: timestamp(startMicros + offset(duration, 'duration', id), 'end', id),
     attributes: [
-      ...toAttributes(spec.attributes, id),
+      ...toAttributes(spec.attributes, `span ${id}`, WARNINGS_KEY),
       ...(spec.warnings === undefined
         ? []
         : [
             {
-              key: '@jaeger@warnings',
+              key: WARNINGS_KEY,
               value: { arrayValue: { values: spec.warnings.map(warning => ({ stringValue: warning })) } },
             },
           ]),
@@ -143,12 +159,12 @@ export function makeOtlpSpan(spec: IOtlpSpanSpec, traceId: string = DEFAULT_TRAC
     events: (spec.events ?? []).map(event => ({
       ...(event.name === undefined ? {} : { name: event.name }),
       timeUnixNano: timestamp(offset(event.time, 'event time', id), 'event time', id),
-      attributes: toAttributes(event.attributes, id),
+      attributes: toAttributes(event.attributes, `span ${id}`),
     })),
     links: (spec.links ?? []).map(link => ({
       traceId: link.traceId === undefined ? wireTraceId : traceIdFor(link.traceId, id),
       spanId: spanIDForWire(link.id),
-      attributes: toAttributes(link.attributes, id),
+      attributes: toAttributes(link.attributes, `span ${id}`),
     })),
     status:
       status === undefined
@@ -185,14 +201,14 @@ export function makeOtlpTrace(
     });
   }
 
-  const resourceAttributes = toAttributes(resource, 'resource');
+  const resourceAttributes = toAttributes(resource, 'trace resource', SERVICE_KEY);
   const resourceSpans: ResourceSpansWire[] = [];
   let lastService: string | undefined;
   specs.forEach(({ service = DEFAULT_SERVICE }, i) => {
     if (service !== lastService) {
       resourceSpans.push({
         resource: {
-          attributes: [{ key: 'service.name', value: { stringValue: service } }, ...resourceAttributes],
+          attributes: [{ key: SERVICE_KEY, value: { stringValue: service } }, ...resourceAttributes],
         },
         scopeSpans: [{ ...(scope === undefined ? {} : { scope }), spans: [] }],
       });

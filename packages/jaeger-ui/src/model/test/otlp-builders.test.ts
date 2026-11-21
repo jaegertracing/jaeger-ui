@@ -134,6 +134,18 @@ describe('makeOtlpSpan', () => {
       'attribute n must be',
     ],
     ['a non-hex link trace ID', { links: [{ id: 'root', traceId: 'trace-1' }] }, 'trace ID trace-1 must be'],
+    [
+      'a reserved warnings attribute',
+      { attributes: { '@jaeger@warnings': 'w' } },
+      'attribute @jaeger@warnings is reserved',
+    ],
+    ['an object attribute', { attributes: { o: {} as unknown as string } }, 'attribute o must be a string'],
+    [
+      'an array event attribute',
+      { events: [{ time: 0, attributes: { a: [] as unknown as string } }] },
+      'attribute a must be',
+    ],
+    ['a span that is its own parent', { parent: 'bad' }, 'a span cannot be its own parent'],
     ['a numeric kind from JavaScript', { kind: 2 as unknown as SpanKind }, 'unknown kind 2'],
     ['an unknown status code', { status: { code: 'FAILED' as StatusCode } }, 'unknown status code FAILED'],
   ])('rejects %s', (_, spec, message) => {
@@ -278,7 +290,13 @@ describe('makeOtlpTrace', () => {
 
   it('rejects a non-finite resource attribute', () => {
     expect(() => makeOtlpTrace([{ id: 'a' }], { resource: { load: NaN } })).toThrow(
-      'Invalid span resource: attribute load must be a finite number'
+      'Invalid trace resource: attribute load must be a finite number'
+    );
+  });
+
+  it('rejects service.name in the resource attributes', () => {
+    expect(() => makeOtlpTrace([{ id: 'a' }], { resource: { 'service.name': 'x' } })).toThrow(
+      'Invalid trace resource: attribute service.name is reserved'
     );
   });
 

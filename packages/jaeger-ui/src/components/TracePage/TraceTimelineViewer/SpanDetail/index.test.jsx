@@ -101,7 +101,7 @@ describe('<SpanDetail>', () => {
     formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
     isErrorSpan.mockReset();
 
-    span = makeTrace(
+    const trace = makeTrace(
       [
         {
           id: 'span',
@@ -119,17 +119,17 @@ describe('<SpanDetail>', () => {
         },
       ],
       { resource: { hostname: 'frontend-1', ip: '10.0.0.1' } }
-    ).spans[0];
+    );
+    span = trace.spans[0];
 
     detailState = new DetailState().toggleEvents().toggleResource().toggleLinks().toggleAttributes();
-    const traceStartTime = 5;
 
     props = {
       detailState,
       span,
-      traceStartTime,
+      traceStartTime: trace.startTime,
       currentViewRangeTime: [0, 100],
-      traceDuration: 1000,
+      traceDuration: trace.duration,
       eventItemToggle: jest.fn(),
       eventsToggle: jest.fn(),
       resourceToggle: jest.fn(),
