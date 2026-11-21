@@ -174,7 +174,6 @@ const Header: React.FC<TProps> = ({
           <div className="DdgHeader--uiFind" role="button" onClick={focusUiFindInput}>
             <IoSearch className="DdgHeader--uiFindSearchIcon" />
             <UiFindInput
-              allowClear
               ref={uiFindInput}
               inputProps={{ className: 'DdgHeader--uiFindInput' }}
               trackFindFunction={trackFilter}

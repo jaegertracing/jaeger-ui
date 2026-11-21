@@ -3,7 +3,6 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Input, InputRef } from 'antd';
-import { IoClose } from 'react-icons/io5';
 import { useNavigate, useLocation } from 'react-router-dom';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
@@ -13,7 +12,6 @@ import { TNil } from '../../types/index';
 import parseQuery from '../../utils/parseQuery';
 
 type TOwnProps = {
-  allowClear?: boolean;
   inputProps?: Record<string, any>;
   trackFindFunction?: (str: string | TNil) => void;
   uiFind?: string;
@@ -27,7 +25,6 @@ const defaultProps: Partial<TProps> = {
 
 export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props, ref) => {
   const {
-    allowClear,
     inputProps,
     trackFindFunction,
     uiFind: uiFindProp,
@@ -64,6 +61,9 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
   }, [updateUiFindQueryParam]);
 
   const clearUiFind = useCallback(() => {
+    // Empty the field here rather than relying on Ant Design's change event, whose order
+    // relative to onClear is an implementation detail of rc-input.
+    setOwnInputValue('');
     updateUiFindQueryParam();
     updateUiFindQueryParam.flush();
   }, [updateUiFindQueryParam]);
@@ -83,21 +83,18 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
   );
 
   const inputValue = _isString(ownInputValue) ? ownInputValue : prevUiFind;
-  const suffix = (
-    <>
-      {allowClear && inputValue && inputValue.length > 0 && (
-        <IoClose data-testid="clear-icon" onClick={clearUiFind} />
-      )}
-      {inputProps?.suffix}
-    </>
-  );
+  // Always render a suffix element: Ant Design adds spacing to its clear icon when one is
+  // present, and these inputs had that spacing from the custom icon this replaced.
+  const suffix = <>{inputProps?.suffix}</>;
 
   return (
+    // Ant Design's built-in clear button is the only clear control (issue #4169).
     <Input
       placeholder="Find..."
       {...inputProps}
       onBlur={handleInputBlur}
       onChange={handleInputChange}
+      onClear={clearUiFind}
       ref={ref}
       suffix={suffix}
       value={inputValue}
