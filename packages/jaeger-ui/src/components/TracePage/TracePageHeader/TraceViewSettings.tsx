@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Button, Dropdown } from 'antd';
-import type { MenuProps } from 'antd';
-import { IoSettingsOutline, IoCheckmark } from 'react-icons/io5';
+import { Button, Divider, Popover, Switch } from 'antd';
+import { IoSettingsOutline } from 'react-icons/io5';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import { useDisplayedLayoutStore } from '../TraceTimelineViewer/store';
@@ -20,9 +19,6 @@ type Props = {
   timelineBarsVisible: boolean;
 };
 
-const CHECK_STYLE = { marginRight: 8, fontSize: 14 };
-const CHECK_PLACEHOLDER = <span style={{ display: 'inline-block', width: 22 }} />;
-
 export default function TraceViewSettings(props: Props) {
   const {
     className,
@@ -36,46 +32,79 @@ export default function TraceViewSettings(props: Props) {
   const heatmapEnabled = useDisplayedLayoutStore(s => s.heatmapEnabled);
   const toggleHeatmap = useDisplayedLayoutStore(s => s.toggleHeatmap);
 
+  const [open, setOpen] = React.useState(false);
   const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
 
-  const items: MenuProps['items'] = [
-    {
-      key: 'timeline',
-      icon: timelineBarsVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
-      label: 'Show Timeline',
-      onClick: onTimelineToggle,
-    },
-    {
-      key: 'heatmap',
-      icon: heatmapEnabled ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
-      label: 'Span Latency Heatmap',
-      onClick: toggleHeatmap,
-    },
-  ];
+  const isSidePanel = detailPanelMode === 'sidepanel';
 
-  if (enableSidePanel) {
-    const isSidePanel = detailPanelMode === 'sidepanel';
-    items.push({
-      key: 'detail-panel-mode',
-      icon: isSidePanel ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
-      label: 'Show Span in Sidebar',
-      onClick: onDetailPanelModeToggle,
-    });
-  }
+  const content = (
+    <div className="TraceViewSettings--popover">
+      <div className="TraceViewSettings--row">
+        <label htmlFor="trace-view-settings-timeline-switch" className="TraceViewSettings--label">
+          Show Timeline
+        </label>
+        <Switch
+          id="trace-view-settings-timeline-switch"
+          size="small"
+          checked={timelineBarsVisible}
+          onChange={onTimelineToggle}
+        />
+      </div>
 
-  items.push(
-    { type: 'divider' },
-    {
-      key: 'keyboard-shortcuts',
-      icon: CHECK_PLACEHOLDER,
-      label: 'Keyboard Shortcuts',
-      onClick: () => setKbdModalVisible(true),
-    }
+      <div className="TraceViewSettings--row">
+        <label htmlFor="trace-view-settings-heatmap-switch" className="TraceViewSettings--label">
+          Span Latency Heatmap
+        </label>
+        <Switch
+          id="trace-view-settings-heatmap-switch"
+          size="small"
+          checked={heatmapEnabled}
+          onChange={toggleHeatmap}
+        />
+      </div>
+
+      {enableSidePanel && (
+        <div className="TraceViewSettings--row">
+          <label htmlFor="trace-view-settings-sidebar-switch" className="TraceViewSettings--label">
+            Show Span in Sidebar
+          </label>
+          <Switch
+            id="trace-view-settings-sidebar-switch"
+            size="small"
+            checked={isSidePanel}
+            onChange={onDetailPanelModeToggle}
+          />
+        </div>
+      )}
+
+      <Divider className="TraceViewSettings--divider" />
+
+      <div className="TraceViewSettings--row">
+        <Button
+          type="link"
+          className="TraceViewSettings--shortcutsButton"
+          onClick={() => {
+            setOpen(false);
+            setKbdModalVisible(true);
+          }}
+        >
+          Keyboard Shortcuts
+        </Button>
+      </div>
+    </div>
   );
 
   return (
     <>
-      <Dropdown menu={{ items }} trigger={['click']}>
+      <Popover
+        content={content}
+        title="Trace View Settings"
+        trigger="click"
+        open={open}
+        onOpenChange={setOpen}
+        placement="bottomRight"
+        arrow={{ pointAtCenter: true }}
+      >
         <Button
           className={`TraceViewSettings ${className || ''}`}
           htmlType="button"
@@ -84,7 +113,7 @@ export default function TraceViewSettings(props: Props) {
         >
           <IoSettingsOutline className="TraceViewSettings--icon" />
         </Button>
-      </Dropdown>
+      </Popover>
       <KeyboardShortcutsHelp open={kbdModalVisible} onClose={() => setKbdModalVisible(false)} />
     </>
   );
