@@ -40,6 +40,25 @@ SPDX-License-Identifier: Apache-2.0
   min-height: 0;
 }
 
+.Page--assistantLoadFailure {
+  flex: 0 0 26rem;
+  align-self: flex-start;
+  position: sticky;
+  top: var(--nav-height);
+  height: calc(100vh - var(--nav-height));
+  max-height: calc(100vh - var(--nav-height));
+  border-left: 1px solid var(--border-default);
+  background-color: var(--surface-primary);
+}
+
+.Page--assistantLoadFailureNotice {
+  margin: 0;
+  padding: 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 /* When the assistant dock is open, confine trace fixed layers to the main column (see CSS spec: fixed + transform containing block). */
 .Page--assistantShell--open .Page--assistantMain {
   transform: translateZ(0);
