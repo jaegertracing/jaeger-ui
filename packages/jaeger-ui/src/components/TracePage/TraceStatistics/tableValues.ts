@@ -35,7 +35,8 @@ function computeColumnValues(
   }
   resultValueChange.selfTotal = (resultValueChange.selfTotal + tempSelf) as IOtelSpan['duration'];
 
-  const onePercent = 100 / trace.duration;
+  // A trace whose spans all have a duration of 0 has no total duration to divide by.
+  const onePercent = trace.duration > 0 ? 100 / trace.duration : 0;
   resultValueChange.percent = resultValueChange.selfTotal * onePercent;
 
   return resultValueChange;
