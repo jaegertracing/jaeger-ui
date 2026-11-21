@@ -21,7 +21,16 @@ vi.mock('./CohortTable', () => {
   });
 });
 
-vi.mock('./TraceHeader', () => mockDefault(() => <div data-testid="trace-header">TraceHeader</div>));
+const { mockTraceHeaderSpy } = vi.hoisted(() => ({
+  mockTraceHeaderSpy: vi.fn(),
+}));
+
+vi.mock('./TraceHeader', () =>
+  mockDefault(props => {
+    mockTraceHeaderSpy(props);
+    return <div data-testid="trace-header">TraceHeader</div>;
+  })
+);
 
 vi.mock('./TraceIdInput', () => {
   return mockDefault(function MockTraceIdInput({ selectTrace }) {
@@ -110,6 +119,15 @@ describe('TraceDiffHeader', () => {
     expect(screen.getByTestId('vs-separator')).toBeInTheDocument();
     expect(screen.getByText('VS')).toBeInTheDocument();
     expect(screen.getAllByTestId('trace-header')).toHaveLength(2);
+  });
+
+  it('does not re-render child components when props remain identical (React.memo)', () => {
+    mockTraceHeaderSpy.mockClear();
+    const { rerender } = render(<TraceDiffHeader {...props} />);
+    expect(mockTraceHeaderSpy).toHaveBeenCalledTimes(2);
+
+    rerender(<TraceDiffHeader {...props} />);
+    expect(mockTraceHeaderSpy).toHaveBeenCalledTimes(2);
   });
 
   it('handles trace without spans', () => {
