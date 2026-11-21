@@ -66,6 +66,51 @@ describe('real TraceStatistics SQL keyboard behavior', () => {
     expect(cell).toHaveFocus();
   });
 
+  it('moves focus to the close button when the SQL popup opens', async () => {
+    const { user, cell } = await showSqlGroup();
+    cell.focus();
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('button', { name: 'close' })).toHaveFocus();
+  });
+
+  it('closes SQL with Escape and returns focus to the SQL name', async () => {
+    const { user, cell } = await showSqlGroup();
+    cell.focus();
+    await user.keyboard('{Enter}');
+    await screen.findByRole('textbox');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(cell).toHaveFocus();
+  });
+
+  it('returns focus to the SQL name after the close button closes SQL', async () => {
+    const { user, cell } = await showSqlGroup();
+    await user.click(cell);
+    await user.click(await screen.findByRole('button', { name: 'close' }));
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(cell).toHaveFocus();
+  });
+
+  it('keeps Escape on SQL from reaching the page shortcuts', async () => {
+    const { user, cell } = await showSqlGroup();
+    await user.click(cell);
+    await screen.findByRole('textbox');
+    // TracePage listens for its shortcuts, Escape among them, on document.body.
+    const pageShortcut = vi.fn();
+    document.body.addEventListener('keydown', pageShortcut);
+    await user.keyboard('{Escape}');
+    document.body.removeEventListener('keydown', pageShortcut);
+    expect(pageShortcut).not.toHaveBeenCalled();
+  });
+
+  it('closes SQL with Escape after a click on the popup outside its controls', async () => {
+    const { user, cell } = await showSqlGroup();
+    await user.click(cell);
+    await user.click(await screen.findByRole('heading', { name: /SQL/ }));
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
   it('does not expose ordinary service names as action buttons', () => {
     render(
       <TraceStatistics trace={trace} uiFind={undefined} uiFindVertexKeys={undefined} useOtelTerms={false} />

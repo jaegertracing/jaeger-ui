@@ -230,6 +230,8 @@ export default function TraceStatistics(props: Props) {
   const [valueNameSelector1, setValueNameSelector1] = useState<string>(getServiceName);
   const [showPopup, setShowPopup] = useState(false);
   const [popupContent, setPopupContent] = useState('');
+  // Holds the SQL cell that opened the popup so closing it can hand focus back.
+  const sqlCellRef = useRef<HTMLElement | null>(null);
 
   /**
    * If the search props change the search function is re-applied. Mirrors the
@@ -271,8 +273,16 @@ export default function TraceStatistics(props: Props) {
     setPopupContent(content);
   };
 
-  const onClickOption = (hasSubgroupValue: boolean, name: string) => {
-    if (valueNameSelector1 === 'sql.query' && hasSubgroupValue) togglePopup(name);
+  const closePopup = () => {
+    setShowPopup(false);
+    sqlCellRef.current?.focus();
+  };
+
+  const onClickOption = (hasSubgroupValue: boolean, name: string, cell: HTMLElement) => {
+    if (valueNameSelector1 === 'sql.query' && hasSubgroupValue) {
+      sqlCellRef.current = cell;
+      togglePopup(name);
+    }
   };
 
   const onCellFunction = (record: ITableSpan) => {
@@ -291,11 +301,11 @@ export default function TraceStatistics(props: Props) {
           <span
             role={canOpenSql ? 'button' : undefined}
             tabIndex={canOpenSql ? 0 : undefined}
-            onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
+            onClick={event => onClickOption(row.hasSubgroupValue, row.name, event.currentTarget)}
             onKeyDown={event => {
               if (canOpenSql && (event.key === 'Enter' || event.key === ' ')) {
                 event.preventDefault();
-                onClickOption(row.hasSubgroupValue, row.name);
+                onClickOption(row.hasSubgroupValue, row.name, event.currentTarget);
               }
             }}
             style={{
@@ -335,7 +345,7 @@ export default function TraceStatistics(props: Props) {
         useOtelTerms={useOtelTerms}
       />
 
-      {showPopup ? <PopupSQL closePopup={togglePopup} popupContent={popupContent} /> : null}
+      {showPopup ? <PopupSQL closePopup={closePopup} popupContent={popupContent} /> : null}
       <Table
         className="span-table span-view-table"
         columns={columns}
