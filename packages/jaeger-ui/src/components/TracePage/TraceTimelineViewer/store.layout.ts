@@ -216,30 +216,41 @@ export const useSavedLayoutPrefsStore = create<Partial<LayoutSettings>>()(
   })
 );
 
+// True while the displayed mode or timeline visibility comes from a temporary layout.
+function differsFromSavedLayout({
+  detailPanelMode,
+  timelineBarsVisible,
+}: Pick<LayoutSettings, 'detailPanelMode' | 'timelineBarsVisible'>): boolean {
+  const saved = normalizeLayoutPrefs(useSavedLayoutPrefsStore.getState());
+  return detailPanelMode !== saved.detailPanelMode || timelineBarsVisible !== saved.timelineBarsVisible;
+}
+
 // The displayed layout is kept apart from the saved preferences so that a layout taken from a URL
 // can be shown without being saved. Only `applyDetailPanelModeToLayout` and `setTimelineBarsVisible`
-// take `persist: false`, because only their settings can come from a URL. Each setter saves before
+// take `persist: false`, because only their settings can come from a URL. Width drags also stay
+// temporary while the displayed mode or visibility differs from the saved layout. A setter saves before
 // it changes the displayed layout, so that a subscriber of this store that calls a setter in response does not
 // have its newer choice overwritten by the older one.
 export const useDisplayedLayoutStore = create<DisplayedLayoutStore>()((set, get) => ({
   ...normalizeLayoutPrefs({}),
 
   setSpanNameColumnWidth: (width: number) => {
-    const { detailPanelMode, sidePanelWidth, timelineBarsVisible } = get();
-    const maxWidth = getMaxNameColumnWidth({ detailPanelMode, sidePanelWidth, timelineBarsVisible });
+    const layout = get();
+    const maxWidth = getMaxNameColumnWidth(layout);
     const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
-    useSavedLayoutPrefsStore.setState({ spanNameColumnWidth });
+    if (!differsFromSavedLayout(layout)) useSavedLayoutPrefsStore.setState({ spanNameColumnWidth });
     set({ spanNameColumnWidth });
   },
 
   setSidePanelWidth: (width: number) => {
-    const { timelineBarsVisible, spanNameColumnWidth } = get();
+    const layout = get();
+    const { timelineBarsVisible, spanNameColumnWidth } = layout;
     const availableWidth = timelineBarsVisible
       ? 1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH
       : 1 - spanNameColumnWidth;
     const maxWidth = Math.max(SIDE_PANEL_WIDTH_MIN, Math.min(SIDE_PANEL_WIDTH_MAX, availableWidth));
     const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), maxWidth);
-    useSavedLayoutPrefsStore.setState({ sidePanelWidth });
+    if (!differsFromSavedLayout(layout)) useSavedLayoutPrefsStore.setState({ sidePanelWidth });
     set({ sidePanelWidth });
   },
 

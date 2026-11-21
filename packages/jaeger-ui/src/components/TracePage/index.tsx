@@ -14,11 +14,8 @@ import memoizeOne from 'memoize-one';
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
-import {
-  setDetailPanelMode as setDetailPanelModeZustand,
-  useDisplayedLayoutStore,
-  useTraceTimelineStore,
-} from './TraceTimelineViewer/store';
+import { useTraceTimelineStore } from './TraceTimelineViewer/store';
+import { useLayoutSettings } from './useLayoutSettings';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -167,10 +164,12 @@ export function TracePageImpl(props: TProps) {
     error: traceQueryError,
   } = useTrace(id);
 
-  // Layout preferences are owned by Zustand. Each setter tracks before it updates the store.
-  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
-  const zustandSetTimelineBarsVisible = useDisplayedLayoutStore(s => s.setTimelineBarsVisible);
+  const {
+    detailPanelMode: { value: detailPanelMode },
+    timelineBarsVisible: { value: timelineBarsVisible },
+    setDetailPanelMode: updateDetailPanelMode,
+    setTimelineBarsVisible: updateTimelineBarsVisible,
+  } = useLayoutSettings(location, enableSidePanel);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const zustandClearTrace = useTraceTimelineStore(s => s.clearTrace);
   // Read the trace's own verdict rather than re-deriving it here. It is computed
@@ -199,17 +198,20 @@ export function TracePageImpl(props: TProps) {
     [traceData?.spans, spanFilter]
   );
 
-  const setDetailPanelMode = useCallback((mode: SpanDetailPanelMode) => {
-    trackDetailPanelMode(mode);
-    setDetailPanelModeZustand(mode);
-  }, []);
+  const setDetailPanelMode = useCallback(
+    (mode: SpanDetailPanelMode) => {
+      trackDetailPanelMode(mode);
+      updateDetailPanelMode(mode);
+    },
+    [updateDetailPanelMode]
+  );
 
   const setTimelineBarsVisible = useCallback(
     (visible: boolean) => {
       trackTimelineBarsVisible(visible);
-      zustandSetTimelineBarsVisible(visible);
+      updateTimelineBarsVisible(visible);
     },
-    [zustandSetTimelineBarsVisible]
+    [updateTimelineBarsVisible]
   );
 
   const navigate = useNavigate();
