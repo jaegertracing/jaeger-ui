@@ -1,17 +1,15 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { parseOtelTrace } from '../api/v3/parser';
-import {
-  refinedTracesData,
-  type KeyValueWire,
-  type ResourceSpansWire,
-  type ScopeSpansWire,
-  type SpanWire,
-  type TracesDataWire,
+import type {
+  KeyValueWire,
+  ResourceSpansWire,
+  ScopeSpansWire,
+  SpanWire,
+  TracesDataWire,
 } from '../api/v3/schemas';
 import { attributeValue, spanIDForWire } from '../model/test/materializer-otlp';
-import { IOtelTrace, SpanKind, StatusCode } from '../types/otel';
+import { SpanKind, StatusCode } from '../types/otel';
 
 type TAttributes = Readonly<Record<string, string | number | boolean>>;
 
@@ -33,13 +31,13 @@ export interface IOtlpSpanSpec {
   status?: { code: StatusCode; message?: string };
 }
 
-export interface IOtlpTraceOptions {
+interface IOtlpTraceOptions {
   traceId?: string;
   scope?: ScopeSpansWire['scope'];
 }
 
-export const DEFAULT_TRACE_ID = 'abcdef0123456789abcdef0123456789';
-export const DEFAULT_SERVICE = 'service';
+const DEFAULT_TRACE_ID = 'abcdef0123456789abcdef0123456789';
+const DEFAULT_SERVICE = 'service';
 
 const KIND_NUMBERS: Record<SpanKind, number> = {
   [SpanKind.UNSPECIFIED]: 0,
@@ -134,13 +132,4 @@ export function makeOtlpTrace(
     scopeSpans: [{ ...(scope === undefined ? {} : { scope }), spans }],
   }));
   return { resourceSpans };
-}
-
-/** Build an IOtelTrace from brief span descriptions through the production OTLP parser. */
-export function makeTrace(specs: ReadonlyArray<IOtlpSpanSpec>, options?: IOtlpTraceOptions): IOtelTrace {
-  const trace = parseOtelTrace(refinedTracesData.parse(makeOtlpTrace(specs, options)));
-  if (!trace) {
-    throw new Error('Trace fixture has no spans');
-  }
-  return trace;
 }

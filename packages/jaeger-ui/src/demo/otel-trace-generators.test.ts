@@ -1,16 +1,13 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  DEFAULT_SERVICE,
-  DEFAULT_TRACE_ID,
-  makeOtlpSpan,
-  makeOtlpTrace,
-  makeTrace,
-} from './otel-trace-generators';
+import { makeOtlpSpan, makeOtlpTrace } from './otel-trace-generators';
+import { parseOtelTrace } from '../api/v3/parser';
 import { refinedSpan, refinedTracesData } from '../api/v3/schemas';
 import { spanIDForWire } from '../model/test/materializer-otlp';
 import { SpanKind, StatusCode } from '../types/otel';
+
+const TRACE_ID = 'abcdef0123456789abcdef0123456789';
 
 describe('makeOtlpSpan', () => {
   it('expands a span id into a valid span with fixed defaults', () => {
@@ -18,7 +15,7 @@ describe('makeOtlpSpan', () => {
 
     expect(refinedSpan.safeParse(span).success).toBe(true);
     expect(span).toEqual({
-      traceId: DEFAULT_TRACE_ID,
+      traceId: TRACE_ID,
       spanId: spanIDForWire('root'),
       name: 'operation',
       startTimeUnixNano: '1000000',
@@ -96,9 +93,7 @@ describe('makeOtlpSpan', () => {
     const span = makeOtlpSpan({ id: 'ABCDEF0123456789', links: [{ id: 'root' }] });
 
     expect(span.spanId).toBe('abcdef0123456789');
-    expect(span.links).toEqual([
-      { traceId: DEFAULT_TRACE_ID, spanId: spanIDForWire('root'), attributes: [] },
-    ]);
+    expect(span.links).toEqual([{ traceId: TRACE_ID, spanId: spanIDForWire('root'), attributes: [] }]);
   });
 
   it.each([
@@ -133,7 +128,7 @@ describe('makeOtlpTrace', () => {
     ).toEqual([
       { service: 'frontend', scope, spans: [spanIDForWire('root'), spanIDForWire('render')] },
       { service: 'mysql', scope, spans: [spanIDForWire('db')] },
-      { service: DEFAULT_SERVICE, scope, spans: [spanIDForWire('default')] },
+      { service: 'service', scope, spans: [spanIDForWire('default')] },
     ]);
   });
 
@@ -150,28 +145,32 @@ describe('makeOtlpTrace', () => {
     );
   });
 
-  it('can represent an explicitly empty trace fixture', () => {
-    expect(makeOtlpTrace([])).toEqual({ resourceSpans: [] });
-  });
-});
-
-describe('makeTrace', () => {
-  it('parses brief specs into an IOtelTrace with tree, timing, and services', () => {
-    const trace = makeTrace([
+  it('produces wire data the parser turns into the described tree, timing, and services', () => {
+    const wire = makeOtlpTrace([
       { id: 'root', service: 'frontend', name: 'GET /', start: 0, duration: 9000 },
       { id: 'child', parent: 'root', service: 'cart', start: 1000, duration: 2000 },
       { id: 'grandchild', parent: 'child', service: 'cart', start: 1500, duration: 500 },
-      { id: 'sibling', parent: 'root', service: 'frontend', start: 4000, duration: 1000 },
+      {
+        id: 'sibling',
+        parent: 'root',
+        service: 'frontend',
+        start: 4000,
+        duration: 1000,
+        kind: SpanKind.CLIENT,
+        status: { code: StatusCode.ERROR, message: 'boom' },
+      },
     ]);
+    const trace = parseOtelTrace(refinedTracesData.parse(wire))!;
     const span = (id: string) => trace.spanMap.get(spanIDForWire(id))!;
 
-    expect(trace.traceID).toBe(DEFAULT_TRACE_ID);
-    expect(trace.spans).toHaveLength(4);
+    expect(trace.traceID).toBe(TRACE_ID);
     expect(trace.rootSpans.map(root => root.spanID)).toEqual([spanIDForWire('root')]);
     expect(span('grandchild').parentSpanID).toBe(spanIDForWire('child'));
     expect(span('grandchild').depth).toBe(2);
     expect(span('grandchild').duration).toBe(500);
     expect(span('sibling').relativeStartTime).toBe(4000);
+    expect(span('sibling').kind).toBe(SpanKind.CLIENT);
+    expect(span('sibling').status).toEqual({ code: StatusCode.ERROR, message: 'boom' });
     expect(span('root').kind).toBe(SpanKind.UNSPECIFIED);
     expect(trace.duration).toBe(9000);
     expect(trace.services).toEqual(
@@ -182,16 +181,7 @@ describe('makeTrace', () => {
     );
   });
 
-  it('maps kind and status through the parser', () => {
-    const trace = makeTrace([
-      { id: 'root', kind: SpanKind.CLIENT, status: { code: StatusCode.ERROR, message: 'boom' } },
-    ]);
-
-    expect(trace.spans[0].kind).toBe(SpanKind.CLIENT);
-    expect(trace.spans[0].status).toEqual({ code: StatusCode.ERROR, message: 'boom' });
-  });
-
-  it('throws for a fixture with no spans', () => {
-    expect(() => makeTrace([])).toThrow('Trace fixture has no spans');
+  it('can represent an explicitly empty trace fixture', () => {
+    expect(makeOtlpTrace([])).toEqual({ resourceSpans: [] });
   });
 });
