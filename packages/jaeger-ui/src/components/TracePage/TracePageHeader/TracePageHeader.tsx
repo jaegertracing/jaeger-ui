@@ -197,8 +197,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           className="TracePageHeader--titleLink"
           type="button"
           onClick={onSlimViewClicked}
-          role="switch"
-          aria-checked={!slimView}
+          aria-expanded={!slimView}
           title={trace.traceName || undefined}
         >
           <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />

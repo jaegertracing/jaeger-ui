@@ -42,6 +42,13 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
+  const _detailToggleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      _detailToggle();
+    }
+  };
+
   const {
     color,
     nameColumnWidth,
@@ -74,12 +81,17 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
             color={colorGenerator.getColorByKey(span.resource.serviceName)}
           />
           <span>
+            {/* This row only renders while the span's details are open, so the accent always
+                reads as expanded, and clicking it collapses them. */}
             <span
               className="detail-row-expanded-accent"
-              aria-checked="true"
+              aria-expanded="true"
+              aria-label="Span details"
               onClick={_detailToggle}
-              role="switch"
+              onKeyDown={_detailToggleKeyDown}
+              role="button"
               style={{ borderColor: color }}
+              tabIndex={0}
             />
           </span>
         </TimelineRow.Cell>

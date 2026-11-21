@@ -60,9 +60,9 @@ describe('<AccordionEvents>', () => {
 
   it('renders without crashing', () => {
     render(<AccordionEvents {...defaultProps} />);
-    const header = screen.getByRole('switch');
+    const header = screen.getByRole('button', { expanded: false });
     expect(header).toHaveTextContent(`Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`);
-    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'show all' })).toBeInTheDocument();
   });
 
   it('hides event items when not expanded', () => {
@@ -96,36 +96,36 @@ describe('<AccordionEvents>', () => {
 
   it('calls onToggle when the header is clicked', () => {
     render(<AccordionEvents {...defaultProps} />);
-    fireEvent.click(screen.getByRole('switch'));
+    fireEvent.click(screen.getByRole('button', { expanded: false }));
     expect(defaultProps.onToggle).toHaveBeenCalled();
   });
 
   it('shows all events when "show all" is clicked', () => {
     render(<AccordionEvents {...defaultProps} isOpen />);
-    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
-    expect(screen.getByRole('switch')).toHaveTextContent(`Logs (${defaultTotalCount})`);
+    fireEvent.click(screen.getByRole('button', { name: 'show all' }));
+    expect(screen.getByRole('button', { expanded: true })).toHaveTextContent(`Logs (${defaultTotalCount})`);
     const items = screen.getAllByTestId('event-item');
     expect(items.length).toBe(defaultTotalCount);
-    expect(screen.getByRole('button', { name: /show in range/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'show in range' })).toBeInTheDocument();
   });
 
   it('displays in-range events again when "show in range" is clicked', () => {
     render(<AccordionEvents {...defaultProps} isOpen />);
-    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
-    fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
-    expect(screen.getByRole('switch')).toHaveTextContent(
+    fireEvent.click(screen.getByRole('button', { name: 'show all' }));
+    fireEvent.click(screen.getByRole('button', { name: 'show in range' }));
+    expect(screen.getByRole('button', { expanded: true })).toHaveTextContent(
       `Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`
     );
     const items = screen.getAllByTestId('event-item');
     expect(items.length).toBe(defaultInRangeLogsCount);
-    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'show all' })).toBeInTheDocument();
   });
 
   it('is interactive by default', () => {
     const { interactive: _unused, ...propsWithoutInteractive } = defaultProps;
     render(<AccordionEvents {...propsWithoutInteractive} isOpen />);
 
-    const header = screen.getByRole('switch');
+    const header = screen.getByRole('button', { expanded: true });
     expect(header).toBeInTheDocument();
     fireEvent.click(header);
     expect(propsWithoutInteractive.onToggle).toHaveBeenCalledTimes(1);
