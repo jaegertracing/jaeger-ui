@@ -109,7 +109,19 @@ describe('<AccordionEvents>', () => {
     expect(screen.getByRole('button', { name: /show in range/i })).toBeInTheDocument();
   });
 
-    it('shows more events on "show more" and fewer again on "show less"', () => {
+  it('displays in-range events again when "show in range" is clicked', () => {
+    render(<AccordionEvents {...defaultProps} isOpen />);
+    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
+    fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
+    expect(screen.getByRole('switch')).toHaveTextContent(
+      `Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`
+    );
+    const items = screen.getAllByTestId('event-item');
+    expect(items.length).toBe(defaultInRangeLogsCount);
+    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+  });
+
+  it('shows more events on "show more" and fewer again on "show less"', () => {
     const manyLogs = Array.from({ length: 5 }, (_, i) => ({
       timestamp: 10 + i,
       name: 'event',
@@ -132,7 +144,7 @@ describe('<AccordionEvents>', () => {
     fireEvent.click(screen.getByRole('button', { name: /show less/i }));
     expect(screen.getAllByTestId('event-item')).toHaveLength(3);
   });
-  
+
   it('is interactive by default', () => {
     const { interactive: _unused, ...propsWithoutInteractive } = defaultProps;
     render(<AccordionEvents {...propsWithoutInteractive} isOpen />);
