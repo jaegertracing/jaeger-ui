@@ -1,35 +1,44 @@
-// Copyright (c) 2020 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { describe, it, expect } from 'vitest';
+
 import MetricCard from './MetricCard';
+import type { TQualityMetrics } from './types';
+
+type TMetric = TQualityMetrics['metrics'][0];
+type TDetails = NonNullable<TMetric['details']>;
 
 describe('MetricCard', () => {
-  const metric = {
+  const metric: TMetric = {
     name: 'Metric Name',
+    category: 'Metric Category',
     description: 'Metric Description',
     metricDocumentationLink: 'metric.documentation.link',
+    metricWeight: 1,
     passCount: 108,
-    passExamples: ['foo'],
+    passExamples: [{ traceID: 'foo' }],
     failureCount: 255,
-    failureExamples: ['bar'],
+    failureExamples: [{ traceID: 'bar' }],
     exemptionCount: 42,
-    exemptionExamples: ['baz'],
+    exemptionExamples: [{ traceID: 'baz' }],
   };
-  const details = [
+  const details: TDetails = [
     {
-      columns: ['col0', 'col1'],
+      columns: [{ key: 'col0' }, { key: 'col1' }],
       description: 'Details[0] Description',
+      rows: [],
     },
     {
-      columns: ['col2', 'col3'],
+      columns: [{ key: 'col2' }, { key: 'col3' }],
       description: 'Details[1] Description',
       rows: [],
     },
     {
-      columns: ['col4', 'col5'],
+      columns: [{ key: 'col4' }, { key: 'col5' }],
       description: 'Details[2] Description',
       rows: [
         {
@@ -39,7 +48,7 @@ describe('MetricCard', () => {
       ],
     },
     {
-      columns: ['col6', 'col7'],
+      columns: [{ key: 'col6' }, { key: 'col7' }],
       description: 'Details[3] Description',
       header: 'Details[3] Header',
       rows: [
@@ -64,7 +73,7 @@ describe('MetricCard', () => {
     expect(screen.getByText(metric.description)).toBeInTheDocument();
     details.forEach(detail => {
       if (detail.rows && detail.rows.length) {
-        expect(screen.getByText(detail.description)).toBeInTheDocument();
+        expect(screen.getByText(detail.description!)).toBeInTheDocument();
       }
     });
   });
