@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,6 +9,7 @@ import { matchPath } from 'react-router-dom';
 import prefixUrl from '../../utils/prefix-url';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
+import { normalizeOperation } from '../../constants/search-form';
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
 import { asValidLookback, lookbackFromDuration, lookbackToTimestamp } from '../../utils/time-range-options';
@@ -88,9 +90,11 @@ function firstOf(v: string | string[] | undefined | Record<string, string>): str
 
 /** Inverse of searchQueryFromUrl: convert a SearchQuery back into a TUrlState for getUrl(). */
 export function searchQueryToUrlState(q: SearchQuery): TUrlState {
+  const operation = normalizeOperation(q.operation);
+
   const state: TUrlState = {
     service: q.service,
-    operation: q.operation,
+    operation,
     start: String(q.start),
     end: String(q.end),
     limit: String(q.limit),
@@ -153,9 +157,12 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
     startStr = String(lookbackToTimestamp(lookback, now));
   }
 
+  const rawOperation = firstOf(q.operation);
+  const operation = normalizeOperation(rawOperation);
+
   return {
     service: firstOf(q?.service),
-    operation: firstOf(q.operation),
+    operation,
     start: startStr,
     end: endStr,
     limit: (() => {
