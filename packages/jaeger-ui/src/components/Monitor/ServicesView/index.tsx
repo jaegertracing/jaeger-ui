@@ -327,11 +327,13 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
     !serviceMetricsInitialLoading &&
     _isEmpty(serviceMetrics?.service_latencies) &&
     !latencyError;
-  // Call rates without latencies, when every latency request succeeded, usually means the
+  // Call rates without latencies, when every latency request succeeded, can mean that the
   // latency histogram name Jaeger queries does not match the one exported by the span
   // metrics pipeline.
-  const showNoLatencyAlert =
-    showNoMetricsAlert && !latencyRequestFailed && serviceMetrics?.service_call_rate != null;
+  // A call-rate series can exist with no usable points; zero is still a valid rate.
+  const callRatePoints = serviceMetrics?.service_call_rate?.metricPoints ?? [];
+  const hasCallRates = callRatePoints.some(point => point.y !== null);
+  const showNoLatencyAlert = showNoMetricsAlert && !latencyRequestFailed && hasCallRates;
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
@@ -344,9 +346,9 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
           message={
             showNoLatencyAlert ? (
               <>
-                Call rates were found but no latency histogram matched. Check that the duration histogram name
-                and unit configured in the metrics storage match what your span metrics pipeline exports. See
-                these
+                Call rates were found but no latency data was returned. One possible cause is that the
+                duration histogram name or unit configured in the metrics storage does not match what your
+                span metrics pipeline exports. See these
                 <Link to={{ pathname: docsLink }} target="_blank">
                   &nbsp;instructions&nbsp;
                 </Link>

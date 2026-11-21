@@ -367,7 +367,7 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.getByText(/Call rates were found but no latency histogram matched/)).toBeInTheDocument();
+    expect(screen.getByText(/Call rates were found but no latency data was returned/)).toBeInTheDocument();
     expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 
@@ -393,7 +393,7 @@ describe('<MonitorATMServicesView>', () => {
     });
     renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('graph-error')).toBeInTheDocument();
-    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency data was returned/)).not.toBeInTheDocument();
     expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 
@@ -415,7 +415,29 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency data was returned/)).not.toBeInTheDocument();
+    expect(screen.getByText(/No data yet!/)).toBeInTheDocument();
+  });
+
+  it('shows the generic alert when the call-rate series has no values', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: null,
+          service_call_rate: {
+            ...serviceMetrics.service_call_rate,
+            metricPoints: serviceMetrics.service_call_rate.metricPoints.map(point => ({ ...point, y: null })),
+          },
+          service_error_rate: null,
+        },
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/no latency data was returned/)).not.toBeInTheDocument();
     expect(screen.getByText(/No data yet!/)).toBeInTheDocument();
   });
 
@@ -430,7 +452,7 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency data was returned/)).not.toBeInTheDocument();
   });
 
   it('does not show the missing-latency alert when latencies exist', () => {
@@ -441,7 +463,7 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency data was returned/)).not.toBeInTheDocument();
     expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 
