@@ -5,7 +5,10 @@ SPDX-License-Identifier: Apache-2.0
 
 .ReferencesButton-MultiParent {
   padding: 0 5px;
-  color: #000;
+  color: var(--text-secondary);
+}
+.ReferencesButton-MultiParent:hover {
+  color: var(--text-primary);
 }
 .ReferencesButton-MultiParent ~ .ReferencesButton-MultiParent {
   margin-left: 5px;
