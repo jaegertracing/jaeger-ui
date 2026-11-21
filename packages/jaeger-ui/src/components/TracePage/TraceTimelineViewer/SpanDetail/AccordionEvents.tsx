@@ -150,7 +150,7 @@ export default function AccordionEvents({
               return (
                 <AccordionAttributes
                   // `i` is necessary in the key because timestamps can repeat
-                  
+
                   key={`${event.timestamp}-${i}`}
                   className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
                   data={event.attributes}
