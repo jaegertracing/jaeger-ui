@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { TracesDataWire } from '../../api/v3/schemas';
+import type { AnyValueWire, TracesDataWire } from '../../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
 
 /** Convert readable span IDs in test specs to stable, valid OTLP span IDs. */
@@ -19,14 +19,15 @@ export function spanIDForWire(spanID: string): string {
   return (hash === 0n ? 1n : hash).toString(16).padStart(16, '0');
 }
 
+/** Convert a plain test value to an OTLP AnyValue. */
+export function attributeValue(value: string | number | boolean): AnyValueWire {
+  if (typeof value === 'string') return { stringValue: value };
+  if (typeof value === 'boolean') return { boolValue: value };
+  return Number.isSafeInteger(value) ? { intValue: String(value) } : { doubleValue: value };
+}
+
 /** Render contract test span specs as OTLP TracesData for parseOtelTrace(). */
 export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): TracesDataWire {
-  const attributeValue = (value: string | number | boolean) => {
-    if (typeof value === 'string') return { stringValue: value };
-    if (typeof value === 'boolean') return { boolValue: value };
-    return Number.isSafeInteger(value) ? { intValue: String(value) } : { doubleValue: value };
-  };
-
   return {
     resourceSpans: [
       {
