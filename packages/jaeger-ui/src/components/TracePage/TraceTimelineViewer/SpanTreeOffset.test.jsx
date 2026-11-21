@@ -218,6 +218,18 @@ describe('SpanTreeOffset', () => {
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
+    it.each(['shiftKey', 'altKey', 'ctrlKey', 'metaKey'])(
+      'calls onClick when Enter or Space is pressed with %s on the span wrapper',
+      modifier => {
+        const onClick = jest.fn();
+        const { container } = render(<SpanTreeOffset {...props} span={spanWithChildren} onClick={onClick} />);
+        const wrapper = container.querySelector('.SpanTreeOffset');
+        fireEvent.keyDown(wrapper, { key: 'Enter', [modifier]: true });
+        fireEvent.keyDown(wrapper, { key: ' ', [modifier]: true });
+        expect(onClick).toHaveBeenCalledTimes(2);
+      }
+    );
+
     it('does not call onClick for other keys on the span wrapper', () => {
       const onClick = jest.fn();
       const { container } = render(<SpanTreeOffset {...props} span={spanWithChildren} onClick={onClick} />);

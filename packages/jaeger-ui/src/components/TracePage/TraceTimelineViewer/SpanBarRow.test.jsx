@@ -143,6 +143,43 @@ describe('<SpanBarRow>', () => {
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
   });
 
+  it.each(['shiftKey', 'altKey', 'ctrlKey', 'metaKey'])(
+    'triggers onDetailToggled when Enter or Space is pressed with %s on span name',
+    modifier => {
+      const onDetailToggled = jest.fn();
+      render(<SpanBarRow {...defaultProps} onDetailToggled={onDetailToggled} />);
+      const spanName = screen.getByRole('switch');
+      fireEvent.keyDown(spanName, { key: 'Enter', [modifier]: true });
+      fireEvent.keyDown(spanName, { key: ' ', [modifier]: true });
+      expect(onDetailToggled).toHaveBeenCalledTimes(2);
+      expect(onDetailToggled).toHaveBeenCalledWith(spanID);
+    }
+  );
+
+  it('does not toggle children when an arrow is pressed on a focused span pill', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow
+          {...defaultProps}
+          isChildrenExpanded={false}
+          onChildrenToggled={onChildrenToggled}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />
+      </div>,
+      { wrapper: SpanPillActionsProvider }
+    );
+    const pill = screen.getByLabelText('http.status_code: 200');
+    fireEvent.keyDown(pill, { key: 'ArrowRight' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(1);
+  });
+
   it('does not trigger onDetailToggled for other keys on span name', () => {
     render(<SpanBarRow {...defaultProps} />);
     const spanName = screen.getByRole('switch');

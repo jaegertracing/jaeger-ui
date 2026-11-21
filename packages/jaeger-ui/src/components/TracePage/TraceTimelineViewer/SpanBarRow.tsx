@@ -138,12 +138,15 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
 
   const _detailToggleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      // Leave modified keys to the global shortcuts (e.g. Shift+Arrow pans) and the browser.
-      if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         onDetailToggled(span.spanID);
-      } else if (e.key === 'ArrowRight' && isParent && !isChildrenExpanded) {
+        return;
+      }
+      // Arrows toggle children only for the span name itself, not for a focused pill inside it,
+      // and leave modified arrows to the global shortcuts (e.g. Shift+Arrow pans) and the browser.
+      if (e.target !== e.currentTarget || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'ArrowRight' && isParent && !isChildrenExpanded) {
         e.preventDefault();
         e.stopPropagation();
         onChildrenToggled(span.spanID);

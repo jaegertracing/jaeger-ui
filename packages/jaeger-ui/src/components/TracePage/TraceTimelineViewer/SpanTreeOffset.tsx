@@ -44,12 +44,14 @@ const SpanTreeOffset: React.FC<TProps> = ({
   const childCount = tree.childCount(span);
   const hasChildren = childCount > 0;
   const _childrenToggleKeyDown = (e: React.KeyboardEvent) => {
-    // Leave modified keys to the global shortcuts (e.g. Shift+Arrow pans) and the browser.
-    if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
     if ((e.key === 'Enter' || e.key === ' ') && onClick) {
       e.preventDefault();
       onClick();
-    } else if (e.key === 'ArrowRight' && !childrenVisible && onClick) {
+      return;
+    }
+    // Leave modified arrows to the global shortcuts (e.g. Shift+Arrow pans) and the browser.
+    if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight' && !childrenVisible && onClick) {
       e.preventDefault();
       e.stopPropagation();
       onClick();
