@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import AccordionEvents from './AccordionEvents';
@@ -138,10 +138,19 @@ describe('<AccordionEvents>', () => {
     });
   });
 
-  it('dispatches events and handles show more/less functionality', () => {
-    jest.useFakeTimers();
+  it('observes content and dispatches detail-measure on resize when spanID is set', () => {
+    let observerCallback;
+    const mockObserve = vi.fn();
+    const mockDisconnect = vi.fn();
+    const mockResizeObserver = vi.fn().mockImplementation(function (cb) {
+      observerCallback = cb;
+      this.observe = mockObserve;
+      this.disconnect = mockDisconnect;
+    });
+    vi.stubGlobal('ResizeObserver', mockResizeObserver);
+
     const originalDispatchEvent = window.dispatchEvent;
-    const mockDispatchEvent = jest.fn();
+    const mockDispatchEvent = vi.fn();
     window.dispatchEvent = mockDispatchEvent;
 
     const manyLogs = Array.from({ length: 5 }, (_, i) => ({
@@ -149,19 +158,20 @@ describe('<AccordionEvents>', () => {
       name: 'event',
       attributes: [{ key: 'message', value: `event ${i}` }],
     }));
-
-    const propsWithManyLogs = {
+    const propsWithSpanID = {
       ...defaultProps,
       events: manyLogs,
       currentViewRangeTime: [0.0, 1.0],
       initialVisibleCount: 3,
       spanID: 'test-span-123',
     };
+    const { unmount } = render(<AccordionEvents {...propsWithSpanID} isOpen />);
 
-    const { unmount } = render(<AccordionEvents {...propsWithManyLogs} isOpen />);
-    const showMoreButton = screen.getByRole('button', { name: /show more.../i });
-    fireEvent.click(showMoreButton);
-    jest.runAllTimers();
+    expect(mockObserve).toHaveBeenCalled();
+
+    act(() => {
+      observerCallback();
+    });
 
     expect(mockDispatchEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -170,58 +180,62 @@ describe('<AccordionEvents>', () => {
       })
     );
 
-    const showLessButton = screen.getByRole('button', { name: /show less/i });
-    fireEvent.click(showLessButton);
-
     unmount();
+    expect(mockDisconnect).toHaveBeenCalled();
 
-    mockDispatchEvent.mockClear();
-    const propsWithoutSpanID = { ...propsWithManyLogs, spanID: undefined };
+    window.dispatchEvent = originalDispatchEvent;
+    vi.unstubAllGlobals();
+  });
+
+  it('dispatches list-resize on resize when spanID is not set', () => {
+    let observerCallback;
+    const mockResizeObserver = vi.fn().mockImplementation(function (cb) {
+      observerCallback = cb;
+      this.observe = vi.fn();
+      this.disconnect = vi.fn();
+    });
+    vi.stubGlobal('ResizeObserver', mockResizeObserver);
+
+    const originalDispatchEvent = window.dispatchEvent;
+    const mockDispatchEvent = vi.fn();
+    window.dispatchEvent = mockDispatchEvent;
+
+    const manyLogs = Array.from({ length: 5 }, (_, i) => ({
+      timestamp: 10 + i,
+      name: 'event',
+      attributes: [{ key: 'message', value: `event ${i}` }],
+    }));
+    const propsWithoutSpanID = {
+      ...defaultProps,
+      events: manyLogs,
+      currentViewRangeTime: [0.0, 1.0],
+      initialVisibleCount: 3,
+      spanID: undefined,
+    };
     render(<AccordionEvents {...propsWithoutSpanID} isOpen />);
-    const showMoreButton2 = screen.getByRole('button', { name: /show more.../i });
-    fireEvent.click(showMoreButton2);
 
-    jest.runAllTimers();
+    act(() => {
+      observerCallback();
+    });
 
     expect(mockDispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'jaeger:list-resize' }));
 
     window.dispatchEvent = originalDispatchEvent;
-    jest.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
-  it('handles observer cleanup and errors', () => {
-    const originalResizeObserver = window.ResizeObserver;
-    const originalMutationObserver = window.MutationObserver;
-    const mockResizeObserver = {
-      observe: jest.fn(),
-      disconnect: jest.fn(() => {
-        throw new Error('disconnect error');
-      }),
-    };
-    window.ResizeObserver = jest.fn(function () {
-      return mockResizeObserver;
+  it('does not observe when accordion is closed', () => {
+    const mockObserve = vi.fn();
+    const mockResizeObserver = vi.fn().mockImplementation(function () {
+      this.observe = mockObserve;
+      this.disconnect = vi.fn();
     });
+    vi.stubGlobal('ResizeObserver', mockResizeObserver);
 
-    const { unmount: unmount1 } = render(<AccordionEvents {...defaultProps} isOpen />);
-    expect(mockResizeObserver.observe).toHaveBeenCalled();
-    expect(() => unmount1()).not.toThrow();
+    render(<AccordionEvents {...defaultProps} isOpen={false} />);
+    expect(mockObserve).not.toHaveBeenCalled();
 
-    window.ResizeObserver = undefined;
-    const mockMutationObserver = {
-      observe: jest.fn(),
-      disconnect: jest.fn(() => {
-        throw new Error('mutation disconnect error');
-      }),
-    };
-    window.MutationObserver = jest.fn(function () {
-      return mockMutationObserver;
-    });
-
-    const { unmount: unmount2 } = render(<AccordionEvents {...defaultProps} isOpen />);
-    expect(() => unmount2()).not.toThrow();
-
-    window.ResizeObserver = originalResizeObserver;
-    window.MutationObserver = originalMutationObserver;
+    vi.unstubAllGlobals();
   });
 });
 
