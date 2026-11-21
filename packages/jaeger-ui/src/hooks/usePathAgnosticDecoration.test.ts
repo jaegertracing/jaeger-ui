@@ -93,6 +93,30 @@ describe('usePathAgnosticDecoration', () => {
     expect(fetchDecoration).toHaveBeenCalledTimes(1);
   });
 
+  it('reads a service whose name contains dots as one key (#4768)', async () => {
+    fetchDecoration.mockResolvedValue({ services: { 'payment.svc': 42 } });
+    const { result } = renderHook(() => usePathAgnosticDecoration({ ...props, service: 'payment.svc' }), {
+      wrapper,
+    });
+    await waitFor(() => expect(result.current.decorationValue).toBe(42));
+  });
+
+  it('encodes the operation in the URL and reads it as one key (#4768)', async () => {
+    vi.mocked(useConfig).mockReturnValue({
+      ...defaultConfig,
+      pathAgnosticDecorations: [
+        { ...schema, opSummaryUrl: '/operations?service=#{service}&operation=#{operation}' },
+      ],
+    });
+    const operation = 'grpc.health.v1.Health/Check?a=1&b=2';
+    fetchDecoration.mockResolvedValue({ operations: { [operation]: 17 } });
+    const { result } = renderHook(() => usePathAgnosticDecoration({ ...props, operation }), { wrapper });
+    await waitFor(() => expect(result.current.decorationValue).toBe(17));
+    expect(fetchDecoration).toHaveBeenCalledWith(
+      '/operations?service=frontend&operation=grpc.health.v1.Health%2FCheck%3Fa%3D1%26b%3D2'
+    );
+  });
+
   it.each([null, ['GET', 'POST']])('uses the service summary without a single operation: %j', operation => {
     renderHook(() => usePathAgnosticDecoration({ ...props, operation }), { wrapper });
     expect(fetchDecoration).toHaveBeenCalledWith('/summary');
