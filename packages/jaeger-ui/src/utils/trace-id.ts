@@ -14,6 +14,24 @@ function isValidBase64(v: string): boolean {
   }
 }
 
+/** Converts supported URL aliases to the v3 request format; the client validates the result. */
+export function toTraceIdHex(value: string): string {
+  const v = value.trim();
+  // The server parses hex before base64, including IDs shorter than the search heuristic accepts.
+  if (/^[0-9a-fA-F]{1,32}$/.test(v)) return v.padStart(32, '0');
+  try {
+    const bytes = atob(v.replace(/-/g, '+').replace(/_/g, '/'));
+    if (bytes.length === 8 || bytes.length === 16) {
+      return Array.from(bytes, byte => byte.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join('')
+        .padStart(32, '0');
+    }
+  } catch {
+    // Leave unsupported IDs for the client's request validation.
+  }
+  return v;
+}
+
 /**
  * Returns true when the string looks like a trace ID (hex or base64 encoded),
  * as opposed to a natural-language question or search query.

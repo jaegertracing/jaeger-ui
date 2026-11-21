@@ -4,7 +4,6 @@
 import {
   processTemplate,
   createTestFunction,
-  getParameterInArray,
   getParameterInAncestor,
   getParameterInTrace,
   processLinkPattern,
@@ -13,6 +12,22 @@ import {
   computeTraceLink,
   getTraceLinks,
 } from './link-patterns';
+import { makeAttributes } from './attributes';
+
+// Wraps a partial span fixture's attribute arrays into IAttributes in place,
+// mirroring how real spans store attributes.
+function wrapSpanAttrs(span) {
+  if (Array.isArray(span.attributes)) span.attributes = makeAttributes(span.attributes);
+  if (span.resource && Array.isArray(span.resource.attributes)) {
+    span.resource.attributes = makeAttributes(span.resource.attributes);
+  }
+  if (Array.isArray(span.events)) {
+    span.events.forEach(event => {
+      if (Array.isArray(event.attributes)) event.attributes = makeAttributes(event.attributes);
+    });
+  }
+  return span;
+}
 
 describe('processTemplate()', () => {
   it('correctly replaces variables', () => {
@@ -131,27 +146,6 @@ describe('createTestFunction()', () => {
   });
 });
 
-describe('getParameterInArray()', () => {
-  const data = [
-    { key: 'mykey', value: 'ok' },
-    { key: 'otherkey', value: 'v' },
-  ];
-
-  it('returns an entry that is present', () => {
-    expect(getParameterInArray('mykey', data)).toBe(data[0]);
-    expect(getParameterInArray('otherkey', data)).toBe(data[1]);
-  });
-
-  it('returns undefined when the entry cannot be found', () => {
-    expect(getParameterInArray('myotherkey', data)).toBeUndefined();
-  });
-
-  it('returns undefined when there is no array', () => {
-    expect(getParameterInArray('otherkey')).toBeUndefined();
-    expect(getParameterInArray('otherkey', null)).toBeUndefined();
-  });
-});
-
 describe('getParameterInAncestor()', () => {
   const spans = [
     {
@@ -228,6 +222,7 @@ describe('getParameterInAncestor()', () => {
   spans[1].parentSpan = spans[0];
   spans[2].parentSpan = spans[0];
   spans[3].parentSpan = spans[2];
+  spans.forEach(wrapSpanAttrs);
 
   it('uses current span attributes', () => {
     expect(getParameterInAncestor('a', spans[3])).toEqual({ key: 'a', value: 'a0' });
@@ -396,6 +391,7 @@ describe('computeLinks()', () => {
     },
   ];
   spans[1].parentSpan = spans[0];
+  spans.forEach(wrapSpanAttrs);
 
   const trace = {
     resource: { attributes: [] },
@@ -451,12 +447,12 @@ describe('computeLinks()', () => {
       },
     ].map(processLinkPattern);
 
-    const span = {
+    const span = wrapSpanAttrs({
       depth: 0,
       resource: { attributes: [{ key: 'procKey', value: 'procVal' }] },
       attributes: [{ key: 'myKey', value: 'myVal' }],
       events: [{ attributes: [{ key: 'logKey', value: 'logVal' }] }],
-    };
+    });
 
     expect(computeLinks(legacyPatterns, span, span.attributes, 0)).toEqual([
       {
@@ -489,7 +485,11 @@ describe('getLinks()', () => {
   ].map(processLinkPattern);
   const template = jest.spyOn(linkPatterns[0].url, 'template');
 
-  const span = { depth: 0, resource: {}, attributes: [{ key: 'mySpecialKey', value: 'valueOfMyKey' }] };
+  const span = wrapSpanAttrs({
+    depth: 0,
+    resource: {},
+    attributes: [{ key: 'mySpecialKey', value: 'valueOfMyKey' }],
+  });
 
   let cache;
 
@@ -507,7 +507,7 @@ describe('getLinks()', () => {
 
   it('returns the result from the cache', () => {
     const result = [];
-    cache.set(span.attributes[0], result);
+    cache.set(span.attributes.entries()[0], result);
     const getLinks = createGetLinks(linkPatterns, cache);
     expect(getLinks(span, span.attributes, 0)).toBe(result);
     expect(template).not.toHaveBeenCalled();
@@ -523,7 +523,7 @@ describe('getLinks()', () => {
         text: 'special key link (valueOfMyKey)',
       },
     ]);
-    expect(cache.get(span.attributes[0])).toBe(result);
+    expect(cache.get(span.attributes.entries()[0])).toBe(result);
   });
 
   it('returns trace links when valid trace is passed', () => {

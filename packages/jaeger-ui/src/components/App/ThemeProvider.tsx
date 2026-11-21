@@ -1,7 +1,15 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ThemeConfig } from 'antd';
 import { ConfigProvider, theme } from 'antd';
 
@@ -73,6 +81,32 @@ const lightTheme: ThemeConfig = {
   },
 };
 
+// antd's dark algorithm derives every shadow from white at 20% opacity, which leaves a popup
+// with a glow of 1–2% opacity and no visible edge. The dark theme replaces the popup shadows
+// with a hairline ring, which gives a popup an edge, and a black shadow dense enough to darken
+// the page around it.
+const darkPopupRingColor = 'rgba(125, 153, 191, 0.45)';
+const darkPopupShadow = [
+  `0 0 0 1px ${darkPopupRingColor}`,
+  '0 6px 16px rgba(0, 0, 0, 0.55)',
+  '0 12px 40px 8px rgba(0, 0, 0, 0.5)',
+].join(', ');
+const darkPopupTokens = {
+  // Popups sit on a surface lighter than colorBgContainer, so that they do not blend into the
+  // page: popovers, dropdowns, select lists, modals and notifications all use this token.
+  colorBgElevated: '#24364f',
+  boxShadow: darkPopupShadow,
+  boxShadowSecondary: darkPopupShadow,
+  // Popovers and tooltips take their shadow from a filter, which has no spread, so a 1px blur
+  // stands in for the ring. antd reads dropShadowPopover but omits it from ThemeConfig, hence
+  // this separate object, which is spread into the theme.
+  dropShadowPopover: [
+    `drop-shadow(0 0 1px ${darkPopupRingColor})`,
+    'drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55))',
+    'drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5))',
+  ].join(' '),
+};
+
 const darkTheme: ThemeConfig = {
   ...baseThemeConfig,
   algorithm: theme.darkAlgorithm,
@@ -86,7 +120,7 @@ const darkTheme: ThemeConfig = {
     colorBorderSecondary: 'rgba(125, 153, 191, 0.25)',
     colorLink: '#7bdcff',
     colorLinkHover: '#caf3ff',
-    colorBgElevated: '#162338',
+    ...darkPopupTokens,
   },
   components: {
     Layout: {
@@ -119,8 +153,19 @@ export default function AppThemeProvider({ children }: ThemeProviderProps) {
     setModeState((prev: ThemeMode) => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
-  useEffect(() => {
+  // This must be a layout effect, not a passive one. `vars.css` selects the dark
+  // palette with `[data-theme='dark']`, and consumers that need a token's value
+  // as data rather than as CSS — `ColorGenerator.getRgbColorByKey`, for the
+  // canvas span graph — read it back off the DOM from their own `useEffect`.
+  // React runs a parent's passive effects *after* its descendants', so writing
+  // the attribute passively here would let those consumers observe the previous
+  // theme for one commit. Every layout effect runs before any passive effect,
+  // which puts the attribute in place first.
+  useLayoutEffect(() => {
     document.body.dataset.theme = mode;
+  }, [mode]);
+
+  useEffect(() => {
     // Don't persist when the host controls the theme — avoid overwriting the
     // user's standalone preference with an embed-injected value.
     if (!embeddedState?.theme) writeStoredTheme(mode);

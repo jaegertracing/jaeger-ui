@@ -1,0 +1,66 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "service.name", "value": { "stringValue": "numeric-upload" } },
+          { "key": "resource.count", "value": { "intValue": 42 } }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "numeric-scope",
+            "attributes": [{ "key": "scope.count", "value": { "intValue": -42 } }]
+          },
+          "spans": [
+            {
+              "traceId": "abcdef0123456789abcdef0123456789",
+              "spanId": "1111111111111111",
+              "name": "numeric-root",
+              "startTimeUnixNano": 1000000,
+              "endTimeUnixNano": 2000000,
+              "attributes": [
+                { "key": "count", "value": { "intValue": 0 } },
+                { "key": "ratio", "value": { "doubleValue": 1.5 } },
+                {
+                  "key": "nested",
+                  "value": {
+                    "arrayValue": {
+                      "values": [
+                        { "intValue": 9007199254740991 },
+                        {
+                          "kvlistValue": {
+                            "values": [
+                              { "key": "minimum", "value": { "intValue": -9007199254740991 } },
+                              { "key": "exact", "value": { "intValue": "9223372036854775807" } }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "name": "numeric-event",
+                  "timeUnixNano": 1500000,
+                  "attributes": [{ "key": "event.count", "value": { "intValue": 7 } }]
+                }
+              ],
+              "links": [
+                {
+                  "traceId": "1234567890abcdef1234567890abcdef",
+                  "spanId": "2222222222222222",
+                  "attributes": [{ "key": "link.count", "value": { "intValue": 9 } }]
+                }
+              ],
+              "futureMetadata": { "intValue": 123, "timeUnixNano": 456 }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

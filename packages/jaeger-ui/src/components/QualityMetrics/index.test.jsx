@@ -6,7 +6,7 @@ import { render, screen, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
-import JaegerAPI from '../../api/jaeger';
+import { jaegerClient } from '../../api/v3/client';
 import * as getUrl from './url';
 import QualityMetricsImpl from '.';
 
@@ -88,7 +88,7 @@ describe('QualityMetrics', () => {
     let rej;
 
     beforeAll(() => {
-      fetchQualityMetricsSpy = jest.spyOn(JaegerAPI, 'fetchQualityMetrics').mockImplementation(() => {
+      fetchQualityMetricsSpy = jest.spyOn(jaegerClient, 'fetchQualityMetrics').mockImplementation(() => {
         promise = new Promise((resolve, reject) => {
           res = resolve;
           rej = reject;
@@ -98,6 +98,8 @@ describe('QualityMetrics', () => {
     });
 
     beforeEach(() => {
+      queryClient.clear();
+      mockLocation.search = '?service=test-service&lookback=48';
       mockNavigate.mockClear();
       fetchQualityMetricsSpy.mockClear();
       headerMock.props = null;
@@ -113,7 +115,7 @@ describe('QualityMetrics', () => {
           </QueryClientProvider>
         );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
-        expect(fetchQualityMetricsSpy).toHaveBeenCalledWith('test-service', 48);
+        expect(fetchQualityMetricsSpy).toHaveBeenCalledWith('test-service', 48, expect.any(AbortSignal));
       });
     });
 
@@ -134,7 +136,7 @@ describe('QualityMetrics', () => {
           </QueryClientProvider>
         );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
-        expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(service, 48);
+        expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(service, 48, expect.any(AbortSignal));
         mockLocation.search = '?service=test-service&lookback=48';
       });
 
@@ -154,7 +156,11 @@ describe('QualityMetrics', () => {
           </QueryClientProvider>
         );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
-        expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith('test-service', lookback);
+        expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(
+          'test-service',
+          lookback,
+          expect.any(AbortSignal)
+        );
         mockLocation.search = '?service=test-service&lookback=48';
       });
 
@@ -204,7 +210,7 @@ describe('QualityMetrics', () => {
           res(qualityMetrics);
         });
 
-        expect(screen.getByTestId('banner-text')).toHaveTextContent('test banner text');
+        expect(await screen.findByTestId('banner-text')).toHaveTextContent('test banner text');
         expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
       });
 
@@ -226,8 +232,113 @@ describe('QualityMetrics', () => {
           }
         });
 
-        expect(screen.getByText('Error message')).toBeInTheDocument();
+        expect(await screen.findByText('Error message')).toBeInTheDocument();
         expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
+      });
+
+      it('shows the HTTP error details from the client', async () => {
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
+
+        const error = Object.assign(new Error('Failed to fetch quality metrics: 503 Service Unavailable'), {
+          httpStatus: 503,
+          httpBody: '{"error":"quality metrics unavailable"}',
+        });
+
+        await act(async () => {
+          rej(error);
+          try {
+            await promise;
+          } catch {
+            // intentionally left blank
+          }
+        });
+
+        expect(await screen.findByText(error.message)).toBeInTheDocument();
+        expect(screen.getByText(error.httpBody)).toBeInTheDocument();
+      });
+
+      it.each([
+        ['service', '?service=other-service&lookback=48'],
+        ['lookback', '?service=test-service&lookback=24'],
+      ])(
+        'cancels the previous request and ignores its late response when the %s changes',
+        async (_field, search) => {
+          const { rerender } = render(
+            <QueryClientProvider client={queryClient}>
+              <QualityMetricsImpl {...props} />
+            </QueryClientProvider>
+          );
+          const resolveFirst = res;
+          const firstSignal = fetchQualityMetricsSpy.mock.calls[0][2];
+
+          mockLocation.search = search;
+          rerender(
+            <QueryClientProvider client={queryClient}>
+              <QualityMetricsImpl {...props} />
+            </QueryClientProvider>
+          );
+          expect(firstSignal.aborted).toBe(true);
+
+          await act(async () => {
+            resolveFirst({ bannerText: 'stale banner', scores: [], metrics: [] });
+          });
+          expect(screen.queryByTestId('banner-text')).not.toBeInTheDocument();
+          expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+
+          await act(async () => {
+            res({ bannerText: 'current banner', scores: [], metrics: [] });
+          });
+          expect(await screen.findByTestId('banner-text')).toHaveTextContent('current banner');
+        }
+      );
+
+      it('cancels the request when the page unmounts', () => {
+        const { unmount } = render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
+        const signal = fetchQualityMetricsSpy.mock.calls[0][2];
+        expect(signal.aborted).toBe(false);
+
+        unmount();
+
+        expect(signal.aborted).toBe(true);
+      });
+
+      it('clears a previous error once another service loads', async () => {
+        const { rerender } = render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
+
+        await act(async () => {
+          rej({ message: 'Error message' });
+          try {
+            await promise;
+          } catch {
+            // intentionally left blank
+          }
+        });
+        expect(await screen.findByText('Error message')).toBeInTheDocument();
+
+        mockLocation.search = '?service=other-service&lookback=48';
+        rerender(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
+        await act(async () => {
+          res({ bannerText: 'other banner', scores: [], metrics: [] });
+        });
+
+        expect(await screen.findByTestId('banner-text')).toHaveTextContent('other banner');
+        expect(screen.queryByText('Error message')).not.toBeInTheDocument();
       });
     });
 
@@ -385,7 +496,7 @@ describe('QualityMetrics', () => {
           }
         });
 
-        expect(screen.getByText(message)).toBeInTheDocument();
+        expect(await screen.findByText(message)).toBeInTheDocument();
       });
 
       it('renders with metrics', async () => {
@@ -420,7 +531,7 @@ describe('QualityMetrics', () => {
           res(metrics);
         });
 
-        expect(screen.getByTestId('banner-text')).toHaveTextContent('test banner text');
+        expect(await screen.findByTestId('banner-text')).toHaveTextContent('test banner text');
         expect(screen.getAllByTestId('score-card')).toHaveLength(2);
         expect(screen.getByText('score0')).toBeInTheDocument();
         expect(screen.getByText('score1')).toBeInTheDocument();
@@ -455,7 +566,7 @@ describe('QualityMetrics', () => {
           res(metricsWithClients);
         });
 
-        expect(screen.getByText('Client Versions')).toBeInTheDocument();
+        expect(await screen.findByText('Client Versions')).toBeInTheDocument();
         expect(screen.getByText('1.2.3')).toBeInTheDocument();
         expect(screen.getByText('1.0.0')).toBeInTheDocument();
         expect(screen.getByText('5')).toBeInTheDocument();

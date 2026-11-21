@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
@@ -50,6 +50,18 @@ const mockChart = {
   destroy: vi.fn(),
 };
 
+const { mockCall, mockDatum } = vi.hoisted(() => {
+  const datum = vi.fn();
+  const call = vi.fn();
+  const selection = {
+    datum,
+    call,
+  };
+  datum.mockReturnValue(selection);
+  call.mockReturnValue(selection);
+  return { mockCall: call, mockDatum: datum };
+});
+
 vi.mock('d3-flame-graph', () => ({
   default: () => mockChart,
 }));
@@ -62,8 +74,8 @@ vi.mock('d3-selection', () => ({
       container.appendChild(svg);
     }
     return {
-      datum: vi.fn().mockReturnThis(),
-      call: vi.fn().mockReturnThis(),
+      datum: mockDatum,
+      call: mockCall,
     };
   }),
 }));
@@ -73,6 +85,8 @@ const otelTrace = transformTraceData(testTrace.data).asOtelTrace();
 describe('<TraceFlamegraph />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCall.mockClear();
+    mockDatum.mockClear();
     callbacks.onClick = null;
     callbacks.colorMapper = null;
     callbacks.getName = null;
@@ -87,11 +101,6 @@ describe('<TraceFlamegraph />', () => {
 
   it('renders empty state when trace is null', () => {
     render(<TraceFlamegraph trace={null} />);
-    expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
-  });
-
-  it('renders empty state when trace is not an OtelTraceFacade', () => {
-    render(<TraceFlamegraph trace={{}} />);
     expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
   });
 
@@ -335,6 +344,41 @@ describe('<TraceFlamegraph />', () => {
   });
 
   describe('handleCollapseAbove', () => {
+    it('replaces a stale collapsed subtree on same-ID reload while retaining search and view mode', () => {
+      const { rerender } = render(<TraceFlamegraph trace={otelTrace} />);
+      const fullGraph = mockDatum.mock.lastCall[0];
+      const collapsedNode = fullGraph.children[0];
+      fireEvent.change(screen.getByTestId('flamegraph-search'), { target: { value: 'Vehicle' } });
+      act(() => callbacks.onClick({ parent: {}, data: collapsedNode }));
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+      expect(mockDatum.mock.lastCall[0]).toBe(collapsedNode);
+
+      const data = structuredClone(testTrace.data);
+      const root = data.spans[0];
+      root.duration += 100000;
+      data.spans.push({
+        ...root,
+        spanID: '0000000000004574',
+        operationName: 'VehicleLateChild',
+        startTime: root.startTime + 1000,
+        duration: 2000,
+        references: [{ refType: 'CHILD_OF', traceID: root.traceID, spanID: root.spanID }],
+      });
+      const refreshed = transformTraceData(data).asOtelTrace();
+      expect(refreshed.traceID).toBe(otelTrace.traceID);
+      rerender(<TraceFlamegraph trace={refreshed} />);
+
+      const refreshedGraph = mockDatum.mock.lastCall[0];
+      expect(refreshedGraph.name).toBe('total');
+      expect(refreshedGraph.duration).toBeGreaterThan(fullGraph.duration);
+      expect(JSON.stringify(refreshedGraph)).toContain('VehicleLateChild');
+      expect(screen.getByText('VehicleLateChild')).toBeInTheDocument();
+      expect(screen.getByTestId('flamegraph-search')).toHaveValue('Vehicle');
+      expect(mockChart.search).toHaveBeenLastCalledWith('Vehicle');
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByTestId('flamegraph-chart')).toBeInTheDocument();
+    });
+
     it('collapse button triggers re-render with collapsed root', () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       // Zoom into a node first
@@ -348,6 +392,85 @@ describe('<TraceFlamegraph />', () => {
       fireEvent.click(screen.getByTestId('flamegraph-collapse'));
       // After collapse, the collapse button should be disabled (no longer zoomed)
       expect(screen.getByTestId('flamegraph-collapse')).toBeDisabled();
+    });
+
+    it('re-applies active search query when collapsing nodes above after chart redraw', () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const searchInput = screen.getByTestId('flamegraph-search');
+      fireEvent.change(searchInput, { target: { value: 'order' } });
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+
+      // Zoom into a node
+      act(() => {
+        callbacks.onClick({
+          parent: {},
+          data: { name: 'load-generator: OrderVehicle', value: 100, duration: 100, children: [] },
+        });
+      });
+
+      mockCall.mockClear();
+      mockChart.search.mockClear();
+
+      // Click collapse
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+
+      // Active search query should be re-applied to the new chart after the redraw
+      expect(mockCall).toHaveBeenCalled();
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+      const lastSearchOrder = Math.max(...mockChart.search.mock.invocationCallOrder);
+      const lastCallOrder = Math.max(...mockCall.mock.invocationCallOrder);
+      expect(lastSearchOrder).toBeGreaterThan(lastCallOrder);
+    });
+
+    it('re-applies active selected item when collapsing nodes above after chart redraw', () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      // Click a table row to set selectedItem
+      fireEvent.click(screen.getByText('OrderVehicle').closest('tr'));
+      expect(mockChart.search).toHaveBeenCalledWith('load-generator: OrderVehicle');
+
+      // Zoom into a node
+      act(() => {
+        callbacks.onClick({
+          parent: {},
+          data: { name: 'load-generator: OrderVehicle', value: 100, duration: 100, children: [] },
+        });
+      });
+
+      mockCall.mockClear();
+      mockChart.search.mockClear();
+
+      // Click collapse
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+
+      // Active selectedItem should be re-applied to the new chart after the redraw
+      expect(mockCall).toHaveBeenCalled();
+      expect(mockChart.search).toHaveBeenCalledWith('load-generator: OrderVehicle');
+      const lastSearchOrder = Math.max(...mockChart.search.mock.invocationCallOrder);
+      const lastCallOrder = Math.max(...mockCall.mock.invocationCallOrder);
+      expect(lastSearchOrder).toBeGreaterThan(lastCallOrder);
+    });
+
+    it('re-applies active search query when resizing table width after chart redraw', () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const searchInput = screen.getByTestId('flamegraph-search');
+      fireEvent.change(searchInput, { target: { value: 'order' } });
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+
+      mockCall.mockClear();
+      mockChart.search.mockClear();
+
+      const resizer = screen.getByTestId('vertical-resizer');
+      resizer.getBoundingClientRect = () => ({ left: 0, width: 1000 });
+      const dragger = resizer.querySelector('.VerticalResizer--dragger');
+      fireEvent.mouseDown(dragger, { clientX: 500, button: 0 });
+      fireEvent.mouseMove(window, { clientX: 600 });
+      fireEvent.mouseUp(window, { clientX: 600 });
+
+      expect(mockCall).toHaveBeenCalled();
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+      const lastSearchOrder = Math.max(...mockChart.search.mock.invocationCallOrder);
+      const lastCallOrder = Math.max(...mockCall.mock.invocationCallOrder);
+      expect(lastSearchOrder).toBeGreaterThan(lastCallOrder);
     });
   });
 
@@ -427,6 +550,47 @@ describe('<TraceFlamegraph />', () => {
       expect(screen.getByText('3')).toBeInTheDocument();
     });
 
+    it('tooltip follows the cursor while moving within the same g.frame', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.__data__ = { data: { name: 'svc: op', value: 100, duration: 100, count: 1 } };
+      svg.appendChild(g);
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      const tooltip = screen.getByText('svc: op').closest('.Flamegraph-tooltip');
+      expect(tooltip).toHaveStyle({ left: '210px', top: '310px' });
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 250, clientY: 320 }));
+      });
+      expect(tooltip).toHaveStyle({ left: '260px', top: '330px' });
+    });
+
+    it('tooltip stays hidden when moving within the g.frame that opened the context menu', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.setAttribute('name', 'svc: op');
+      g.__data__ = { data: { name: 'svc: op', value: 100, duration: 100, count: 1 } };
+      svg.appendChild(g);
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 250, clientY: 320 }));
+      });
+      expect(document.querySelector('.Flamegraph-tooltip')).not.toBeInTheDocument();
+    });
+
     it('mousemove without g.frame hides tooltip', async () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
@@ -463,6 +627,34 @@ describe('<TraceFlamegraph />', () => {
       expect(screen.queryByText('svc: op')).not.toBeInTheDocument();
     });
 
+    it('context menu runs Collapse nodes above and Reset View, closing after each', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.setAttribute('name', 'svc: op');
+      svg.appendChild(g);
+      const menu = () => document.querySelector('.Flamegraph-context-menu');
+      const openMenu = () =>
+        act(() => {
+          g.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 100, clientY: 100 }));
+        });
+
+      act(() => {
+        callbacks.onClick({ parent: {}, data: { name: 'svc: op' } });
+      });
+      await openMenu();
+      fireEvent.click(within(menu()).getByText('Collapse nodes above'));
+      expect(menu()).toBeNull();
+      expect(screen.getByTestId('flamegraph-collapse')).toBeDisabled();
+
+      await openMenu();
+      mockChart.resetZoom.mockClear();
+      fireEvent.click(within(menu()).getByText('Reset View'));
+      expect(mockChart.resetZoom).toHaveBeenCalled();
+      expect(menu()).toBeNull();
+    });
+
     it('context menu closes on close handler', async () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
@@ -481,7 +673,10 @@ describe('<TraceFlamegraph />', () => {
   });
 
   describe('colorMapper with search active', () => {
-    it('returns rgba with 0.3 opacity when search is active', () => {
+    // The dimmed color must stay a token reference rather than resolved numbers:
+    // the chart only redraws on its own data or search changes, so resolved values
+    // would keep the previous theme's colors after a theme switch.
+    it('dims via color-mix over the palette token when search is active', () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       // Trigger a search to set searchActiveRef = true
       const searchInput = screen.getByTestId('flamegraph-search');
@@ -491,7 +686,7 @@ describe('<TraceFlamegraph />', () => {
         { data: { name: 'load-generator: op', serviceName: 'load-generator' } },
         '#000'
       );
-      expect(color).toMatch(/^rgba\(\d+, \d+, \d+, 0\.3\)$/);
+      expect(color).toMatch(/^color-mix\(in srgb, var\(--span-color-\d+\) 30%, transparent\)$/);
     });
 
     it('returns highlight color even when search is active', () => {

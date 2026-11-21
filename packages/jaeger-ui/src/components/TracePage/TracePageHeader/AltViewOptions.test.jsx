@@ -2,12 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
 import { ETraceViewType } from '../types';
+import { jaegerClient } from '../../../api/v3/client';
+import { downloadTraces } from '../../../utils/download-traces';
+import { queryClient } from '../../../query/app-query-client';
+
+vi.mock('../../../api/v3/client', () => ({ jaegerClient: { fetchTrace: vi.fn() } }));
+vi.mock('../../../utils/download-traces', () => ({ downloadTraces: vi.fn() }));
 
 vi.mock('antd', async () => {
   const originalModule = await vi.importActual('antd');
@@ -34,6 +40,7 @@ vi.mock('antd', async () => {
         </div>
       </div>
     ),
+    message: { error: vi.fn() },
     Button: ({ children, className }) => (
       <button type="button" className={className} data-testid="dropdown-button">
         {children}
@@ -59,7 +66,14 @@ describe('AltViewOptions', () => {
   afterEach(() => {
     jest.clearAllMocks();
     cleanup();
+    queryClient.removeQueries({ queryKey: ['uploadedSummaries'] });
+    queryClient.removeQueries({ queryKey: ['uploadedRawTraces'] });
   });
+
+  const setUploaded = (traceID, raw) => {
+    queryClient.setQueryData(['uploadedSummaries'], [{ traceID }]);
+    queryClient.setQueryData(['uploadedRawTraces'], [raw]);
+  };
 
   const renderComponent = (customProps = {}) => {
     const mergedProps = { ...props, ...customProps };
@@ -107,6 +121,7 @@ describe('AltViewOptions', () => {
 
     expect(screen.queryByTestId('menu-item-trace-json')).not.toBeInTheDocument();
     expect(screen.queryByTestId('menu-item-trace-json-unadjusted')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-trace-json-download')).not.toBeInTheDocument();
 
     expect(screen.getByTestId('menu-item-TraceGraph')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
@@ -126,16 +141,101 @@ describe('AltViewOptions', () => {
     expect(trackViewChange).toHaveBeenCalledWith(viewType);
   });
 
-  it('renders JSON links with correct URLs', () => {
-    renderComponent();
+  it('renders JSON links to the v3 trace endpoint', () => {
+    const traceID = '0123456789abcdef0123456789abcdef';
+    renderComponent({ traceID });
 
     const jsonMenuItem = screen.getByTestId('menu-item-trace-json');
     const jsonLink = jsonMenuItem.querySelector('a');
-    expect(jsonLink).toHaveAttribute('href', '/api/traces/test trace ID?prettyPrint=true');
+    expect(jsonLink).toHaveAttribute('href', `/api/v3/traces/${traceID}?prettyPrint=true`);
 
     const rawJsonMenuItem = screen.getByTestId('menu-item-trace-json-unadjusted');
     const rawJsonLink = rawJsonMenuItem.querySelector('a');
-    expect(rawJsonLink).toHaveAttribute('href', '/api/traces/test trace ID?raw=true&prettyPrint=true');
+    expect(rawJsonLink).toHaveAttribute('href', `/api/v3/traces/${traceID}?rawTraces=true&prettyPrint=true`);
+  });
+
+  it('pads short trace IDs to 32 hex characters in JSON links', () => {
+    renderComponent({ traceID: 'abc123' });
+
+    const jsonLink = screen.getByTestId('menu-item-trace-json').querySelector('a');
+    expect(jsonLink).toHaveAttribute('href', `/api/v3/traces/${'abc123'.padStart(32, '0')}?prettyPrint=true`);
+  });
+
+  it('downloads the trace as returned by the backend', async () => {
+    const traceID = 'abc123';
+    const traceIdHex = traceID.padStart(32, '0');
+    const wire = { resourceSpans: [] };
+    jaegerClient.fetchTrace.mockResolvedValue(wire);
+    const trackJsonDownload = vi.spyOn(track, 'trackJsonDownload');
+    renderComponent({ traceID });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    await waitFor(() => expect(downloadTraces).toHaveBeenCalledWith([wire], `trace-${traceIdHex}.json`));
+    expect(jaegerClient.fetchTrace).toHaveBeenCalledWith(traceIdHex);
+    expect(trackJsonDownload).toHaveBeenCalled();
+  });
+
+  it('shows an error when the trace download fails', async () => {
+    const { message } = await import('antd');
+    jaegerClient.fetchTrace.mockRejectedValue(new Error('boom'));
+    renderComponent({ traceID: 'abc123' });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    await waitFor(() => expect(message.error).toHaveBeenCalledWith('Failed to download trace: boom'));
+    expect(downloadTraces).not.toHaveBeenCalled();
+  });
+
+  it('reports non-Error rejections in the download error message', async () => {
+    const { message } = await import('antd');
+    jaegerClient.fetchTrace.mockRejectedValue('offline');
+    renderComponent({ traceID: 'abc123' });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    await waitFor(() => expect(message.error).toHaveBeenCalledWith('Failed to download trace: offline'));
+  });
+
+  it('downloads an uploaded OTLP trace from the upload cache instead of the backend', () => {
+    const traceID = '0123456789abcdef0123456789abcdef';
+    const raw = { resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: traceID }] }] }] };
+    setUploaded(traceID, raw);
+    renderComponent({ traceID });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    expect(downloadTraces).toHaveBeenCalledWith([raw], `trace-${traceID}.json`);
+    expect(jaegerClient.fetchTrace).not.toHaveBeenCalled();
+  });
+
+  it('hides the download for an uploaded legacy Jaeger JSON trace', () => {
+    setUploaded('abc123', { traceID: 'abc123', spans: [], processes: {} });
+    renderComponent({ traceID: 'abc123' });
+
+    expect(screen.queryByTestId('menu-item-trace-json-download')).not.toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-trace-json')).toBeInTheDocument();
+  });
+
+  it('ignores clicks while a backend download is in flight', async () => {
+    let resolveFetch;
+    jaegerClient.fetchTrace.mockReturnValue(
+      new Promise(resolve => {
+        resolveFetch = resolve;
+      })
+    );
+    renderComponent({ traceID: 'abc123' });
+
+    const item = screen.getByTestId('menu-item-trace-json-download');
+    fireEvent.click(item);
+    await waitFor(() => expect(item).toHaveTextContent('Downloading Trace…'));
+    expect(item.querySelector('a')).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(item);
+    expect(jaegerClient.fetchTrace).toHaveBeenCalledTimes(1);
+
+    resolveFetch({ resourceSpans: [] });
+    await waitFor(() => expect(item).toHaveTextContent('Download Trace (OTLP JSON)'));
+    expect(downloadTraces).toHaveBeenCalledTimes(1);
   });
 
   it('updates dropdown text when view type changes', () => {

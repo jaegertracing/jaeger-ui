@@ -14,7 +14,7 @@ function convSpans(spans: ReadonlyArray<IOtelSpan>) {
     ids.push(id);
     const { serviceName: service } = resource;
 
-    const attributes = spanAttributes.reduce((accum: Record<string, any>, attr) => {
+    const attributes = spanAttributes.entries().reduce((accum: Record<string, any>, attr) => {
       const { key, value } = attr;
       return { ...accum, [key]: value };
     }, {});

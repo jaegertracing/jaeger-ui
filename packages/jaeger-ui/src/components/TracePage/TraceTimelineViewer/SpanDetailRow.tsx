@@ -6,9 +6,11 @@ import React from 'react';
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
+import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import TimelineRow from './TimelineRow';
 
-import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
+import { IOtelSpan, IAttributes, IEvent } from '../../../types/otel';
+import colorGenerator from '../../../utils/color-generator';
 import { Hyperlink } from '../../../types/hyperlink';
 
 import './SpanDetailRow.css';
@@ -19,13 +21,14 @@ type SpanDetailRowProps = {
   timelineBarsVisible: boolean;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
-  linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Hyperlink[];
+  linksGetter: (attributes: IAttributes, index: number) => Hyperlink[];
   eventItemToggle: (spanID: string, event: IEvent) => void;
   eventsToggle: (spanID: string) => void;
   resourceToggle: (spanID: string) => void;
   linksToggle: (spanID: string) => void;
   warningsToggle: (spanID: string) => void;
   span: IOtelSpan;
+  tree?: VisibleTree;
   attributesToggle: (spanID: string) => void;
   traceStartTime: number;
   focusSpan: (uiFind: string) => void;
@@ -49,6 +52,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     linksToggle,
     warningsToggle,
     span,
+    tree = RECORDED_TREE,
     attributesToggle,
     traceStartTime,
     focusSpan,
@@ -62,7 +66,13 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     <TimelineRow className="detail-row">
       {timelineBarsVisible && (
         <TimelineRow.Cell width={nameColumnWidth}>
-          <SpanTreeOffset span={span} showChildrenIcon={false} isDetailRow color={color} />
+          <SpanTreeOffset
+            span={span}
+            tree={tree}
+            showChildrenIcon={false}
+            isDetailRow
+            color={colorGenerator.getColorByKey(span.resource.serviceName)}
+          />
           <span>
             <span
               className="detail-row-expanded-accent"

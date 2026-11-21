@@ -18,6 +18,7 @@ SPDX-License-Identifier: Apache-2.0
 
   --surface-primary: var(--ant-color-bg-container);
   --surface-secondary: var(--ant-color-bg-layout);
+  --surface-elevated: var(--ant-color-bg-elevated);
   --surface-tertiary: color-mix(in srgb, var(--ant-color-text-base) 6%, var(--ant-color-bg-container));
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
@@ -58,6 +59,12 @@ SPDX-License-Identifier: Apache-2.0
   --interactive-primary-rgb: 17, 147, 154;
   --interactive-primary-opaque: rgba(var(--interactive-primary-rgb), 0.6);
 
+  /* Detail-table filter actions retain their distinct, high-contrast roles. */
+  --action-apply-background: #4c21ce;
+  --action-apply-text: #fff;
+  --action-cancel-background: #007272;
+  --action-cancel-text: #fff;
+
   /* ============================================
     FEEDBACK TOKENS (Alerts, Notifications)
     ============================================ */
@@ -77,8 +84,11 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);
+  --shadow-elevated: var(--ant-box-shadow-secondary);
   /* centered, strong glow effect on components */
   --shadow-component-focus: 0px 0px 5px rgba(0, 0, 0, 0.3);
+  /* left-facing shadow for side panels */
+  --shadow-sidepanel: -3px 0 3px rgba(0, 0, 0, 0.1);
 
   /* ============================================
     SPECIAL PURPOSE TOKENS
@@ -88,6 +98,8 @@ SPDX-License-Identifier: Apache-2.0
   /* Layout Variables */
   --nav-height: 48px;
   --timeline-header-row-height: 38px;
+  --heatmap-legend-min-height: 72px;
+  --heatmap-legend-height: var(--heatmap-legend-min-height);
 
   /* 
      Span categorical colors (IBM Carbon Sequence)
@@ -155,6 +167,31 @@ SPDX-License-Identifier: Apache-2.0
   --critical-path-color: #000;
   --critical-path-outline: #fff;
 
+  /*
+     Span latency heatmap: duration against the median of same-operation peers, from half the
+     median or less (1) through the median (4, neutral) to twice the median or more (7).
+     Carbon's cyan–red diverging scale, which stays distinguishable with red–green color
+     blindness, unlike a green–red ramp. Every step clears 3:1 against --surface-primary, the
+     neutral middle is the lightest so it recedes, and steps 3, 4 and 5 differ in lightness from
+     their neighbors. No-peers marks operations seen once.
+  */
+  --heatmap-1: #003a6d;
+  /* Cyan 80 */
+  --heatmap-2: #00539a;
+  /* Cyan 70 */
+  --heatmap-3: #0072c3;
+  /* Cyan 60 */
+  --heatmap-4: #8d8d8d;
+  /* Gray 50 */
+  --heatmap-5: #da1e28;
+  /* Red 60 */
+  --heatmap-6: #a2191f;
+  /* Red 70 */
+  --heatmap-7: #750e13;
+  /* Red 80 */
+  --heatmap-no-peers: #525252;
+  /* Gray 70 */
+
   /* ============================================
     TRACE TIMELINE TOKENS
     Used by TracePageHeader, TimelineViewer, SpanGraph components
@@ -163,6 +200,27 @@ SPDX-License-Identifier: Apache-2.0
   /* Trace Timeline */
   --span-graph-inactive: rgba(216, 216, 216, 0.5);
   --span-bar-log-marker: rgba(0, 0, 0, 0.5);
+
+  /*
+     Span tree chrome — how strongly the service color shows through on the
+     hierarchy guides, connectors, dots, and box borders in the Service column.
+     A percentage consumed by `color-mix(… <strength>, transparent)`, so it acts
+     as an alpha: 100% matches the span bar exactly, lower values let the row
+     background wash the color out. It does not vary by state — a box border
+     means "this service", and collapsing a subtree does not change that.
+  */
+  --tree-chrome-strength: 65%;
+
+  /*
+     Fill of a collapsed parent box, which is the sole indicator that a subtree
+     is hidden, so it has to be plainly visible. Mixed toward the box surface
+     rather than toward transparency, so this is a tint, not a strength.
+     Dark needs a larger share than light: `--surface-secondary` is a saturated
+     navy there (hue 215°), so a tint from the blue end of the span palette
+     lands close to its own background, whereas the light surface is neutral
+     and every hue reads against it.
+  */
+  --tree-chrome-fill: 22%;
 
   /* ============================================
     SYNTAX HIGHLIGHTING TOKENS
@@ -202,6 +260,8 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
   /* centered, strong glow effect on components */
   --shadow-component-focus: 0px 0px 5px rgba(255, 255, 255, 0.3);
+  /* left-facing shadow for side panels */
+  --shadow-sidepanel: -3px 0 3px rgba(255, 255, 255, 0.16);
 
   /* ============================================
     SPECIAL PURPOSE TOKENS - Dark Mode
@@ -263,6 +323,26 @@ SPDX-License-Identifier: Apache-2.0
   --critical-path-color: #fff;
   --critical-path-outline: #000;
 
+  /* Span latency heatmap - Dark Mode: the light-mode steps with lightness mirrored, so the
+     ends of the scale stay the most prominent and the neutral middle, now the darkest step,
+     recedes. Every step still clears 3:1 against --surface-primary. */
+  --heatmap-1: #82cfff;
+  /* Cyan 30 */
+  --heatmap-2: #33b1ff;
+  /* Cyan 40 */
+  --heatmap-3: #1192e8;
+  /* Cyan 50 */
+  --heatmap-4: #6f6f6f;
+  /* Gray 60 */
+  --heatmap-5: #fa4d56;
+  /* Red 50 */
+  --heatmap-6: #ff8389;
+  /* Red 40 */
+  --heatmap-7: #ffb3b8;
+  /* Red 30 */
+  --heatmap-no-peers: #a8a8a8;
+  /* Gray 40 */
+
   /* ============================================
     TRACE TIMELINE TOKENS - Dark Mode
     ============================================ */
@@ -270,6 +350,11 @@ SPDX-License-Identifier: Apache-2.0
   /* Trace Timeline - Dark Mode */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);
   --span-bar-log-marker: rgba(255, 255, 255, 0.5);
+
+  /* See the light-mode definition: the dark box surface is a saturated navy, so
+     a tint from the blue end of the palette needs a larger share to separate
+     from it. */
+  --tree-chrome-fill: 40%;
 
   /* ============================================
     SYNTAX HIGHLIGHTING TOKENS - Dark Mode

@@ -7,13 +7,14 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
-import { useSearchResultsStore } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
 import * as track from './index.track';
-import * as orderBy from '../../../model/order-by';
+import * as orderBy from './order-by';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection';
+import * as getConfigModule from '../../../utils/config/get-config';
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
@@ -135,8 +136,6 @@ const baseProps = {
   traceSummaries: baseTraces,
   uploadedTraceIDs: new Set(),
   rawTraces: baseRawTraces,
-  sortBy: orderBy.MOST_RECENT,
-  handleSortChange: jest.fn(),
 };
 
 // to wrap component with Router context (for use in rerender)
@@ -148,6 +147,10 @@ const renderWithRouter = (ui, options = {}) => {
 };
 
 describe('<SearchResults>', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('shows the "no results" message when the search result is empty', () => {
     renderWithRouter(<SearchResults {...baseProps} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
@@ -157,6 +160,20 @@ describe('<SearchResults>', () => {
     const { skipMessage: _unused, ...propsWithoutSkipMessage } = baseProps;
     renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
+  });
+
+  it('renders the lowercase trace count and the search latency', () => {
+    renderWithRouter(<SearchResults {...baseProps} searchLatency={2_500_000} />);
+    const count = screen.getByText(/2 traces/);
+    expect(count).toHaveTextContent('2 traces (in 2.5s)');
+    expect(screen.getByText(/\(in 2\.5s\)/)).toBeInTheDocument();
+  });
+
+  it('renders the count without latency when searchLatency is absent', () => {
+    renderWithRouter(<SearchResults {...baseProps} />);
+    const count = screen.getByText(/2 traces/);
+    expect(count).toBeInTheDocument();
+    expect(count).not.toHaveTextContent('(in');
   });
 
   it('shows a loading indicator if loading traces', () => {
@@ -511,11 +528,43 @@ describe('<SearchResults>', () => {
     });
   });
 
+  describe('sort integration', () => {
+    const distinctTraces = [
+      { ...baseTraces[0], traceID: 'short', duration: 100 },
+      { ...baseTraces[1], traceID: 'long', duration: 5000 },
+    ];
+
+    beforeEach(() => {
+      useSearchResultsStore.setState({ viewMode: 'list', sortBy: orderBy.MOST_RECENT });
+    });
+
+    it('reads sortBy from the store and sorts unsorted traceSummaries internally', () => {
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={distinctTraces} />);
+      const items = screen.getAllByTestId(/^result-/);
+      expect(items[0]).toHaveAttribute('data-testid', 'result-short');
+      expect(items[1]).toHaveAttribute('data-testid', 'result-long');
+    });
+
+    it('re-sorts the rendered results when the sort dropdown changes', () => {
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={distinctTraces} />);
+
+      fireEvent.change(screen.getByTestId('searchable-select'), {
+        target: { value: orderBy.LONGEST_FIRST },
+      });
+
+      const items = screen.getAllByTestId(/^result-/);
+      expect(items[0]).toHaveAttribute('data-testid', 'result-long');
+      expect(items[1]).toHaveAttribute('data-testid', 'result-short');
+      expect(useSearchResultsStore.getState().sortBy).toBe(orderBy.LONGEST_FIRST);
+    });
+  });
+
   describe('showStandaloneLink', () => {
-    it('renders Link when showStandaloneLink is true', () => {
+    it('renders Link with accessible aria-label when showStandaloneLink is true', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
-      const link = screen.getByRole('link');
+      const link = screen.getByRole('link', { name: 'Open search results in a new window' });
       expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute('aria-label', 'Open search results in a new window');
       expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
     });
 
@@ -523,6 +572,16 @@ describe('<SearchResults>', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
       expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
+    });
+
+    it('renders Link with accessible aria-label without "in a new window" when forbidNewPage is true', () => {
+      vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
+      renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
+      const link = screen.getByRole('link', { name: 'Open search results' });
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute('aria-label', 'Open search results');
+      expect(link).toHaveAttribute('target', '');
+      expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
     });
   });
 

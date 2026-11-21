@@ -12,5 +12,5 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .AccordionText--header:hover {
-  background: #e8e8e8;
+  background: var(--surface-component-background-hover);
 }

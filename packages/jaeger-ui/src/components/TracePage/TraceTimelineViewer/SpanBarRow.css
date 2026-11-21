@@ -3,6 +3,65 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
+.SpanBarRow--pillWrap {
+  /* Sit above .span-name::after so hover tooltips receive pointer events. */
+  display: inline-flex;
+  max-width: 100%;
+  position: relative;
+  vertical-align: middle;
+  z-index: 1;
+}
+
+.SpanBarRow--pill {
+  background: var(--surface-component-background);
+  border: 1px solid var(--border-default);
+  /* text-overflow: ellipsis does not reliably apply inside a flex formatting
+     context (antd's Tag otherwise renders as display: flex here) - it hard-clips
+     the text with no ellipsis marker instead. inline-block keeps the ellipsis
+     working since the truncated content is plain text with no icon/flex children. */
+  display: inline-block;
+  font-size: 0.85em;
+  line-height: 1.2;
+  margin-left: 0.25rem;
+  /* Unlike http.status_code (always 3 fixed digits), values like
+     gen_ai.request.model are unbounded-length strings. Without a cap here,
+     .span-name's overflow: hidden can clip this pill entirely once the
+     preceding service/operation-name text already fills the row, so it
+     disappears with no indication it exists. Capping width and ellipsizing
+     the pill's own text keeps it visible (if truncated); SpanPill's Tooltip
+     surfaces the full label and value on hover. */
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* The row already shows the pointer cursor, so the cursor cannot tell a pill from its row, and a
+   hovered pill changes colour instead. */
+.SpanBarRow--pillWrap:hover .SpanBarRow--pill:not(.is-error),
+.SpanBarRow--pillWrap:focus-visible .SpanBarRow--pill:not(.is-error) {
+  background: var(--surface-component-background-hover);
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+}
+
+.SpanBarRow--pillWrap:hover .SpanBarRow--pill.is-error,
+.SpanBarRow--pillWrap:focus-visible .SpanBarRow--pill.is-error {
+  background: color-mix(in srgb, var(--feedback-error) 28%, var(--surface-primary));
+}
+
+.SpanBarRow--pillHint {
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.SpanBarRow--pill.is-error {
+  background: color-mix(in srgb, var(--feedback-error) 12%, var(--surface-primary));
+  border-color: var(--feedback-error-text);
+  color: var(--feedback-error-text);
+}
+
 .span-row.is-matching-filter {
   background-color: var(--trace-emphasis-highlight);
 }
@@ -209,9 +268,49 @@ SPDX-License-Identifier: Apache-2.0
   vertical-align: middle;
 }
 
-.SpanBarRow--spanTypeIcon {
+/* The connector glyph marks a row whose parent is hidden, so it was lifted to the nearest
+   visible ancestor. It is muted because it is a hint, not an alarm. It is raised above the
+   hit-area pseudo-element of the span-name link, which otherwise takes the hover that opens the
+   tooltip. */
+.SpanBarRow--liftedGlyph {
   color: var(--text-secondary);
-  font-size: 0.85em;
+  cursor: help;
   margin-right: 0.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* The tooltips of the glyph and the badge list spans, so they read smaller than the row and wrap a
+   long span name under its bullet. */
+.ant-tooltip.SpanBarRow--spanListTip {
+  max-width: 360px;
+}
+
+.SpanBarRow--spanListTip .ant-tooltip-inner {
+  font-size: 12px;
+}
+
+.SpanBarRow--spanList ul {
+  margin: 0.25em 0 0;
+  padding-left: 1.25em;
+  overflow-wrap: anywhere;
+}
+
+.SpanBarRow--spanListMore {
+  font-style: italic;
+  list-style: none;
+  margin-left: -1.25em;
+}
+
+/* The hidden-errors badge credits the errors of hidden descendants to their nearest visible
+   ancestor, in lift mode, where no pruned placeholder row exists to report them. */
+.SpanBarRow--hiddenErrors {
+  color: var(--feedback-error-text);
+  cursor: help;
+  font-size: 0.85em;
+  margin-left: 0.25rem;
+  position: relative;
   vertical-align: middle;
+  white-space: nowrap;
+  z-index: 1;
 }

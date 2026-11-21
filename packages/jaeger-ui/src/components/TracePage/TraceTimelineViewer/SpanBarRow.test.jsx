@@ -5,12 +5,17 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import SpanBarRow from './SpanBarRow';
+import SpanBarRow, { SpanListTooltip, TOOLTIP_SPAN_LIMIT } from './SpanBarRow';
+import { SpanPillActionsContext } from './spanPillActions';
+import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
+import colorGenerator from '../../../utils/color-generator';
+import { makeAttributes } from '../../../model/attributes';
+import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick }) => (
-    <div data-testid="span-tree-offset" onClick={onClick}>
+  default: jest.fn(({ span, childrenVisible, onClick, color }) => (
+    <div data-testid="span-tree-offset" data-color={color} onClick={onClick}>
       SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
@@ -33,10 +38,22 @@ vi.mock('./SpanBar', () => ({
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
-vi.mock('./utils', () => ({
-  formatDurationCompact: jest.fn(d => `formatted-${d}`),
-  ViewedBoundsFunctionType: {},
-}));
+vi.mock('./utils', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    formatDurationCompact: jest.fn(d => `formatted-${d}`),
+  };
+});
+
+// SpanPill throws without a SpanPillActionsContext provider. In the app the trace page is that
+// provider; a test that renders a row with pills wraps it in this one.
+const spanPillActions = { applyVerb: vi.fn(), disabledReasons: () => ({ keep: null, hide: null }) };
+function SpanPillActionsProvider({ children }) {
+  return (
+    <SpanPillActionsContext.Provider value={spanPillActions}>{children}</SpanPillActionsContext.Provider>
+  );
+}
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -70,14 +87,15 @@ describe('<SpanBarRow>', () => {
       startTime: 100,
       endTime: 200,
       duration: 100,
-      attributes: [],
+      attributes: makeAttributes([]),
       events: [],
       links: [],
       status: { code: 'OK' },
-      resource: { attributes: [], serviceName: 'service-name' },
+      resource: { attributes: makeAttributes([]), serviceName: 'service-name' },
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
+      childSpans: [{ spanID: 'child-span-id' }],
       relativeStartTime: 100,
       inboundLinks: [],
       warnings: null,
@@ -85,6 +103,7 @@ describe('<SpanBarRow>', () => {
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
+    spanPillsEnabled: false,
     useOtelTerms: false,
   };
 
@@ -137,6 +156,14 @@ describe('<SpanBarRow>', () => {
     fireEvent.click(treeOffset);
     expect(defaultProps.onChildrenToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onChildrenToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('keeps the tree markers on the service color when the bar takes another color', () => {
+    render(<SpanBarRow {...defaultProps} color="var(--heatmap-7)" />);
+    expect(screen.getByTestId('span-tree-offset')).toHaveAttribute(
+      'data-color',
+      colorGenerator.getColorByKey('service-name')
+    );
   });
 
   it('shows ReferencesButton when span has multiple references', () => {
@@ -250,6 +277,146 @@ describe('<SpanBarRow>', () => {
     });
   });
 
+  describe('span pills', () => {
+    it('renders pills with error styling for 5xx status codes', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '500' }]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      const errorPill = screen.getByLabelText('http.status_code: 500');
+      expect(errorPill).toBeInTheDocument();
+      expect(errorPill).toHaveClass('is-error');
+    });
+
+    it('renders neutral pills without error styling for non-5xx', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      const pill = screen.getByLabelText('http.status_code: 200');
+      expect(pill).toBeInTheDocument();
+      expect(pill).not.toHaveClass('is-error');
+    });
+
+    it('does not render pills when spanPillsEnabled is false', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled={false}
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
+    });
+
+    it('renders a pill for gen_ai.request.model', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      const pill = screen.getByLabelText('gen_ai.request.model: gpt-4o');
+      expect(pill).toBeInTheDocument();
+      expect(pill).not.toHaveClass('is-error');
+    });
+
+    it('renders both an http status pill and a gen_ai.request.model pill when both are present', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'http.status_code', value: '500' },
+              { key: GEN_AI_REQUEST_MODEL, value: 'claude-3-haiku' },
+            ]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      expect(screen.getByLabelText('http.status_code: 500')).toBeInTheDocument();
+      expect(screen.getByLabelText('gen_ai.request.model: claude-3-haiku')).toBeInTheDocument();
+    });
+
+    it('renders multiple pills from span attributes', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'http.status_code', value: '200' },
+              { key: 'http.method', value: 'GET' },
+            ]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      expect(screen.getByLabelText('http.status_code: 200')).toBeInTheDocument();
+      expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
+    });
+
+    it('shows the pill label and value as a tooltip on hover', async () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      fireEvent.mouseEnter(screen.getByLabelText('http.status_code: 200').parentElement);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code: 200');
+    });
+
+    it('shows the full label and value in the tooltip, so a CSS-truncated pill value is still discoverable on hover', async () => {
+      const longModel = 'gpt-4o-2024-08-06-fine-tuned-deployment-name';
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: longModel }]),
+          }}
+        />,
+        { wrapper: SpanPillActionsProvider }
+      );
+      const pill = screen.getByLabelText(`gen_ai.request.model: ${longModel}`);
+      fireEvent.mouseEnter(pill.parentElement);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(`gen_ai.request.model: ${longModel}`);
+    });
+  });
+
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
     const getViewedBounds = jest.fn().mockReturnValue({ start: 0.2, end: 0.3 });
     const props = {
@@ -269,5 +436,140 @@ describe('<SpanBarRow>', () => {
       }),
       undefined
     );
+  });
+
+  describe('GenAI icon', () => {
+    it('shows no GenAI icon for a standard span', () => {
+      render(<SpanBarRow {...defaultProps} />);
+      expect(
+        screen.queryByRole('img', { name: /LLM call|MCP Tool call|AI Agent|Retrieval|GenAI span/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows an LLM call icon when span.genAIKind=LLM_CALL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'LLM_CALL' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
+    });
+
+    it('shows a tool call icon when span.genAIKind=TOOL_CALL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'TOOL_CALL' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'MCP Tool call' })).toBeInTheDocument();
+    });
+
+    it('shows an agent icon when span.genAIKind=AGENT', () => {
+      const span = { ...defaultProps.span, genAIKind: 'AGENT' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
+    });
+
+    it('shows a retrieval icon when span.genAIKind=RETRIEVAL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'RETRIEVAL' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'Retrieval' })).toBeInTheDocument();
+    });
+
+    it('shows a generic GenAI icon when span.genAIKind=UNKNOWN_GENAI', () => {
+      const span = { ...defaultProps.span, genAIKind: 'UNKNOWN_GENAI' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
+    });
+
+    it('renders exactly one icon for a GenAI span — kind icon, not also a namespace icon (#4217)', () => {
+      const span = {
+        ...defaultProps.span,
+        genAIKind: 'LLM_CALL',
+        attributes: makeAttributes([{ key: 'gen_ai.system', value: 'openai' }]),
+      };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(container.querySelectorAll('.SpanDecorationIcon')).toHaveLength(1);
+      expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
+    });
+
+    it('still renders exactly one icon when a GenAI span also carries http attributes (#4217)', () => {
+      // Root HTTP server span for a GenAI agent often carries both gen_ai.* and
+      // http.* attributes. The unified resolver must not fall through to http.
+      const span = {
+        ...defaultProps.span,
+        genAIKind: 'AGENT',
+        attributes: makeAttributes([
+          { key: 'gen_ai.operation.name', value: 'invoke_agent' },
+          { key: 'http.request.method', value: 'POST' },
+          { key: 'http.response.status_code', value: 200 },
+        ]),
+      };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(container.querySelectorAll('.SpanDecorationIcon')).toHaveLength(1);
+      expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
+    });
+
+    it('renders the decoration icon before the error icon', () => {
+      const span = { ...defaultProps.span, genAIKind: 'LLM_CALL' };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} hasOwnError />);
+      const svcName = container.querySelector('.span-svc-name');
+      const decoration = svcName.querySelector('.SpanDecorationIcon');
+      const error = svcName.querySelector('.SpanBarRow--errorIcon');
+      expect(decoration).toBeTruthy();
+      expect(error).toBeTruthy();
+      // DOCUMENT_POSITION_FOLLOWING (4): error comes after decoration in the tree.
+      expect(decoration.compareDocumentPosition(error) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+  });
+  describe('lift mode', () => {
+    const hiddenSpan = {
+      spanID: 'hidden-1',
+      name: 'gateway',
+      resource: { serviceName: 'mcp-gateway' },
+    };
+    const errorSpan = { spanID: 'err-1', name: 'GET /pods', resource: { serviceName: 'k8s-api' } };
+    const liftedTree = {
+      parentOf: () => null,
+      isLastChild: () => false,
+      depthOf: () => 1,
+      childCount: () => 0,
+      liftedPast: () => [hiddenSpan],
+      hiddenErrors: () => [errorSpan, errorSpan, errorSpan, errorSpan, errorSpan, errorSpan, errorSpan],
+      hiddenErrorIDs: () => new Set(['err-1']),
+    };
+
+    it('draws the indent guides from the lifted tree', () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      expect(SpanTreeOffset.mock.lastCall[0].tree).toBe(liftedTree);
+    });
+
+    it('marks a lifted row with the connector glyph and names the hidden spans on hover', async () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      fireEvent.mouseEnter(screen.getByTestId('lifted-glyph'));
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Lifted past 1 hidden span');
+      expect(tooltip.querySelectorAll('li')).toHaveLength(1);
+      expect(tooltip.querySelector('li')).toHaveTextContent('mcp-gateway::gateway');
+    });
+
+    it('shows a hidden-errors badge whose hover text names at most a few spans', () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      expect(screen.getByTestId('hidden-errors')).toHaveTextContent('7 hidden errors');
+      const { container } = render(<SpanListTooltip heading="Hidden" spans={liftedTree.hiddenErrors()} />);
+      const items = container.querySelectorAll('li');
+      expect(items).toHaveLength(TOOLTIP_SPAN_LIMIT + 1);
+      expect(items[0]).toHaveTextContent('k8s-api::GET /pods');
+      expect(items[TOOLTIP_SPAN_LIMIT]).toHaveTextContent('and 1 more');
+    });
+
+    it('reads whether the row has children from the tree, not from the span', () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      expect(screen.queryByTestId('lifted-glyph')).toBeInTheDocument();
+      expect(screen.queryByTestId('hidden-errors')).toBeInTheDocument();
+      // The SpanTreeOffset mock toggles children through onClick; with no children the row passes none.
+      fireEvent.click(screen.getByTestId('span-tree-offset'));
+      expect(defaultProps.onChildrenToggled).not.toHaveBeenCalled();
+    });
+
+    it('renders neither the glyph nor the badge for a span of the plain tree', () => {
+      render(<SpanBarRow {...defaultProps} />);
+      expect(screen.queryByTestId('lifted-glyph')).toBeNull();
+      expect(screen.queryByTestId('hidden-errors')).toBeNull();
+    });
   });
 });
