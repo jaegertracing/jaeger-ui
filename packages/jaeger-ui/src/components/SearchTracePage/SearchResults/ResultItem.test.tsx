@@ -1,7 +1,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter, createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
@@ -13,13 +14,14 @@ import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../../model/trace-summary';
 import * as tracking from './index.track';
+import type { TraceSummary } from '../../../types/trace-summary';
 
 // Helper function to wrap component with Router
-const renderWithRouter = ui => {
+const renderWithRouter = (ui: React.ReactElement) => {
   return render(ui, { wrapper: MemoryRouter });
 };
 
-let traceSummary;
+let traceSummary: TraceSummary;
 
 beforeEach(() => {
   // Reset trace data before each test.
@@ -27,7 +29,7 @@ beforeEach(() => {
   // Resetting ensures that each test starts with a clean, unmodified trace,
   // preventing side effects between tests and maintaining test isolation.
   const trace = transformTraceData(traceGenerator.trace({}));
-  traceSummary = traceToTraceSummary(trace.asOtelTrace());
+  traceSummary = traceToTraceSummary(trace!.asOtelTrace());
 });
 
 it('<ResultItem /> should render base case correctly', () => {
@@ -69,7 +71,7 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error sp
   const targetService = traceSummary.services[0];
 
   // Mark the first service as having errors.
-  const summaryWithError = {
+  const summaryWithError: TraceSummary = {
     ...traceSummary,
     errorSpanCount: 1,
     services: traceSummary.services.map((s, i) => (i === 0 ? { ...s, errorSpanCount: 1 } : s)),
@@ -88,11 +90,11 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error sp
 
   const serviceTagsContainer = screen.getByTestId(markers.SERVICE_TAGS);
   const errorTag = Array.from(serviceTagsContainer.querySelectorAll('li > .ServicePills--tag')).find(tag =>
-    tag.textContent.includes(targetService.name)
+    tag.textContent?.includes(targetService.name)
   );
 
   expect(errorTag).toBeDefined();
-  expect(errorTag.querySelector('.ServicePills--errorIcon')).toBeInTheDocument();
+  expect(errorTag!.querySelector('.ServicePills--errorIcon')).toBeInTheDocument();
 });
 
 it('passes router state to destination route when linkTo is a TracePageLink', async () => {
@@ -163,7 +165,7 @@ it('does not render Uploaded tag when isUploaded is false', () => {
 });
 
 it('calls trackConversions on click', () => {
-  const spy = jest.spyOn(tracking, 'trackConversions');
+  const spy = vi.spyOn(tracking, 'trackConversions');
   renderWithRouter(
     <ResultItem
       traceSummary={traceSummary}
@@ -180,7 +182,7 @@ it('calls trackConversions on click', () => {
 });
 
 it('<ResultItem /> hides span tag when spanCount is undefined', () => {
-  const summary = {
+  const summary: TraceSummary = {
     ...traceSummary,
     spanCount: undefined,
     errorSpanCount: undefined,
