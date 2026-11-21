@@ -246,7 +246,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
         const parsedSpan: MutableOtelSpan = {
           traceID: spanTraceID,
           spanID,
-          parentSpanID: span.parentSpanId?.toLowerCase(),
+          parentSpanID: span.parentSpanId?.toLowerCase() || undefined,
           name: span.name || 'no-name',
           kind: toSpanKind(span.kind),
           startTime,

@@ -14,6 +14,7 @@ import traceGenerator from '../../../demo/trace-generators';
 import { getTraceName } from '../../../model/trace-display-helpers';
 import transformTraceData from '../../../model/transform-trace-data';
 import { ETraceViewType } from '../types';
+import * as getConfigModule from '../../../utils/config/get-config';
 
 vi.mock('./AltViewOptions', () => {
   return mockDefault(function MockAltViewOptions(props) {
@@ -86,6 +87,15 @@ const renderWithRouter = component => {
 };
 
 describe('<TracePageHeader>', () => {
+  it('counts the error spans in the summary', () => {
+    const errorCount = HEADER_ITEMS.find(item => item.key === 'error-count');
+    const raw = traceGenerator.trace({ numberOfSpans: 6 });
+    raw.spans[1].tags = [{ key: 'error', type: 'bool', value: true }];
+    raw.spans[4].tags = [{ key: 'error', type: 'bool', value: true }];
+    const trace = transformTraceData(raw).asOtelTrace();
+    expect(errorCount.renderer(trace)).toBe(2);
+  });
+
   const trace = transformTraceData(traceGenerator.trace({}));
   const mockRef = React.createRef();
 
@@ -128,6 +138,10 @@ describe('<TracePageHeader>', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     wrapper = renderWithRouter(<TracePageHeader {...defaultProps} />);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('renders a <header />', () => {
@@ -366,7 +380,7 @@ describe('<TracePageHeader>', () => {
       expect(links[0]).toHaveAttribute('href', `/${toSearch}`);
     });
 
-    it('toggles the standalone link', () => {
+    it('toggles the standalone link with accessible aria-label', () => {
       const linkToStandalone = 'some-link';
       wrapper.rerender(
         <MemoryRouter>
@@ -374,9 +388,11 @@ describe('<TracePageHeader>', () => {
         </MemoryRouter>
       );
 
-      const links = screen.getAllByRole('link');
-      expect(links).toHaveLength(1);
-      expect(links[0]).toHaveAttribute('href', `/${linkToStandalone}`);
+      const link = screen.getByRole('link', { name: 'Open trace in a new window' });
+      expect(link).toBeInTheDocument();
+      expect(screen.getAllByRole('link')).toHaveLength(1);
+      expect(link).toHaveAttribute('href', `/${linkToStandalone}`);
+      expect(link).toHaveAttribute('aria-label', 'Open trace in a new window');
 
       wrapper.rerender(
         <MemoryRouter>
@@ -385,11 +401,28 @@ describe('<TracePageHeader>', () => {
       );
       expect(screen.queryAllByRole('link')).toHaveLength(0);
     });
+
+    it('renders standalone link without "in a new window" when forbidNewPage is true', () => {
+      vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
+      const linkToStandalone = 'some-link';
+      wrapper.rerender(
+        <MemoryRouter>
+          <TracePageHeader {...defaultProps} linkToStandalone={linkToStandalone} showStandaloneLink />
+        </MemoryRouter>
+      );
+
+      const link = screen.getByRole('link', { name: 'Open trace' });
+      expect(link).toBeInTheDocument();
+      expect(screen.getAllByRole('link')).toHaveLength(1);
+      expect(link).toHaveAttribute('href', `/${linkToStandalone}`);
+      expect(link).toHaveAttribute('aria-label', 'Open trace');
+      expect(link).toHaveAttribute('target', '');
+    });
   });
   describe('<TracePageHeaderWithRef>', () => {
     it('renders default export (forwardRef wrapper) correctly', () => {
       const props = {
-        trace,
+        trace: trace.asOtelTrace(),
         canCollapse: false,
         clearSearch: jest.fn(),
         focusUiFindMatches: jest.fn(),

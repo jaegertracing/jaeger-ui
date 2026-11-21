@@ -3,12 +3,14 @@
 
 import { create } from 'zustand';
 import DetailState from './SpanDetail/DetailState';
-import { useLayoutPrefsStore } from './store.layout';
+import { useDisplayedLayoutStore } from './store.layout';
 import { TNil } from '../../../types';
-import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { IOtelTrace, IEvent } from '../../../types/otel';
+import { EMPTY_SPAN_FILTER, ISpanFilter } from '../spanFilter';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
+  CollapseTarget,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
@@ -19,16 +21,22 @@ type TraceTimelineInteractionStore = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
-  prunedServices: Set<string>;
-  setPrunedServices: (pruned: Set<string>) => void;
-  clearServiceFilter: () => void;
-  // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
-  setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
+  // The active span filter (RFC 0009). Consumers evaluate it over the trace they render.
+  spanFilter: ISpanFilter;
+  setSpanFilter: (filter: ISpanFilter) => void;
+  // Resets ephemeral fields when a different trace is opened and optionally focuses the find
+  // matches, given as the search text or as the set of matching span IDs the filter leaves visible.
+  // A reload of the same trace does neither, so that it keeps the user's collapses and scroll
+  // position, at the cost that a match arriving under a collapsed parent stays hidden.
+  setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => void;
+  // Forgets the current trace when the trace page unmounts, so that re-opening the same trace is an
+  // open and not a reload.
+  clearTrace: () => void;
   childrenToggle: (spanID: string) => void;
   expandAll: () => void;
-  expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
-  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
-  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
+  expandOne: (spans: ReadonlyArray<CollapseTarget>) => void;
+  collapseAll: (spans: ReadonlyArray<CollapseTarget>) => void;
+  collapseOne: (spans: ReadonlyArray<CollapseTarget>) => void;
   detailToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
@@ -37,49 +45,77 @@ type TraceTimelineInteractionStore = {
   detailWarningsToggle: (spanID: string) => void;
   detailReferencesToggle: (spanID: string) => void;
   clearShouldScrollToFirstUiFindMatch: () => void;
-  focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide?: boolean) => void;
+  focusUiFindMatches: (
+    trace: IOtelTrace,
+    matches: string | ReadonlySet<string> | TNil,
+    allowHide?: boolean
+  ) => void;
 };
+
+const emptyEphemeralFields = () => ({
+  childrenHiddenIDs: new Set<string>(),
+  detailStates: new Map<string, DetailState>(),
+  shouldScrollToFirstUiFindMatch: false,
+});
 
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
   traceID: null,
   traceSpans: null,
-  childrenHiddenIDs: new Set<string>(),
-  detailStates: new Map<string, DetailState>(),
-  shouldScrollToFirstUiFindMatch: false,
-  prunedServices: new Set<string>(),
+  ...emptyEphemeralFields(),
+  spanFilter: EMPTY_SPAN_FILTER,
 
-  setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
-
-  clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
-  setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
+  setSpanFilter: (filter: ISpanFilter) => set({ spanFilter: filter }),
+  setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => {
     const { traceID: currentTraceID, traceSpans } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
 
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
       traceSpans: trace.spans,
     };
 
-    // Span IDs and service names are stable across refetches of the same trace,
-    // so the user's collapse, detail and filter selections stay valid.
-    if (trace.traceID !== currentTraceID) {
-      Object.assign(base, {
-        childrenHiddenIDs: new Set<string>(),
-        detailStates: new Map<string, DetailState>(),
-        shouldScrollToFirstUiFindMatch: false,
-        prunedServices: new Set<string>(),
-      });
+    const isNewTrace = trace.traceID !== currentTraceID;
+
+    // Across refetches of the same trace, collapse selections persist, while detail states are
+    // pruned for spans that no longer exist. The span filter is not touched here at all: the page's
+    // span filter hook resolves it from the URL for every trace, and it does so before the
+    // timeline mounts, so a reset here would wipe what the URL asked for.
+    if (isNewTrace) {
+      Object.assign(base, emptyEphemeralFields());
+    } else {
+      const validSpanIDs = trace.spanMap;
+      const currentDetailStates = get().detailStates;
+      let hasDropped = false;
+      for (const id of currentDetailStates.keys()) {
+        if (!validSpanIDs.has(id)) {
+          hasDropped = true;
+          break;
+        }
+      }
+      if (hasDropped) {
+        const prunedDetailStates = new Map<string, DetailState>();
+        for (const [id, state] of currentDetailStates) {
+          if (validSpanIDs.has(id)) {
+            prunedDetailStates.set(id, state);
+          }
+        }
+        base.detailStates = prunedDetailStates;
+      }
     }
 
-    if (uiFind) {
-      let focused = calculateFocusedFindRowStates(uiFind, trace.spans);
+    if (isNewTrace && matches) {
+      let focused = calculateFocusedFindRowStates(matches, trace.spans);
       focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
       Object.assign(base, focused);
     }
 
     set(base as Partial<TraceTimelineInteractionStore>);
+  },
+
+  clearTrace: () => {
+    set({ traceID: null, traceSpans: null, ...emptyEphemeralFields() });
   },
 
   childrenToggle: (spanID: string) => {
@@ -96,26 +132,31 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs: new Set<string>() });
   },
 
-  expandOne: (spans: ReadonlyArray<IOtelSpan>) => {
+  expandOne: (spans: ReadonlyArray<CollapseTarget>) => {
     const current = get().childrenHiddenIDs;
     if (current.size === 0) return;
     let prevExpandedDepth = -1;
     let expandNextHiddenSpan = true;
+    let expanded = false;
     const childrenHiddenIDs = spans.reduce((res, s) => {
       if (s.depth <= prevExpandedDepth) {
         expandNextHiddenSpan = true;
       }
-      if (expandNextHiddenSpan && res.has(s.spanID)) {
+      // A collapsed span whose children are all hidden draws no children, so expanding it would
+      // spend the click on nothing.
+      if (expandNextHiddenSpan && s.hasChildren && res.has(s.spanID)) {
         res.delete(s.spanID);
+        expanded = true;
         expandNextHiddenSpan = false;
         prevExpandedDepth = s.depth;
       }
       return res;
     }, new Set(current));
-    set({ childrenHiddenIDs });
+    // An unchanged set keeps its identity, so the memoized rows are not regenerated for nothing.
+    if (expanded) set({ childrenHiddenIDs });
   },
 
-  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => {
+  collapseAll: (spans: ReadonlyArray<CollapseTarget>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
     const childrenHiddenIDs = spans.reduce((res, s) => {
@@ -125,10 +166,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs });
   },
 
-  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => {
+  collapseOne: (spans: ReadonlyArray<CollapseTarget>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
-    let nearestCollapsedAncestor: IOtelSpan | undefined;
+    let nearestCollapsedAncestor: CollapseTarget | undefined;
     const childrenHiddenIDs = spans.reduce((res, curSpan) => {
       if (nearestCollapsedAncestor && curSpan.depth <= nearestCollapsedAncestor.depth) {
         res.add(nearestCollapsedAncestor.spanID);
@@ -147,7 +188,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   },
 
   detailToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates: current } = get();
     if (detailPanelMode === 'sidepanel') {
       if (current.has(spanID)) {
@@ -169,31 +210,31 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   },
 
   detailTagsToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'tags') });
   },
 
   detailProcessToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'process') });
   },
 
   detailLogsToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'logs') });
   },
 
   detailWarningsToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'warnings') });
   },
 
   detailReferencesToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({
       detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'references'),
@@ -201,7 +242,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   },
 
   detailLogItemToggle: (spanID: string, logItem: IEvent) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     const old = detailStates.get(spanID) ?? DetailState.forDetailPanelMode(detailPanelMode);
     const detailState = old.toggleLogItem(logItem);
@@ -216,10 +257,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     }
   },
 
-  focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide = true) => {
-    if (!uiFind) return;
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
-    let focused = calculateFocusedFindRowStates(uiFind, trace.spans, allowHide);
+  focusUiFindMatches: (trace: IOtelTrace, matches: string | ReadonlySet<string> | TNil, allowHide = true) => {
+    if (!matches || (typeof matches !== 'string' && matches.size === 0)) return;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
+    let focused = calculateFocusedFindRowStates(matches, trace.spans, allowHide);
     focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
     set(focused);
   },

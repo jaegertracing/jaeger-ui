@@ -1,7 +1,6 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import _get from 'lodash/get';
 import {
   IErrorData,
   IErrorContext,
@@ -23,7 +22,7 @@ import prefixUrl from '../prefix-url';
 // This is required by the gtag.js script to work
 
 interface WindowWithGATracking extends Window {
-  dataLayer: (string | object)[][] | undefined;
+  dataLayer: IArguments[] | undefined;
 }
 
 declare let window: WindowWithGATracking;
@@ -269,10 +268,10 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const isTest = appEnv === 'test';
   const isDebugMode =
     (isDev && isTruish(shouldDebugGoogleAnalytics())) ||
-    isTruish(parseQuery(_get(window, 'location.search'))['ga-debug']);
-  const gaID = _get(config, 'tracking.gaID');
-  const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
-  const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
+    isTruish(parseQuery(window.location.search)['ga-debug']);
+  const gaID = config.tracking?.gaID;
+  const isErrorsEnabled = isDebugMode || Boolean(config.tracking?.trackErrors);
+  const cookiesToDimensions = config.tracking?.cookiesToDimensions;
   const context = isErrorsEnabled ? true : null;
   const EVENT_LENGTHS = {
     action: 499,
@@ -284,16 +283,16 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     return isTest || isDebugMode || (isProd && Boolean(gaID));
   };
 
-  // Function to add a new event to the Google Analytics dataLayer
-  const gtag = (...args: (string | object)[]) => {
+  // gtag.js dispatches Arguments objects as commands; arrays are legacy method calls.
+  function gtag(...args: (string | object)[]) {
     if (window !== undefined)
       if (window.dataLayer !== undefined && Array.isArray(window.dataLayer)) {
-        window.dataLayer.push(args);
+        window.dataLayer.push(arguments);
         if (isDebugMode) {
           console.log('[GA Tracking]', ...args);
         }
       }
-  };
+  }
 
   const trackError = (description: string) => {
     let msg = description;
@@ -374,17 +373,15 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       appVersion: versionLong,
     });
 
-    if (cookiesToDimensions !== undefined) {
-      (cookiesToDimensions as unknown as Array<{ cookie: string; dimension: string }>).forEach(
-        ({ cookie, dimension }: { cookie: string; dimension: string }) => {
-          const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
-          if (match) {
-            gtag('set', {
-              [dimension]: match[1],
-            });
-          } else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
-        }
-      );
+    if (cookiesToDimensions) {
+      cookiesToDimensions.forEach(({ cookie, dimension }) => {
+        const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
+        if (match) {
+          gtag('set', {
+            [dimension]: match[1],
+          });
+        } else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
+      });
     }
     if (isErrorsEnabled) {
       ErrorCaptureInit({

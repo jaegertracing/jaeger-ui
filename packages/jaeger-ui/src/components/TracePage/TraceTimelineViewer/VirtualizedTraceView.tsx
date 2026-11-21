@@ -4,14 +4,12 @@
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import cx from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
 
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
-import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
-import generateRowStates, { RowState } from './generateRowStates';
+import generateRowStates, { RowState, RECORDED_TREE, VisibleTree } from './generateRowStates';
 import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
@@ -30,19 +28,30 @@ import { Accessors } from '../ScrollManager';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
-import { TNil, ReduxState } from '../../../types';
+import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
+import { heatmapColor } from '../../../utils/span-latency-stats';
 import TTraceTimeline from '../../../types/TTraceTimeline';
-import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import { getSelectedSpanID, useDisplayedLayoutStore, useTraceTimelineStore } from './store';
+import {
+  trackChildrenToggle,
+  trackDetailLogItemToggle,
+  trackDetailLogsToggle,
+  trackDetailProcessToggle,
+  trackDetailTagsToggle,
+  trackDetailToggle,
+} from './store.track';
 
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
+import { evaluateSpanFilter, TreeMode } from '../spanFilter';
 
 type RowStateData = {
   rows: RowState[];
+  tree: VisibleTree;
   spanIndexToRowIndex: Map<number, number>;
 };
 
@@ -53,9 +62,15 @@ type TVirtualizedTraceViewOwnProps = {
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
+  filterTrace: IOtelTrace | TNil;
   criticalPath: CriticalPathSection[];
   spanPillsEnabled: boolean;
   useOtelTerms: boolean;
+  heatmapEnabled?: boolean;
+  // Latency score per spanID; spans missing from the map have no same-operation peers.
+  heatmapScores?: Map<string, number>;
+  // Changes when content above the list (the heatmap legend) moves it; see ListView.
+  listTopOffsetKey?: unknown;
 };
 
 type TDispatchProps = {
@@ -68,9 +83,12 @@ type TDispatchProps = {
   detailProcessToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
-  setSpanNameColumnWidth: (width: number) => void;
-  setTrace: (trace: IOtelTrace | TNil, uiFind: string | TNil) => void;
-  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
+  setTrace: (trace: IOtelTrace | TNil, findMatchesIDs: ReadonlySet<string> | TNil) => void;
+  focusUiFindMatches: (
+    trace: IOtelTrace,
+    matches: string | ReadonlySet<string> | TNil,
+    allowHide?: boolean
+  ) => void;
 };
 
 type RouteProps = {
@@ -80,7 +98,8 @@ type RouteProps = {
 
 type TDerivedStateProps = {
   selectedSpanID: string | null;
-  prunedServices: Set<string>;
+  hiddenIDs: ReadonlySet<string>;
+  treeMode: TreeMode;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -104,21 +123,24 @@ function generateRowStatesFromTrace(
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
-  prunedServices: Set<string>
+  hiddenIDs: ReadonlySet<string>,
+  treeMode: TreeMode
 ): RowStateData {
   if (!trace) {
     return {
       rows: [],
+      tree: RECORDED_TREE,
       spanIndexToRowIndex: new Map(),
     };
   }
 
-  const rows = generateRowStates(
+  const { rows, tree } = generateRowStates(
     trace.spans,
     childrenHiddenIDs,
     detailStates,
     detailPanelMode,
-    prunedServices
+    hiddenIDs,
+    treeMode
   );
 
   const spanIndexToRowIndex = new Map<number, number>();
@@ -131,6 +153,7 @@ function generateRowStatesFromTrace(
 
   return {
     rows,
+    tree,
     spanIndexToRowIndex,
   };
 }
@@ -160,15 +183,23 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   propsRef.current = props;
 
   const criticalPathContext = useMemo(
-    () => makeCriticalPathContext(props.trace, props.criticalPath, props.prunedServices),
-    [props.trace, props.criticalPath, props.prunedServices]
+    () => makeCriticalPathContext(props.trace, props.criticalPath, props.hiddenIDs, props.treeMode),
+    [props.trace, props.criticalPath, props.hiddenIDs, props.treeMode]
   );
 
-  const getRowStates = useCallback((): RowState[] => {
-    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices)
-      .rows;
+  const getRowStateData = useCallback((): RowStateData => {
+    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, hiddenIDs, treeMode } = propsRef.current;
+    return memoizedGenerateRowStates(
+      trace,
+      childrenHiddenIDs,
+      detailStates,
+      detailPanelMode,
+      hiddenIDs,
+      treeMode
+    );
   }, []);
+
+  const getRowStates = useCallback((): RowState[] => getRowStateData().rows, [getRowStateData]);
 
   const getClippingCssClasses = useCallback((): string => {
     return memoizedGetCssClasses(propsRef.current.currentViewRangeTime);
@@ -219,29 +250,25 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const getViewRange = useCallback(() => propsRef.current.currentViewRangeTime, []);
   const getSearchedSpanIDs = useCallback(() => propsRef.current.findMatchesIDs, []);
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
+  const getHiddenSpanIDs = useCallback(() => propsRef.current.hiddenIDs, []);
 
   const mapRowIndexToSpanIndex = useCallback(
-    (index: number) => getRowStates()[index].spanIndex,
+    (index: number) => getRowStates()[index]?.spanIndex,
     [getRowStates]
   );
 
-  const mapSpanIndexToRowIndex = useCallback((index: number) => {
-    const { spanIndexToRowIndex } = memoizedGenerateRowStates(
-      propsRef.current.trace,
-      propsRef.current.childrenHiddenIDs,
-      propsRef.current.detailStates,
-      propsRef.current.detailPanelMode,
-      propsRef.current.prunedServices
-    );
+  const mapSpanIndexToRowIndex = useCallback(
+    (index: number) => {
+      const rowIndex = getRowStateData().spanIndexToRowIndex.get(index);
 
-    const rowIndex = spanIndexToRowIndex.get(index);
+      if (rowIndex == null) {
+        throw new Error(`unable to find row for span index: ${index}`);
+      }
 
-    if (rowIndex == null) {
-      throw new Error(`unable to find row for span index: ${index}`);
-    }
-
-    return rowIndex;
-  }, []);
+      return rowIndex;
+    },
+    [getRowStateData]
+  );
 
   const getAccessors = useCallback(() => {
     const lv = listViewRef.current;
@@ -252,6 +279,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       getViewRange,
       getSearchedSpanIDs,
       getCollapsedChildren,
+      getHiddenSpanIDs,
       getViewHeight: lv.getViewHeight,
       getBottomRowIndexVisible: lv.getBottomVisibleIndex,
       getTopRowIndexVisible: lv.getTopVisibleIndex,
@@ -263,6 +291,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     getViewRange,
     getSearchedSpanIDs,
     getCollapsedChildren,
+    getHiddenSpanIDs,
     mapRowIndexToSpanIndex,
     mapSpanIndexToRowIndex,
   ]);
@@ -371,10 +400,19 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     []
   );
 
+  // The bar row and its detail row share one color, so an expanded span matches its bar.
+  // Read through propsRef like the other row inputs: ListView re-renders its visible rows
+  // whenever this component renders, so toggling the heatmap repaints them.
+  const getSpanColor = useCallback((span: IOtelSpan): string => {
+    const { heatmapEnabled, heatmapScores } = propsRef.current;
+    return heatmapEnabled && heatmapScores
+      ? heatmapColor(heatmapScores.get(span.spanID))
+      : colorGenerator.getColorByKey(span.resource.serviceName);
+  }, []);
+
   const renderSpanBarRow = useCallback(
     (span: IOtelSpan, spanIndex: number, key: string, style: React.CSSProperties, attrs: object) => {
       const { spanID } = span;
-      const { serviceName } = span.resource;
       const {
         childrenHiddenIDs,
         childrenToggle,
@@ -382,12 +420,13 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         detailToggle,
         findMatchesIDs,
         nameColumnWidth,
-        prunedServices,
+        hiddenIDs,
         selectedSpanID,
         timelineBarsVisible,
         trace,
         useOtelTerms,
         spanPillsEnabled,
+        heatmapEnabled,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -396,16 +435,20 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
       const { spans } = trace;
 
-      const color = colorGenerator.getColorByKey(serviceName);
-      const isCollapsed = childrenHiddenIDs.has(spanID);
+      const color = getSpanColor(span);
+      const { tree } = getRowStateData();
+      // A collapsed span whose children are all hidden draws no children, so its row is not drawn
+      // as collapsed either.
+      const isCollapsed = childrenHiddenIDs.has(spanID) && tree.childCount(span) > 0;
       const isDetailExpanded = detailStates.has(spanID);
       const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
       const isSelected = selectedSpanID === spanID;
       const hasOwnError = isErrorSpan(span);
-      const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
+      // The hidden errors that this row's badge already reports are not reported a second time as a
+      // child error; the badges of collapsed descendants have no row, so their errors still count.
+      const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex, tree.hiddenErrorIDs(span));
       const hasPrunedChildren =
-        prunedServices.size > 0 &&
-        span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
+        hiddenIDs.size > 0 && span.childSpans.some(child => hiddenIDs.has(child.spanID));
       const criticalPathSections = criticalPathContext.sectionsFor(span, isCollapsed, hasPrunedChildren);
       // Check for direct child "server" span if the span is a "client" span.
       let rpc = null;
@@ -414,7 +457,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         if (rpcSpan) {
           const rpcViewBounds = getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
           rpc = {
-            color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
+            color: getSpanColor(rpcSpan),
             operationName: rpcSpan.name,
             serviceName: rpcSpan.resource.serviceName,
             viewEnd: rpcViewBounds.end,
@@ -429,7 +472,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       if (!span.hasChildren && peerServiceValue != null && (isKindClient(span) || isKindProducer(span))) {
         noInstrumentedServer = {
           serviceName: String(peerServiceValue),
-          color: colorGenerator.getColorByKey(String(peerServiceValue)),
+          // The peer has no span of its own to score, so under the heatmap it takes the color of
+          // the client call that measured it.
+          color: heatmapEnabled ? color : colorGenerator.getColorByKey(String(peerServiceValue)),
         };
       }
 
@@ -459,17 +504,17 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             traceDuration={trace.duration}
             spanPillsEnabled={spanPillsEnabled}
             useOtelTerms={useOtelTerms}
+            tree={tree}
           />
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext]
+    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext, getSpanColor, getRowStateData]
   );
 
   const renderSpanDetailRow = useCallback(
     (span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) => {
       const { spanID } = span;
-      const { serviceName } = span.resource;
       const {
         detailLogItemToggle,
         detailLogsToggle,
@@ -490,7 +535,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         return null;
       }
 
-      const color = colorGenerator.getColorByKey(serviceName);
+      const color = getSpanColor(span);
       return (
         <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
           <SpanDetailRow
@@ -512,11 +557,12 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={trace.duration}
             useOtelTerms={useOtelTerms}
+            tree={getRowStateData().tree}
           />
         </div>
       );
     },
-    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan]
+    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan, getSpanColor, getRowStateData]
   );
 
   const renderRow = useCallback(
@@ -541,13 +587,17 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   );
 
   const prevTraceRef = useRef<IOtelTrace | TNil | undefined>(undefined);
-  const { trace, uiFind, setTrace } = props;
+  // The focus on load takes the matches the filter leaves visible, the same set the count and the
+  // highlighting use, so a hidden span is never opened or selected. It waits until the page has
+  // resolved the filter for this trace, because until then the matches are those of the filter the
+  // previous trace left behind, and a reload of the same trace runs this effect only once.
+  const { trace, filterTrace, findMatchesIDs, setTrace } = props;
   useEffect(() => {
-    if (trace !== prevTraceRef.current) {
-      setTrace(trace, uiFind);
+    if (trace !== prevTraceRef.current && (!trace || filterTrace === trace)) {
+      setTrace(trace, findMatchesIDs);
       prevTraceRef.current = trace;
     }
-  }, [trace, uiFind, setTrace]);
+  }, [trace, filterTrace, findMatchesIDs, setTrace]);
 
   useEffect(() => {
     window.addEventListener('jaeger:list-resize', handleListResize);
@@ -590,6 +640,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         itemsWrapperClassName="VirtualizedTraceView--rowsWrapper"
         getKeyFromIndex={getKeyFromIndex}
         getIndexFromKey={getIndexFromKey}
+        topOffsetKey={props.listTopOffsetKey}
         windowScroller
       />
     </div>
@@ -597,10 +648,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 });
 
 /**
- * Functional wrapper that reads Zustand (ephemeral timeline state + layout prefs) and the
- * remaining Redux slice (hoverIndentGuideIds, uiFind), creates dual-write action handlers
- * (Redux dispatch first so the tracking middleware sees the pre-update state, then Zustand),
- * and passes everything into the class component.
+ * Functional wrapper that reads Zustand (ephemeral timeline state + layout prefs), derives uiFind
+ * from the URL, creates action handlers that call the trackers before each Zustand update so
+ * analytics see pre-update state, and passes everything into the class component.
  */
 /* istanbul ignore next */
 function VirtualizedTraceViewWrapper(
@@ -610,20 +660,21 @@ function VirtualizedTraceViewWrapper(
     search?: string;
   }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dispatch = useDispatch<any>();
-  const hoverIndentGuideIds = useSelector((state: ReduxState) => state.traceTimeline.hoverIndentGuideIds);
   const uiFind = parseUiFind(ownProps.search ?? ownProps.location.search ?? '');
 
-  const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
-  const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const spanNameColumnWidth = useDisplayedLayoutStore(s => s.spanNameColumnWidth);
+  const sidePanelWidth = useDisplayedLayoutStore(s => s.sidePanelWidth);
+  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
   const traceID = useTraceTimelineStore(s => s.traceID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const spanFilter = useTraceTimelineStore(s => s.spanFilter);
+  const hiddenIDs = useMemo(
+    () => evaluateSpanFilter(ownProps.trace.spans, spanFilter).hiddenIDs,
+    [ownProps.trace.spans, spanFilter]
+  );
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
 
   const zustandSetTrace = useTraceTimelineStore(s => s.setTrace);
@@ -633,108 +684,70 @@ function VirtualizedTraceViewWrapper(
   const zustandDetailProcessToggle = useTraceTimelineStore(s => s.detailProcessToggle);
   const zustandDetailLogsToggle = useTraceTimelineStore(s => s.detailLogsToggle);
   const zustandDetailLogItemToggle = useTraceTimelineStore(s => s.detailLogItemToggle);
-  const zustandDetailWarningsToggle = useTraceTimelineStore(s => s.detailWarningsToggle);
-  const zustandDetailReferencesToggle = useTraceTimelineStore(s => s.detailReferencesToggle);
-  const zustandClearScroll = useTraceTimelineStore(s => s.clearShouldScrollToFirstUiFindMatch);
-  const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
+  const detailWarningsToggle = useTraceTimelineStore(s => s.detailWarningsToggle);
+  const detailReferencesToggle = useTraceTimelineStore(s => s.detailReferencesToggle);
+  const clearShouldScrollToFirstUiFindMatch = useTraceTimelineStore(
+    s => s.clearShouldScrollToFirstUiFindMatch
+  );
+  const focusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
 
   const setTrace = useCallback(
-    (trace: IOtelTrace | TNil, uiFindValue: string | TNil) => {
-      dispatch(actions.setTrace(trace, uiFindValue));
-      if (trace) zustandSetTrace(trace, uiFindValue);
+    (trace: IOtelTrace | TNil, findMatchesIDs: ReadonlySet<string> | TNil) => {
+      if (trace) zustandSetTrace(trace, findMatchesIDs);
     },
-    [dispatch, zustandSetTrace]
+    [zustandSetTrace]
   );
 
   const childrenToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.childrenToggle(spanID));
+      trackChildrenToggle(spanID);
       zustandChildrenToggle(spanID);
     },
-    [dispatch, zustandChildrenToggle]
+    [zustandChildrenToggle]
   );
 
   const detailToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailToggle(spanID));
+      trackDetailToggle(spanID);
       zustandDetailToggle(spanID);
     },
-    [dispatch, zustandDetailToggle]
+    [zustandDetailToggle]
   );
 
   const detailTagsToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailTagsToggle(spanID));
+      trackDetailTagsToggle(spanID);
       zustandDetailTagsToggle(spanID);
     },
-    [dispatch, zustandDetailTagsToggle]
+    [zustandDetailTagsToggle]
   );
 
   const detailProcessToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailProcessToggle(spanID));
+      trackDetailProcessToggle(spanID);
       zustandDetailProcessToggle(spanID);
     },
-    [dispatch, zustandDetailProcessToggle]
+    [zustandDetailProcessToggle]
   );
 
   const detailLogsToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailLogsToggle(spanID));
+      trackDetailLogsToggle(spanID);
       zustandDetailLogsToggle(spanID);
     },
-    [dispatch, zustandDetailLogsToggle]
+    [zustandDetailLogsToggle]
   );
 
   const detailLogItemToggle = useCallback(
     (spanID: string, logItem: IEvent) => {
-      dispatch(actions.detailLogItemToggle(spanID, logItem));
+      trackDetailLogItemToggle(spanID, logItem);
       zustandDetailLogItemToggle(spanID, logItem);
     },
-    [dispatch, zustandDetailLogItemToggle]
-  );
-
-  const detailWarningsToggle = useCallback(
-    (spanID: string) => {
-      dispatch(actions.detailWarningsToggle(spanID));
-      zustandDetailWarningsToggle(spanID);
-    },
-    [dispatch, zustandDetailWarningsToggle]
-  );
-
-  const detailReferencesToggle = useCallback(
-    (spanID: string) => {
-      dispatch(actions.detailReferencesToggle(spanID));
-      zustandDetailReferencesToggle(spanID);
-    },
-    [dispatch, zustandDetailReferencesToggle]
-  );
-
-  const clearShouldScrollToFirstUiFindMatch = useCallback(() => {
-    dispatch(actions.clearShouldScrollToFirstUiFindMatch());
-    zustandClearScroll();
-  }, [dispatch, zustandClearScroll]);
-
-  const focusUiFindMatches = useCallback(
-    (trace: IOtelTrace, uiFindValue: string | TNil, allowHide?: boolean) => {
-      dispatch(actions.focusUiFindMatches(trace, uiFindValue, allowHide));
-      zustandFocusUiFindMatches(trace, uiFindValue, allowHide);
-    },
-    [dispatch, zustandFocusUiFindMatches]
-  );
-
-  // setSpanNameColumnWidth: the parent TraceTimelineViewer/index.tsx owns the nameColumnWidth prop;
-  // this handler keeps Redux in sync (Zustand is updated by the parent via its own dual-write).
-  const setSpanNameColumnWidth = useCallback(
-    (width: number) => {
-      dispatch(actions.setSpanNameColumnWidth(width));
-    },
-    [dispatch]
+    [zustandDetailLogItemToggle]
   );
 
   const combinedProps: VirtualizedTraceViewProps = {
     ...ownProps,
-    hoverIndentGuideIds,
     uiFind,
     spanNameColumnWidth,
     sidePanelWidth,
@@ -744,7 +757,8 @@ function VirtualizedTraceViewWrapper(
     childrenHiddenIDs,
     detailStates,
     shouldScrollToFirstUiFindMatch,
-    prunedServices,
+    hiddenIDs,
+    treeMode: spanFilter.treeMode,
     selectedSpanID,
     setTrace,
     childrenToggle,
@@ -757,7 +771,6 @@ function VirtualizedTraceViewWrapper(
     detailReferencesToggle,
     clearShouldScrollToFirstUiFindMatch,
     focusUiFindMatches,
-    setSpanNameColumnWidth,
   };
 
   return <VirtualizedTraceViewImpl {...combinedProps} />;

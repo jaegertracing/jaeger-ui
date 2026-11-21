@@ -336,7 +336,7 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   const showNoLatencyAlert = showNoMetricsAlert && !latencyRequestFailed && hasCallRates;
 
   if (servicesLoading) {
-    return <LoadingIndicator vcentered centered />;
+    return <LoadingIndicator vcentered centered label="Loading services" />;
   }
 
   return (

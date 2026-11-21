@@ -147,6 +147,11 @@ export type AnyValueWire = {
   bytesValue?: string;
 };
 
+// Proto3 JSON represents non-finite doubles as strings.
+const doubleValue = z
+  .union([z.number(), z.literal('NaN'), z.literal('Infinity'), z.literal('-Infinity')])
+  .transform(Number);
+
 // Circular AnyValue: lazy defers evaluation so forward refs are safe.
 // oxlint-disable-next-line no-use-before-define
 export const refinedAnyValue: z.ZodType<AnyValueWire> = z.lazy(() =>
@@ -155,7 +160,7 @@ export const refinedAnyValue: z.ZodType<AnyValueWire> = z.lazy(() =>
       stringValue: z.string().optional(),
       boolValue: z.boolean().optional(),
       intValue: decimalInt64String.optional(),
-      doubleValue: z.number().optional(),
+      doubleValue: doubleValue.optional(),
       // oxlint-disable-next-line no-use-before-define
       arrayValue: refinedArrayValue.optional(),
       // oxlint-disable-next-line no-use-before-define
@@ -244,7 +249,8 @@ export const refinedSpan = z
     traceId: traceIdHex,
     spanId: spanIdHex,
     traceState: z.string().optional(),
-    parentSpanId: spanIdHex.optional(),
+    // OTLP/JSON exporters may write an empty parentSpanId for a root span.
+    parentSpanId: z.union([z.literal(''), spanIdHex]).optional(),
     flags: z.number().int().min(0).optional(),
     name: z.string().optional(),
     kind: spanKindEnum.optional(),
@@ -260,12 +266,12 @@ export const refinedSpan = z
   })
   .passthrough();
 
-// `spans` / `scopeSpans` are required arrays (empty allowed): without them the rest of
-// the envelope is meaningless. This matches the generated base, which declares both required.
+// ProtoJSON omits empty repeated fields. Restore their empty-array defaults
+// before the parser walks resources and scopes.
 export const refinedScopeSpans = z
   .object({
     scope: refinedScope.optional(),
-    spans: z.array(refinedSpan),
+    spans: z.array(refinedSpan).default([]),
     schemaUrl: z.string().optional(),
   })
   .passthrough();
@@ -273,7 +279,7 @@ export const refinedScopeSpans = z
 export const refinedResourceSpans = z
   .object({
     resource: refinedResource.optional(),
-    scopeSpans: z.array(refinedScopeSpans),
+    scopeSpans: z.array(refinedScopeSpans).default([]),
     schemaUrl: z.string().optional(),
   })
   .passthrough();
@@ -335,4 +341,50 @@ const normalizeTraceId = z.preprocess(
 // so responses without the field pass validation (client.ts handles the ?? [] fallback).
 export const TraceSummariesResponseSchema = jaeger_api_v3_FindTraceSummariesResponse.extend({
   summaries: z.array(normalizeTraceId).optional(),
+});
+
+// The retained /api/metrics routes return OpenMetrics MetricFamily protobuf JSON.
+// Empty repeated fields and help can be omitted by the backend's jsonpb marshaler.
+const metricPoint = z
+  .object({
+    gaugeValue: z.object({ doubleValue }).passthrough(),
+    timestamp: z.string(),
+  })
+  .passthrough();
+
+const metricFamily = z
+  .object({
+    type: z.literal('GAUGE'),
+    help: z.string().default(''),
+    metrics: z
+      .array(
+        z
+          .object({
+            labels: z
+              .array(z.object({ name: z.string(), value: z.string().default('') }).passthrough())
+              .default([]),
+            metricPoints: z.array(metricPoint).default([]),
+          })
+          .passthrough()
+      )
+      .default([]),
+  })
+  .passthrough();
+
+export const ServiceMetricsResponseSchema = metricFamily
+  .extend({
+    name: z.enum(['service_latencies', 'service_call_rate', 'service_error_rate']),
+  })
+  .refine(response => response.metrics.every(metric => metric.labels.length > 0), {
+    // Service metrics rendering reads the first label as the service name.
+    message: 'Service metrics require a label for each series',
+    path: ['metrics'],
+  });
+
+export const OperationMetricsResponseSchema = metricFamily.extend({
+  name: z.enum([
+    'service_operation_latencies',
+    'service_operation_call_rate',
+    'service_operation_error_rate',
+  ]),
 });

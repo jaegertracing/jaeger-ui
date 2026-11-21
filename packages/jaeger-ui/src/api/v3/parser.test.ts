@@ -65,6 +65,13 @@ describe('parseOtelTrace', () => {
     expect(trace.spans[0].attributes.has('@jaeger@warnings')).toBe(false);
   });
 
+  it('treats an empty parentSpanId as a root span', () => {
+    const trace = parseOtelTrace(refinedTracesData.parse(traces([makeSpan({ parentSpanId: '' })])))!;
+    expect(trace.spans[0].parentSpanID).toBeUndefined();
+    expect(trace.rootSpans).toHaveLength(1);
+    expect(trace.orphanSpanCount).toBe(0);
+  });
+
   it('returns null when the payload has no spans', () => {
     expect(parseOtelTrace({})).toBeNull();
     expect(parseOtelTrace(traces([]))).toBeNull();

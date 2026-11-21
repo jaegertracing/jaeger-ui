@@ -14,6 +14,7 @@ import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection';
+import * as getConfigModule from '../../../utils/config/get-config';
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
@@ -146,6 +147,10 @@ const renderWithRouter = (ui, options = {}) => {
 };
 
 describe('<SearchResults>', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('shows the "no results" message when the search result is empty', () => {
     renderWithRouter(<SearchResults {...baseProps} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
@@ -555,10 +560,11 @@ describe('<SearchResults>', () => {
   });
 
   describe('showStandaloneLink', () => {
-    it('renders Link when showStandaloneLink is true', () => {
+    it('renders Link with accessible aria-label when showStandaloneLink is true', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
-      const link = screen.getByRole('link');
+      const link = screen.getByRole('link', { name: 'Open search results in a new window' });
       expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute('aria-label', 'Open search results in a new window');
       expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
     });
 
@@ -566,6 +572,16 @@ describe('<SearchResults>', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
       expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
+    });
+
+    it('renders Link with accessible aria-label without "in a new window" when forbidNewPage is true', () => {
+      vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
+      renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
+      const link = screen.getByRole('link', { name: 'Open search results' });
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute('aria-label', 'Open search results');
+      expect(link).toHaveAttribute('target', '');
+      expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
     });
   });
 

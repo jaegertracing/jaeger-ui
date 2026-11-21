@@ -103,6 +103,17 @@ describe('TraceTimelineViewer/utils', () => {
         expect(result).toEqual([i, target]);
       });
     });
+
+    it('leaves out the descendants in skipIDs', () => {
+      const error = { code: StatusCode.ERROR };
+      const spans = [
+        { spanID: 'a', depth: 0, status: { code: StatusCode.OK } },
+        { spanID: 'b', depth: 1, status: error },
+        { spanID: 'c', depth: 2, status: error },
+      ];
+      expect(spanContainsErredSpan(spans, 0, new Set(['b']))).toBe(true);
+      expect(spanContainsErredSpan(spans, 0, new Set(['b', 'c']))).toBe(false);
+    });
   });
 
   describe('findServerChildSpan()', () => {

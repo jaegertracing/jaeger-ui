@@ -60,7 +60,7 @@ vi.mock('../../utils/config/get-config', () => ({
 }));
 
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { render, fireEvent, waitFor, cleanup, screen } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
@@ -68,13 +68,12 @@ import dayjs from 'dayjs';
 import queryString from 'query-string';
 import SearchableSelect from '../common/SearchableSelect';
 
-import {
+import SearchFormWithLocation, {
   applyAdjustTime,
   convertQueryParamsToFormDates,
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
-  mapDispatchToProps,
-  mapStateToProps,
+  getSearchFormProps,
   optionsWithinMaxLookback,
   submitForm,
   traceIDsToQuery,
@@ -445,6 +444,30 @@ describe('<SearchForm>', () => {
     mockUseConfig.mockImplementation(() => baseUiConfig);
   });
 
+  it('uses URL defaults and submits through the router without a Redux provider', async () => {
+    function CurrentSearch() {
+      return <output data-testid="current-search">{useLocation().search}</output>;
+    }
+    render(
+      <MemoryRouter initialEntries={['/search?service=svcA&operation=A&limit=500&lookback=2h']}>
+        <SearchFormWithLocation />
+        <CurrentSearch />
+      </MemoryRouter>
+    );
+    expect(SearchableSelect.values.service).toBe('svcA');
+    expect(SearchableSelect.values.operation).toBe('A');
+    fireEvent.change(document.querySelector('input[name="resultsLimit"]'), { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Find Traces' }));
+    await waitFor(() => {
+      expect(queryString.parse(screen.getByTestId('current-search').textContent)).toMatchObject({
+        service: 'svcA',
+        operation: 'A',
+        limit: '100',
+        lookback: '2h',
+      });
+    });
+  });
+
   it('enables operations only when a service is selected', async () => {
     renderForm(<SearchForm key="fresh" {...defaultProps} />);
 
@@ -679,6 +702,47 @@ describe('<SearchForm>', () => {
 
       // Should display error message for services
       expect(container.textContent).toContain('Error loading services: Failed to fetch services');
+      expect(container.querySelector('[data-testid="ErrorMessage--details"]')).not.toBeInTheDocument();
+    });
+
+    it.each([
+      {
+        field: 'services',
+        hook: 'services',
+        message: 'Failed to fetch services: 400 Bad Request',
+        httpUrl: '/api/v3/services',
+      },
+      {
+        field: 'operations',
+        hook: 'spanNames',
+        message: 'Failed to fetch span names for service "svcA": 400 Bad Request',
+        httpUrl: '/api/v3/operations',
+      },
+    ])('shows the response body when $field fail to load', async ({ field, hook, message, httpUrl }) => {
+      const error = Object.assign(new Error(message), {
+        httpStatus: 400,
+        httpUrl,
+        httpBody: 'invalid service name',
+      });
+      useServices.mockReturnValue(
+        hook === 'services'
+          ? { data: undefined, isLoading: false, error }
+          : { data: ['svcA'], isLoading: false, error: null }
+      );
+      useSpanNames.mockReturnValue(
+        hook === 'spanNames'
+          ? { data: undefined, isLoading: false, error }
+          : { data: [], isLoading: false, error: null }
+      );
+
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      await waitFor(() => {
+        expect(container.textContent).toContain(`Error loading ${field}: ${message}`);
+      });
+      expect(container.querySelector('[data-testid="ErrorMessage--details"]')).toHaveTextContent(
+        'invalid service name'
+      );
     });
 
     it('displays error message when span names fetch fails', async () => {
@@ -964,31 +1028,21 @@ describe('validation', () => {
   });
 });
 
-describe('mapStateToProps()', () => {
-  let state;
-  const callMapStateToProps = (search = '') => mapStateToProps(state, { search });
-
+describe('getSearchFormProps()', () => {
   beforeEach(() => {
-    state = {};
     localStorage.clear();
   });
 
   it('does not explode when the query string is empty', () => {
-    expect(() => callMapStateToProps('')).not.toThrow();
+    expect(() => getSearchFormProps('')).not.toThrow();
   });
 
   // tests the green path
   it('service and operation fallback to values in `store` when the values are valid', () => {
     const op = 'some-op';
     const svc = 'some-svc';
-    state.services = {
-      services: [svc, 'something-else'],
-      operationsForService: {
-        [svc]: [op, 'some other opertion'],
-      },
-    };
     localStorage.setItem('lastSearch', JSON.stringify({ operation: op, service: svc }));
-    const { service, operation } = callMapStateToProps().initialValues;
+    const { service, operation } = getSearchFormProps().initialValues;
     expect(operation).toBe(op);
     expect(service).toBe(svc);
   });
@@ -997,15 +1051,14 @@ describe('mapStateToProps()', () => {
   // last-search stored by an earlier build still carries it, and must keep meaning "any
   // operation" rather than becoming a filter for an operation of that name.
   it('reads the legacy any-operation value from the URL as the current sentinel', () => {
-    const { operation } = callMapStateToProps('operation=all').initialValues;
+    const { operation } = getSearchFormProps('operation=all').initialValues;
     expect(operation).toBe(ALL_OPERATIONS);
   });
 
   it('reads the legacy any-operation value from lastSearch as the current sentinel', () => {
     const svc = 'some-svc';
-    state.services = { services: [svc], operationsForService: { [svc]: [] } };
     localStorage.setItem('lastSearch', JSON.stringify({ operation: 'all', service: svc }));
-    const { operation } = callMapStateToProps().initialValues;
+    const { operation } = getSearchFormProps().initialValues;
     expect(operation).toBe(ALL_OPERATIONS);
   });
 
@@ -1045,13 +1098,13 @@ describe('mapStateToProps()', () => {
     });
 
     it('derives values when available', () => {
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(expected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(expected);
     });
 
     it('parses `tag` values in the former format to logfmt', () => {
       delete params.tags;
       params.tag = ['error:true', 'span.kind:client'];
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(expected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(expected);
     });
 
     it('parses single string `tag` value in the former format to logfmt', () => {
@@ -1063,7 +1116,7 @@ describe('mapStateToProps()', () => {
         tags: 'error=true',
       };
 
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(singleTagExpected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(singleTagExpected);
     });
 
     it('handles tag parsing for keys without values', () => {
@@ -1075,7 +1128,7 @@ describe('mapStateToProps()', () => {
         tags: 'invalid-no-colon=""',
       };
 
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(
         tagWithEmptyValueExpected
       );
     });
@@ -1088,7 +1141,7 @@ describe('mapStateToProps()', () => {
         tags: undefined,
       };
 
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
     });
 
     it('handles empty key in tag parameter', () => {
@@ -1100,7 +1153,7 @@ describe('mapStateToProps()', () => {
         tags: 'Parse Error',
       };
 
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
     });
 
     it('handles invalid JSON in logfmtTags', () => {
@@ -1112,7 +1165,7 @@ describe('mapStateToProps()', () => {
         tags: 'Parse Error',
       };
 
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(errorExpected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(errorExpected);
     });
 
     it('handles traceIDParams as string', () => {
@@ -1123,7 +1176,7 @@ describe('mapStateToProps()', () => {
         traceIDs: '123abc',
       };
 
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
     });
 
     it('handles traceIDParams as array', () => {
@@ -1134,7 +1187,7 @@ describe('mapStateToProps()', () => {
         traceIDs: '123abc,456def',
       };
 
-      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
+      expect(getSearchFormProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
     });
   });
 
@@ -1145,7 +1198,7 @@ describe('mapStateToProps()', () => {
       return Math.abs(a - b);
     }
     const dateParams = makeDateParams(0);
-    const { startDate, startDateTime, endDate, endDateTime, ...values } = callMapStateToProps().initialValues;
+    const { startDate, startDateTime, endDate, endDateTime, ...values } = getSearchFormProps().initialValues;
 
     expect(values).toEqual({
       service: '-',
@@ -1159,7 +1212,7 @@ describe('mapStateToProps()', () => {
     });
     expect(startDate).toBe(dateParams.dateStr);
     expect(startDateTime).toBe('00:00');
-    // expect the time differential between our `makeDateparams()` and the mapStateToProps values to be
+    // expect the time differential between our `makeDateparams()` and the getSearchFormProps values to be
     // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
@@ -1167,13 +1220,13 @@ describe('mapStateToProps()', () => {
 
   it('uses search.defaultLookback from config when no lookback is in the URL', () => {
     vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
-    const { lookback } = callMapStateToProps('').initialValues;
+    const { lookback } = getSearchFormProps('').initialValues;
     expect(lookback).toBe('15m');
   });
 
   it('URL lookback takes precedence over search.defaultLookback', () => {
     vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
-    const { lookback } = callMapStateToProps('lookback=2h').initialValues;
+    const { lookback } = getSearchFormProps('lookback=2h').initialValues;
     expect(lookback).toBe('2h');
   });
 });
@@ -1200,33 +1253,5 @@ describe('submitForm() adjustEndTime toggle', () => {
   it('should not apply adjustEndTime when adjustTimeEnabled is false', () => {
     const url = submitForm(fields, '1m', false);
     expect(queryString.parse(url.slice(url.indexOf('?') + 1)).service).toBe('svcA');
-  });
-});
-
-describe('mapDispatchToProps()', () => {
-  it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => {})).toEqual({
-      submitFormHandler: expect.any(Function),
-    });
-  });
-
-  it('submitFormHandler delegates to submitForm', () => {
-    const { submitFormHandler } = mapDispatchToProps(() => {});
-    // submitForm returns a URL string; just verify it returns something truthy
-    const fields = {
-      service: 'svc',
-      operation: 'op',
-      resultsLimit: '20',
-      lookback: '1h',
-      startDate: '2020-01-01',
-      startDateTime: '00:00',
-      endDate: '2020-01-01',
-      endDateTime: '01:00',
-      tags: '',
-      minDuration: '',
-      maxDuration: '',
-    };
-    const result = submitFormHandler(fields, null, false);
-    expect(typeof result).toBe('string');
   });
 });

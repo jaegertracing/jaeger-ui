@@ -18,6 +18,7 @@ import { RiGraduationCapFill as LLMCallIcon } from 'react-icons/ri';
 
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import type { AttributeValue, GenAISpanKind, IAttributes, IOtelSpan } from '../../../types/otel';
+import { stringifyAttributeValue } from '../../../utils/filter-spans';
 
 /**
  * Shared span decoration registry (#4223).
@@ -43,7 +44,18 @@ type ISpanDecoration = {
   pills?: readonly IPillSource[];
 };
 
-export type ISpanPill = { label: string; value: string; isError?: boolean };
+/**
+ * `attrKey` is the key of the attribute that holds `value`, and `label` is the same for every key
+ * of one pill source. `attrMatchText` is the value as the search and the span filter match it,
+ * which differs from `value` for a value with surrounding spaces and for bytes.
+ */
+export type ISpanPill = {
+  label: string;
+  attrKey: string;
+  attrMatchText: string;
+  value: string;
+  isError?: boolean;
+};
 
 export type ISpanDecorationIcon = {
   icon: IconType;
@@ -132,7 +144,12 @@ function pillFromSource(span: IOtelSpan, source: IPillSource): ISpanPill | undef
     if (!value) {
       continue;
     }
-    const pill: ISpanPill = { label: source.label, value };
+    const pill: ISpanPill = {
+      label: source.label,
+      attrKey: key,
+      attrMatchText: stringifyAttributeValue(attrValue),
+      value,
+    };
     if (source.isError?.(value)) {
       pill.isError = true;
     }

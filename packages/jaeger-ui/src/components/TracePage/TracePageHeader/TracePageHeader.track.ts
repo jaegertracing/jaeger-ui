@@ -14,6 +14,7 @@ export const trackViewChange = (viewType: ETraceViewType) => trackEvent(CATEGORY
 // use a closure instead of bind to prevent forwarding any arguments to trackEvent()
 export const trackJsonView = () => trackEvent(CATEGORY_ALT_VIEW, 'json');
 export const trackRawJsonView = () => trackEvent(CATEGORY_ALT_VIEW, 'rawJson');
+export const trackJsonDownload = () => trackEvent(CATEGORY_ALT_VIEW, 'downloadJson');
 
 export const trackSlimHeaderToggle = (isOpen: boolean) =>
   trackEvent(CATEGORY_SLIM_HEADER, getToggleValue(isOpen));

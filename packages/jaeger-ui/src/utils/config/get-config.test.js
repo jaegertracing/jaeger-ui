@@ -144,6 +144,15 @@ describe('getConfig()', () => {
       expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, backendCapabilities: capabilities });
     });
 
+    it('keeps quality-metrics defaults when the embedded config only enables the menu', () => {
+      embedded = { qualityMetrics: { menuEnabled: true } };
+
+      expect(getConfig().qualityMetrics).toEqual({
+        ...defaultConfig.qualityMetrics,
+        menuEnabled: true,
+      });
+    });
+
     describe('overwriting precedence and merging', () => {
       describe('fields not in mergeFields', () => {
         it('gives precedence to the embedded config', () => {
