@@ -238,7 +238,7 @@ export function convertTimeUnitToShortTerm(timeUnit: LongTimeUnit): ShortTimeUni
 }
 
 export function convertToTimeUnit(microseconds: number, targetTimeUnit: string): number {
-  if (microseconds < 1000) {
+  if (targetTimeUnit === 'microseconds') {
     return microseconds;
   }
 
