@@ -572,4 +572,69 @@ describe('<SpanBarRow>', () => {
       expect(screen.queryByTestId('hidden-errors')).toBeNull();
     });
   });
+
+  describe('showServiceName', () => {
+    it('renders the service name by default', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+    });
+
+    it('renders the service name when showServiceName is true', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+    });
+
+    it('visually hides the service name when showServiceName is false', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('service-name')).toHaveClass('SpanBarRow--visuallyHidden');
+      expect(screen.getByRole('switch', { name: /service-name\s*op-name/ })).toBeInTheDocument();
+    });
+
+    it('still shows the operation name when service name is hidden', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('op-name')).toBeInTheDocument();
+    });
+
+    it('keeps service name visible when rpc is present even if showServiceName is false', () => {
+      const rpc = {
+        color: '#f00',
+        operationName: 'rpc-op',
+        serviceName: 'rpc-service',
+        viewEnd: 1,
+        viewStart: 0,
+      };
+      render(<SpanBarRow {...defaultProps} rpc={rpc} showServiceName={false} />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+      expect(screen.getByText('rpc-service')).toBeInTheDocument();
+    });
+
+    it('keeps service name visible when noInstrumentedServer is present even if showServiceName is false', () => {
+      const noInstrumentedServer = {
+        serviceName: 'peer-service',
+        color: '#0f0',
+      };
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          rpc={null}
+          noInstrumentedServer={noInstrumentedServer}
+          showServiceName={false}
+        />
+      );
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+      expect(screen.getByText('peer-service')).toBeInTheDocument();
+    });
+
+    it('keeps service name visible when operationName is empty even if showServiceName is false', () => {
+      const span = { ...defaultProps.span, name: '' };
+      render(<SpanBarRow {...defaultProps} span={span} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+    });
+
+    it('applies is-children-collapsed to endpoint-name when showServiceName is false and children are collapsed', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} isChildrenExpanded={false} />);
+      const endpoint = screen.getByText('op-name');
+      expect(endpoint).toHaveClass('endpoint-name', 'is-children-collapsed');
+    });
+  });
 });
