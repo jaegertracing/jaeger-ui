@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { Provider } from 'react-redux';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 
@@ -17,7 +16,6 @@ import '../common/vars.css';
 import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
-import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 import { JaegerAssistantProvider } from './JaegerAssistantContext';
 
@@ -29,21 +27,19 @@ export default function JaegerUIApp() {
   return (
     <AppQueryClientProvider>
       <ThemeProvider>
-        <Provider store={store}>
-          <JaegerAssistantProvider>
-            <Page>
-              <Routes>
-                {ROUTES.map(({ path, element }) => (
-                  <Route key={path} path={path} element={element} />
-                ))}
-                <Route path="/" element={<Navigate to={searchPath} replace />} />
-                <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
-                <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
-                <Route path="*" element={<NotFound error="Page not found" />} />
-              </Routes>
-            </Page>
-          </JaegerAssistantProvider>
-        </Provider>
+        <JaegerAssistantProvider>
+          <Page>
+            <Routes>
+              {ROUTES.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
+              <Route path="/" element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
+              <Route path="*" element={<NotFound error="Page not found" />} />
+            </Routes>
+          </Page>
+        </JaegerAssistantProvider>
       </ThemeProvider>
     </AppQueryClientProvider>
   );

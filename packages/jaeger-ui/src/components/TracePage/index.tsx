@@ -439,7 +439,7 @@ export function TracePageImpl(props: TProps) {
     return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
   if (traceLoading || !traceData) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+    return <LoadingIndicator className="u-mt-vast" centered label="Loading trace" />;
   }
 
   // timelineFindMatches is null in the graph view, which counts the text matches alone.
