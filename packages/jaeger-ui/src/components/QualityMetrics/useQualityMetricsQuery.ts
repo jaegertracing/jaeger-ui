@@ -16,8 +16,7 @@ export function useQualityMetricsQuery(
   return useQuery({
     queryKey: ['qualityMetrics', service, lookback],
     queryFn: service
-      ? async ({ signal }) =>
-          (await jaegerClient.fetchQualityMetrics(service, lookback, signal)) as TQualityMetrics
+      ? ({ signal }) => jaegerClient.fetchQualityMetrics(service, lookback, signal)
       : skipToken,
   });
 }

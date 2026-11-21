@@ -388,3 +388,90 @@ export const OperationMetricsResponseSchema = metricFamily.extend({
     'service_operation_error_rate',
   ]),
 });
+
+// Quality metrics endpoint is configured via UI config (qualityMetrics.apiEndpoint)
+// and points to an external or custom service. The schema validates the payload at the
+// network boundary, using .passthrough() to retain unknown third-party server fields.
+const nullToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(val => (val === null ? undefined : val), schema.optional());
+
+// Client.Examples, Detail.Columns and Detail.Rows are plain Go slices without
+// omitempty, so they serialize as null when unset. Normalize only that null to
+// the empty arrays the components already render; an omitted field stays
+// undefined and is rejected as a missing required field.
+const nullToEmptyArray = <T extends z.ZodTypeAny>(schema: z.ZodArray<T>) =>
+  z.preprocess(val => (val === null ? [] : val), schema);
+
+const qualityMetricsExample = z
+  .object({
+    traceID: z.string(),
+    spanIDs: nullToUndefined(z.array(z.string())),
+  })
+  .passthrough();
+
+const qualityMetricsScore = z
+  .object({
+    key: z.string(),
+    label: z.string(),
+    max: z.number(),
+    value: z.number(),
+  })
+  .passthrough();
+
+const qualityMetricsBannerText = z.union([
+  z.string(),
+  z
+    .object({
+      value: z.string(),
+      // styling is omitempty in the Go BannerText; BannerText.tsx defaults it.
+      styling: z.record(z.string(), z.unknown()).optional(),
+    })
+    .passthrough(),
+]);
+
+const qualityMetricsDetail = z
+  .object({
+    description: z.string().optional(),
+    header: z.string().optional(),
+    columns: nullToEmptyArray(z.array(z.union([z.string(), z.record(z.string(), z.any())]))),
+    rows: nullToEmptyArray(z.array(z.record(z.string(), z.any()))),
+  })
+  .passthrough();
+
+const qualityMetricsMetric = z
+  .object({
+    name: z.string(),
+    category: z.string(),
+    description: z.string(),
+    metricDocumentationLink: z.string(),
+    metricWeight: z.number(),
+    passCount: z.number(),
+    passExamples: nullToUndefined(z.array(qualityMetricsExample)),
+    failureCount: z.number(),
+    failureExamples: nullToUndefined(z.array(qualityMetricsExample)),
+    exemptionCount: nullToUndefined(z.number()),
+    exemptionExamples: nullToUndefined(z.array(qualityMetricsExample)),
+    details: nullToUndefined(z.array(qualityMetricsDetail)),
+  })
+  .passthrough();
+
+const qualityMetricsClient = z
+  .object({
+    version: z.string(),
+    minVersion: z.string(),
+    count: z.number(),
+    examples: nullToEmptyArray(z.array(qualityMetricsExample)),
+  })
+  .passthrough();
+
+export const QualityMetricsSchema = z
+  .object({
+    traceQualityDocumentationLink: z.string(),
+    bannerText: nullToUndefined(qualityMetricsBannerText),
+    scores: z.array(qualityMetricsScore),
+    metrics: z.array(qualityMetricsMetric),
+    clients: nullToUndefined(z.array(qualityMetricsClient)),
+  })
+  .passthrough();
+
+export type TQualityMetrics = z.infer<typeof QualityMetricsSchema>;
