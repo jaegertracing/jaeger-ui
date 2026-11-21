@@ -233,4 +233,56 @@ describe('SpanTreeOffset', () => {
       expect(wrapper).toHaveAttribute('tabindex', '0');
     });
   });
+  describe('with a lifted tree', () => {
+    it('draws the indent guides of the visible ancestors and the last-child state the tree reports', () => {
+      // parentSpan is hidden: ownSpan is drawn directly under rootSpan, as its last child.
+      const tree = {
+        parentOf: span => (span === ownSpan ? rootSpan : null),
+        isLastChild: span => span === ownSpan,
+        depthOf: span => (span === ownSpan ? 1 : 0),
+        childCount: span => (span === rootSpan ? 1 : 0),
+        liftedPast: () => [],
+        hiddenErrors: () => [],
+        hiddenErrorIDs: () => new Set(),
+      };
+      const { container } = render(<SpanTreeOffset {...props} tree={tree} />);
+      const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
+      expect(indentGuides.length).toBe(1);
+      expect(indentGuides[0].getAttribute('data-testid')).toBe(`indent-guide-${rootSpanID}`);
+      expect(indentGuides[0]).toHaveClass('is-last');
+    });
+
+    it('terminates the guide of a non-immediate ancestor when its branch ends in the chain', () => {
+      // Both ancestors are visible; parentSpan is the last child of rootSpan, ownSpan is not the last
+      // child of parentSpan.
+      const tree = {
+        parentOf: span => (span === ownSpan ? parentSpan : span === parentSpan ? rootSpan : null),
+        isLastChild: span => span === parentSpan,
+        depthOf: span => (span === ownSpan ? 2 : span === parentSpan ? 1 : 0),
+        childCount: span => (span === ownSpan ? 0 : 1),
+        liftedPast: () => [],
+        hiddenErrors: () => [],
+        hiddenErrorIDs: () => new Set(),
+      };
+      const { container } = render(<SpanTreeOffset {...props} tree={tree} />);
+      const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
+      expect(indentGuides.length).toBe(2);
+      expect(indentGuides[0]).toHaveClass('is-terminated');
+      expect(indentGuides[1]).not.toHaveClass('is-last');
+    });
+
+    it('shows the child count the tree reports', () => {
+      const tree = {
+        parentOf: () => null,
+        isLastChild: () => false,
+        depthOf: () => 0,
+        childCount: () => 3,
+        liftedPast: () => [],
+        hiddenErrors: () => [],
+        hiddenErrorIDs: () => new Set(),
+      };
+      const { container } = render(<SpanTreeOffset {...props} tree={tree} />);
+      expect(container.querySelector('.SpanTreeOffset--box')).toHaveTextContent('3');
+    });
+  });
 });

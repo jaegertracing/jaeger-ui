@@ -4,6 +4,7 @@
 import type { IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 import { detectMediaType, MediaType } from '../../../../../utils/media';
+import { GEN_AI_TOOL_DEFINITIONS } from '../../../../../constants/span-attributes';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
 
@@ -117,6 +118,18 @@ export type GenAiTokenUsage = {
  */
 export type GenAiAttributeSource = { key: string; spec: string };
 
+export type GenAiToolDefinition = {
+  name?: string;
+  type?: string;
+  description?: string;
+  parameters?: unknown;
+  // Provider-specific configuration outside the fields the UI renders specially.
+  metadata?: Record<string, unknown>;
+  // Set when the entry does not match any recognised schema so the UI can
+  // still display it via a raw JSON view rather than silently dropping it.
+  raw?: unknown;
+};
+
 // Every variant separates its discriminant (`type`) from its payload (`data`)
 // so a generic fallback renderer can walk `Object.entries(data)` for a
 // section type it doesn't have a specific case for.
@@ -136,6 +149,7 @@ export type GenAiSection =
       data: { systemInstructions?: string; inputMessages: GenAiMessage[]; outputMessages: GenAiMessage[] };
       sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
     }
+  | { type: 'tools'; data: { tools: GenAiToolDefinition[] } }
   | { type: 'toolCall'; data: GenAiToolCall }
   | { type: 'retrieval'; data: GenAiRetrieval }
   | { type: 'memory'; data: GenAiMemory }
@@ -194,6 +208,123 @@ function parseSystemInstructions(value: AttributeValue | undefined): string | un
     .map(stringifyValue)
     .join('\n\n');
   return text || undefined;
+}
+
+/**
+ * Normalises one entry from a gen_ai.tool.definitions array into the
+ * canonical GenAiToolDefinition shape, accommodating the three shapes
+ * seen in the wild:
+ *
+ *  1. OTel FunctionToolDefinition / LangChain / Google ADK  — flat object
+ *     with top-level `name`, optional `type`, `description`, `parameters`.
+ *  2. OpenAI API wire format — `{ type: "function", function: { name, … } }`.
+ *  3. Everything else — stored as `raw` so the UI can still display it.
+ *
+ * Only one `name` or `parameters` field is required to consider an entry
+ * "recognised"; entries with neither fall back to `raw`.
+ */
+function unhandledFields(
+  record: Record<string, unknown>,
+  handled: readonly string[]
+): Record<string, unknown> | undefined {
+  const fields = Object.fromEntries(Object.entries(record).filter(([key]) => !handled.includes(key)));
+  return Object.keys(fields).length > 0 ? fields : undefined;
+}
+
+function mergeMetadata(
+  outer: Record<string, unknown> | undefined,
+  inner: Record<string, unknown> | undefined
+): Record<string, unknown> | undefined {
+  const metadata = { ...outer };
+  for (const [key, value] of Object.entries(inner ?? {})) {
+    if (!Object.prototype.hasOwnProperty.call(metadata, key)) {
+      metadata[key] = value;
+      continue;
+    }
+
+    // A provider can define the same extension key on the OpenAI wrapper and
+    // its nested function. Keep the wrapper's original key and namespace the
+    // nested one so neither value is hidden in the metadata table.
+    const nestedKey = `function.${key}`;
+    let uniqueKey = nestedKey;
+    let suffix = 2;
+    while (Object.prototype.hasOwnProperty.call(metadata, uniqueKey)) {
+      uniqueKey = `${nestedKey} (${suffix})`;
+      suffix += 1;
+    }
+    metadata[uniqueKey] = value;
+  }
+  return Object.keys(metadata).length > 0 ? metadata : undefined;
+}
+
+function normaliseToolEntry(entry: unknown): GenAiToolDefinition {
+  if (typeof entry !== 'object' || entry === null) {
+    return { raw: entry };
+  }
+  const rec = entry as Record<string, unknown>;
+
+  // OpenAI wire format: { type: "function", function: { name, description, parameters } }
+  const nested = rec.function;
+  if (typeof nested === 'object' && nested !== null) {
+    const fn = nested as Record<string, unknown>;
+    const name = typeof fn.name === 'string' ? fn.name : undefined;
+    const description = typeof fn.description === 'string' ? fn.description : undefined;
+    const parameters = fn.parameters !== undefined ? fn.parameters : undefined;
+    if (name !== undefined || parameters !== undefined) {
+      const outerHandled = ['function'];
+      if (typeof rec.type === 'string') outerHandled.push('type');
+      const innerHandled = ['parameters'];
+      if (name !== undefined) innerHandled.push('name');
+      if (description !== undefined) innerHandled.push('description');
+      const metadata = mergeMetadata(unhandledFields(rec, outerHandled), unhandledFields(fn, innerHandled));
+      return {
+        type: typeof rec.type === 'string' ? rec.type : undefined,
+        name,
+        description,
+        parameters,
+        ...(metadata && { metadata }),
+      };
+    }
+  }
+
+  // Flat OTel / LangChain / Google ADK format
+  const name = typeof rec.name === 'string' ? rec.name : undefined;
+  const description = typeof rec.description === 'string' ? rec.description : undefined;
+  const parameters = rec.parameters !== undefined ? rec.parameters : undefined;
+  const type = typeof rec.type === 'string' ? rec.type : undefined;
+
+  if (name !== undefined || parameters !== undefined) {
+    const handled = ['parameters'];
+    if (type !== undefined) handled.push('type');
+    if (name !== undefined) handled.push('name');
+    if (description !== undefined) handled.push('description');
+    const metadata = unhandledFields(rec, handled);
+    return { type, name, description, parameters, ...(metadata && { metadata }) };
+  }
+
+  // Unrecognised — surface the whole entry as a raw JSON view.
+  return { raw: entry };
+}
+
+/**
+ * Parses gen_ai.tool.definitions. The attribute may arrive as:
+ *  - An already-parsed array of tool definition objects.
+ *  - A JSON-encoded string of the same array.
+ *  - A single object (not array-wrapped) from lenient instrumentation.
+ * Returns undefined only when the attribute is absent.
+ */
+export function parseToolDefinitions(value: AttributeValue | undefined): GenAiToolDefinition[] | undefined {
+  if (value == null) return undefined;
+  let parsed: unknown = value;
+  if (typeof value === 'string') {
+    parsed = tryParseJson(value);
+    // This builder claims gen_ai.tool.definitions before parsing it. Preserve a
+    // malformed or custom string as a raw tool entry instead of hiding it.
+    if (typeof parsed === 'string') return [{ raw: value }];
+  }
+  const entries = Array.isArray(parsed) ? parsed : [parsed];
+  const tools = entries.map(normaliseToolEntry);
+  return tools;
 }
 
 const jsonObjectOrArrayStartRegex = /^\s*[[{]/;
@@ -711,6 +842,10 @@ const REGISTRY: SectionBuilder[] = [
           sources: { input: input.source, output: output.source },
         }
       : undefined;
+  },
+  get => {
+    const tools = parseToolDefinitions(get(GEN_AI_TOOL_DEFINITIONS));
+    return tools ? { type: 'tools', data: { tools } } : undefined;
   },
   get => {
     const id = asString(get('gen_ai.tool.call.id'));
