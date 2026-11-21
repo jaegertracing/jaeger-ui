@@ -79,6 +79,19 @@ describe('formatDuration', () => {
   it('carries across the day boundary', () => {
     expect(formatDuration(ONE_DAY - 20 * ONE_SECOND)).toBe('1d');
   });
+
+  it('carries single-unit decimal durations across the minute, second, and millisecond boundaries', () => {
+    expect(formatDuration(59994999)).toBe('59.99s');
+    expect(formatDuration(59995000)).toBe('1m');
+    expect(formatDuration(59999999)).toBe('1m');
+
+    expect(formatDuration(999994)).toBe('999.99ms');
+    expect(formatDuration(999995)).toBe('1s');
+    expect(formatDuration(999999)).toBe('1s');
+
+    expect(formatDuration(999.994)).toBe('999.99μs');
+    expect(formatDuration(999.995)).toBe('1ms');
+  });
 });
 
 describe('getSuitableTimeUnit', () => {

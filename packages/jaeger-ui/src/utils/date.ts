@@ -176,7 +176,13 @@ export function formatDuration(duration: Microseconds): string {
   const [primaryUnit, secondaryUnit] = selectUnits(duration);
 
   if (primaryUnit.ofPrevious === 1000) {
-    return `${_round(duration / primaryUnit.microseconds, 2)}${primaryUnit.unit}`;
+    const roundedValue = _round(duration / primaryUnit.microseconds, 2);
+    const roundedDuration = roundedValue * primaryUnit.microseconds;
+    const [carriedPrimaryUnit] = selectUnits(roundedDuration);
+    if (carriedPrimaryUnit !== primaryUnit) {
+      return `${_round(roundedDuration / carriedPrimaryUnit.microseconds, 2)}${carriedPrimaryUnit.unit}`;
+    }
+    return `${roundedValue}${primaryUnit.unit}`;
   }
 
   const roundedDuration = Math.round(duration / secondaryUnit.microseconds) * secondaryUnit.microseconds;
