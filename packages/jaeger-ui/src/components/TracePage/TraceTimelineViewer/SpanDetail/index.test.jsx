@@ -10,9 +10,10 @@ import '@testing-library/jest-dom';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration, formatDurationCompact, isErrorSpan } from '../utils';
-import traceGenerator from '../../../../demo/trace-generators';
-import transformTraceData from '../../../../model/transform-trace-data';
 import { makeAttributes } from '../../../../model/attributes';
+import { makeTrace } from '../../../../model/test/otlp-builders';
+
+const OTHER_TRACE_ID = '0123456789abcdef0123456789abcdef';
 
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
@@ -90,7 +91,6 @@ vi.mock('../../../../utils/genai', () => ({
 
 describe('<SpanDetail>', () => {
   let props;
-  let spanData;
   let span;
   let detailState;
 
@@ -101,73 +101,25 @@ describe('<SpanDetail>', () => {
     formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
     isErrorSpan.mockReset();
 
-    const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
-    spanData = rawTrace.spans[0];
-
-    spanData.logs = [
-      {
-        timestamp: 10,
-        fields: [
-          { key: 'message', value: 'oh the log message' },
-          { key: 'something', value: 'else' },
-        ],
-      },
-      {
-        timestamp: 20,
-        fields: [
-          { key: 'message', value: 'oh the next log message' },
-          { key: 'more', value: 'stuff' },
-        ],
-      },
-    ];
-
-    spanData.warnings = ['Warning 1', 'Warning 2'];
-
-    spanData.references = [
-      {
-        refType: 'CHILD_OF',
-        span: {
-          spanID: 'span2',
-          traceID: 'trace1',
-          operationName: 'op1',
-          process: {
-            serviceName: 'service1',
-          },
+    span = makeTrace(
+      [
+        {
+          id: 'span',
+          name: 'GET /cart',
+          service: 'frontend',
+          start: 100,
+          duration: 500,
+          attributes: { 'http.method': 'GET', 'http.status_code': 200 },
+          events: [
+            { name: 'oh the log message', time: 110, attributes: { something: 'else' } },
+            { name: 'oh the next log message', time: 120, attributes: { more: 'stuff' } },
+          ],
+          links: [{ id: 'span1' }, { id: 'span4' }, { id: 'span5', traceId: OTHER_TRACE_ID }],
+          warnings: ['Warning 1', 'Warning 2'],
         },
-        spanID: 'span1',
-        traceID: 'trace1',
-      },
-      {
-        refType: 'CHILD_OF',
-        span: {
-          spanID: 'span3',
-          traceID: 'trace1',
-          operationName: 'op2',
-          process: {
-            serviceName: 'service2',
-          },
-        },
-        spanID: 'span4',
-        traceID: 'trace1',
-      },
-      {
-        refType: 'CHILD_OF',
-        span: {
-          spanID: 'span6',
-          traceID: 'trace2',
-          operationName: 'op2',
-          process: {
-            serviceName: 'service2',
-          },
-        },
-        spanID: 'span5',
-        traceID: 'trace2',
-      },
-    ];
-
-    // Transform the span data and then convert to OTEL span
-    const transformedTrace = transformTraceData({ ...rawTrace, spans: [spanData] });
-    span = transformedTrace.asOtelTrace().spans[0];
+      ],
+      { resource: { hostname: 'frontend-1', ip: '10.0.0.1' } }
+    ).spans[0];
 
     detailState = new DetailState().toggleEvents().toggleResource().toggleLinks().toggleAttributes();
     const traceStartTime = 5;
