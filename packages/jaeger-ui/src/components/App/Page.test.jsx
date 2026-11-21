@@ -13,6 +13,7 @@ vi.mock('../../stores/embedded-store', () => ({
 }));
 
 const assistantMock = vi.hoisted(() => ({ configured: false }));
+const dockMock = vi.hoisted(() => ({ throws: false }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({
   useJaegerAssistantConfigured: () => assistantMock.configured,
@@ -20,11 +21,16 @@ vi.mock('../../hooks/useJaegerAssistant', () => ({
 }));
 
 vi.mock('./JaegerAssistantPanel', () => ({
-  JaegerAssistantDock: () => <aside data-testid="assistant-dock" />,
+  JaegerAssistantDock: () => {
+    if (dockMock.throws) {
+      throw new Error('assistant dock failed to render');
+    }
+    return <aside data-testid="assistant-dock" />;
+  },
 }));
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -54,6 +60,7 @@ describe('<Page>', () => {
     trackPageView.mockReset();
     useEmbeddedStateMock.mockReturnValue(null);
     assistantMock.configured = false;
+    dockMock.throws = false;
   });
 
   it('renders without exploding', () => {
@@ -126,6 +133,27 @@ describe('<Page>', () => {
       expect(spy).toHaveBeenCalledWith('[jaeger-assistant] failed to load the assistant panel', err);
       expect(Fallback()).toBeNull();
       spy.mockRestore();
+    });
+
+    it('keeps page content visible when the dock throws during render', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      assistantMock.configured = true;
+      dockMock.throws = true;
+
+      try {
+        renderWithAssistant();
+
+        await waitFor(() =>
+          expect(spy).toHaveBeenCalledWith(
+            '[jaeger-assistant] failed to render the assistant panel',
+            expect.any(Error)
+          )
+        );
+        expect(screen.getByTestId('page-child')).toBeInTheDocument();
+        expect(screen.queryByTestId('assistant-dock')).not.toBeInTheDocument();
+      } finally {
+        spy.mockRestore();
+      }
     });
   });
 
