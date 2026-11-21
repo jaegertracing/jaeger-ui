@@ -79,6 +79,23 @@ describe('formatDuration', () => {
   it('carries across the day boundary', () => {
     expect(formatDuration(ONE_DAY - 20 * ONE_SECOND)).toBe('1d');
   });
+
+  it('carries a single decimal unit that rounds up to its own base', () => {
+    // The value is rounded to 2 decimals, which can reach the base of the next
+    // unit. Rendering it as "60s" or "1000ms" is the same malformation #4246
+    // described for the two-unit case.
+    expect(formatDuration(ONE_MINUTE - 5 * ONE_MILLISECOND)).toBe('1m');
+    expect(formatDuration(ONE_MINUTE - 1)).toBe('1m');
+    expect(formatDuration(ONE_SECOND - 5)).toBe('1s');
+    expect(formatDuration(ONE_SECOND - 1)).toBe('1s');
+  });
+
+  it('does not carry a single decimal unit that rounds down', () => {
+    expect(formatDuration(ONE_MINUTE - 5 * ONE_MILLISECOND - 1)).toBe('59.99s');
+    expect(formatDuration(ONE_MINUTE - 500 * ONE_MILLISECOND)).toBe('59.5s');
+    expect(formatDuration(ONE_SECOND - 6)).toBe('999.99ms');
+    expect(formatDuration(999)).toBe('999μs');
+  });
 });
 
 describe('getSuitableTimeUnit', () => {

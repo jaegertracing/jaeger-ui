@@ -176,7 +176,16 @@ export function formatDuration(duration: Microseconds): string {
   const [primaryUnit, secondaryUnit] = selectUnits(duration);
 
   if (primaryUnit.ofPrevious === 1000) {
-    return `${_round(duration / primaryUnit.microseconds, 2)}${primaryUnit.unit}`;
+    const roundedValue = _round(duration / primaryUnit.microseconds, 2);
+    // Rounding can push the value up to the base of the next unit, e.g. 59.9995s
+    // rounds to 60 and would render as "60s". Re-select the units on the rounded
+    // duration so the carry is applied, the same way the two-unit path below does.
+    const roundedDuration = roundedValue * primaryUnit.microseconds;
+    const [carriedUnit] = selectUnits(roundedDuration);
+    if (carriedUnit !== primaryUnit) {
+      return formatDuration(roundedDuration as Microseconds);
+    }
+    return `${roundedValue}${primaryUnit.unit}`;
   }
 
   const roundedDuration = Math.round(duration / secondaryUnit.microseconds) * secondaryUnit.microseconds;
