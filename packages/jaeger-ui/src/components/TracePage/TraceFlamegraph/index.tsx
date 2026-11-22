@@ -16,7 +16,7 @@ import { generateTableData } from './generateTableData';
 import FlamegraphToolbar, { ViewMode } from './FlamegraphToolbar';
 import FlamegraphTable from './FlamegraphTable';
 import FlamegraphContextMenu from './FlamegraphContextMenu';
-import FlamegraphTooltip from './FlamegraphTooltip';
+import FlamegraphTooltip, { TOOLTIP_CURSOR_OFFSET_PX } from './FlamegraphTooltip';
 import VerticalResizer from '../../common/VerticalResizer';
 
 import 'd3-flame-graph/dist/d3-flamegraph.css';
@@ -53,6 +53,7 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
   const searchActiveRef = useRef(false);
   const zoomedNodeRef = useRef<IFlameNode | null>(null);
   const hoveredFrameRef = useRef<Element | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   // Fraction of the content width allotted to the table in "both" mode (rest goes to the chart).
@@ -63,11 +64,15 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [chartZoomed, setChartZoomed] = useState(false);
-  const [collapsedRoot, setCollapsedRoot] = useState<IFlameNode | null>(null);
+  const [collapsedSelection, setCollapsedSelection] = useState<{
+    trace: IOtelTrace | null;
+    node: IFlameNode;
+  } | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const fullFlameData = useMemo(() => (trace ? convertOtelTraceToFlameData(trace) : null), [trace]);
+  const collapsedRoot = collapsedSelection?.trace === trace ? collapsedSelection.node : null;
   const flameData = collapsedRoot || fullFlameData;
   const tableData = useMemo(() => (trace ? generateTableData(trace) : []), [trace]);
   const maxSelf = useMemo(() => Math.max(...tableData.map(r => r.self), 1), [tableData]);
@@ -161,6 +166,11 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
           }
           return;
         }
+        const tooltipEl = tooltipRef.current;
+        if (tooltipEl) {
+          tooltipEl.style.left = `${e.clientX + TOOLTIP_CURSOR_OFFSET_PX}px`;
+          tooltipEl.style.top = `${e.clientY + TOOLTIP_CURSOR_OFFSET_PX}px`;
+        }
         if (target === hoveredFrameRef.current) return;
         hoveredFrameRef.current = target;
         const d3Data = (target as any).__data__;
@@ -228,7 +238,7 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
     setSearchQuery('');
     setSelectedItem(null);
     setChartZoomed(false);
-    setCollapsedRoot(null);
+    setCollapsedSelection(null);
     zoomedNodeRef.current = null;
     if (chartRef.current) {
       chartRef.current.resetZoom();
@@ -238,11 +248,11 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
 
   const handleCollapseAbove = useCallback(() => {
     if (zoomedNodeRef.current) {
-      setCollapsedRoot(zoomedNodeRef.current);
+      setCollapsedSelection({ trace, node: zoomedNodeRef.current });
       zoomedNodeRef.current = null;
     }
     setChartZoomed(false);
-  }, []);
+  }, [trace]);
 
   const handleRowClick = useCallback((name: string) => {
     setSelectedItem(prev => (prev === name ? null : name));
@@ -372,6 +382,7 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
       )}
       {tooltip && !contextMenu && (
         <FlamegraphTooltip
+          ref={tooltipRef}
           x={tooltip.x}
           y={tooltip.y}
           name={tooltip.name}

@@ -4,6 +4,7 @@
 import * as React from 'react';
 
 import { ApiError } from '../../types/api-error';
+import { truncateErrorDetail } from '../../utils/error-message';
 
 import './ErrorMessage.css';
 
@@ -25,8 +26,6 @@ type ErrorAttrProps = {
   name: string;
   value: string | number;
 };
-
-export const MAX_DETAIL_LENGTH = 1024;
 
 function ErrorAttr({ name, value }: ErrorAttrProps) {
   return (
@@ -60,10 +59,7 @@ export function Details({ className, error, wrap = false, wrapperClassName }: Su
   }
 
   const { httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
-  const bodyExcerpt =
-    httpBody && httpBody.length > MAX_DETAIL_LENGTH
-      ? `${httpBody.slice(0, MAX_DETAIL_LENGTH - 3).trim()}...`
-      : httpBody;
+  const bodyExcerpt = truncateErrorDetail(httpBody);
 
   const details = (
     <div

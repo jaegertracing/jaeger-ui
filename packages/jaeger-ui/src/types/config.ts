@@ -187,6 +187,10 @@ export type Config = {
     // which allows passing functions to the configuration.
     // See https://github.com/jaegertracing/jaeger-ui/issues/652 for background.
     customWebAnalytics: IWebAnalyticsFunc | TNil;
+
+    // cookiesToDimensions maps browser cookies to Google Analytics
+    // custom dimensions, so a cookie value is sent with every event.
+    cookiesToDimensions?: readonly { cookie: string; dimension: string }[] | TNil;
   };
 
   // linkPatterns allow customizing the display of traces with external links.
@@ -247,6 +251,11 @@ export type Config = {
     // spanPillsEnabled controls span pill overlays in the trace timeline.
     // Default: true. Set to false to disable if needed.
     spanPillsEnabled?: boolean;
+
+    // filterApplyThreshold is the span count above which a change in the span filter popover
+    // waits for the Apply button instead of applying as it is made. Below it the button is not
+    // rendered. Default: 10000.
+    filterApplyThreshold?: number;
   };
 
   // useOpenTelemetryTerms determines whether the UI uses OpenTelemetry terminology

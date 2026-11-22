@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import OperationsGraph, { generatePlaceholder } from './opsGraph';
-import { serviceOpsMetrics } from '../../../../reducers/metrics.mock';
+import { serviceOpsMetrics } from '../../metrics.mock';
 
 class ResizeObserver {
   observe() {}

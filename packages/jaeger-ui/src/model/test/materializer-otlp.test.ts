@@ -10,8 +10,8 @@ const spec: ITraceSpec = {
   traceID: 'f77950feed55c1ce91dd8e87896623a6',
   serviceName: 'serviceName',
   spans: [
-    { spanID: 'd4dcb46e95b781f5', operationName: 'root' },
-    { spanID: 'child', operationName: 'child', parentSpanID: 'd4dcb46e95b781f5' },
+    { spanID: 'd4dcb46e95b781f5', name: 'root' },
+    { spanID: 'child', name: 'child', parentSpanID: 'd4dcb46e95b781f5' },
   ],
 };
 
@@ -20,11 +20,11 @@ describe('OTLP trace contract materializer', () => {
     const wire = toOtlpTrace({
       ...spec,
       spans: [
-        { spanID: 'missing', operationName: 'missing', events: [{ timestamp: 2 }] },
-        { spanID: 'empty-scope', operationName: 'empty-scope', scope: {} },
+        { spanID: 'missing', name: 'missing', events: [{ timestamp: 2 }] },
+        { spanID: 'empty-scope', name: 'empty-scope', scope: {} },
         {
           spanID: 'named',
-          operationName: 'named',
+          name: 'named',
           kind: 2,
           scope: { name: 'library', version: '1' },
           events: [{ name: 'event', timestamp: 3, attributes: [{ key: 'value', value: false }] }],
@@ -64,10 +64,10 @@ describe('OTLP trace contract materializer', () => {
     const wire = toOtlpTrace({
       ...spec,
       spans: [
-        { spanID: 'default', operationName: 'default' },
-        { spanID: 'missing-start', operationName: 'missing-start', startTime: undefined },
-        { spanID: 'nan-start', operationName: 'nan-start', startTime: NaN },
-        { spanID: 'missing-end', operationName: 'missing-end', duration: undefined },
+        { spanID: 'default', name: 'default' },
+        { spanID: 'missing-start', name: 'missing-start', startTime: undefined },
+        { spanID: 'nan-start', name: 'nan-start', startTime: NaN },
+        { spanID: 'missing-end', name: 'missing-end', duration: undefined },
       ],
     });
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
@@ -85,12 +85,12 @@ describe('OTLP trace contract materializer', () => {
       spans: [
         {
           spanID: 'linked',
-          operationName: 'linked',
-          references: [
+          name: 'linked',
+          links: [
             { refType: 'CHILD_OF', spanID: 'child' },
             { refType: 'CHILD_OF', spanID: 'other' },
           ],
-          tags: [
+          attributes: [
             { key: 'string', value: 'value' },
             { key: 'bool', value: false },
             { key: 'int', value: 0 },
@@ -99,8 +99,8 @@ describe('OTLP trace contract materializer', () => {
         },
         {
           spanID: 'follower',
-          operationName: 'follower',
-          references: [{ refType: 'FOLLOWS_FROM', spanID: 'other' }],
+          name: 'follower',
+          links: [{ refType: 'FOLLOWS_FROM', spanID: 'other' }],
         },
       ],
     });
@@ -142,9 +142,9 @@ describe('OTLP trace contract materializer', () => {
       spans: [
         {
           spanID: 'linked',
-          operationName: 'linked',
+          name: 'linked',
           parentSpanID,
-          references: [
+          links: [
             { refType: 'FOLLOWS_FROM', spanID: 'follower-target' },
             { refType: 'CHILD_OF', spanID: 'parent-target' },
             { refType: 'CHILD_OF', spanID: 'other-target' },

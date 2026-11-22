@@ -18,20 +18,6 @@
       "description": "rolldown ships one package per platform binding (@rolldown/binding-*); group them all into a single PR so they bump in lockstep"
     },
     {
-      "groupName": "assistant-ui and ag-ui",
-      "matchManagers": ["npm"],
-      "matchPackageNames": ["/^@assistant-ui//", "/^@ag-ui//"],
-      "rangeStrategy": "pin",
-      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so pnpm dedupes a single copy."
-    },
-    {
-      "matchManagers": ["npm"],
-      "matchPackageNames": ["@ag-ui/client"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false,
-      "description": "Block major upgrades of @ag-ui/client until @assistant-ui/react-ag-ui supports @ag-ui/client 1.x"
-    },
-    {
       "groupName": "opentelemetry",
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@opentelemetry//"],
@@ -48,6 +34,14 @@
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
+    },
+    {
+      "groupName": "assistant-ui and ag-ui",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@assistant-ui//", "/^@ag-ui//"],
+      "rangeStrategy": "pin",
+      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent, the assistant-ui store); bumping them independently produces duplicate copies in node_modules and tsc or module-resolution errors. Pin exact versions (no ^) so pnpm dedupes a single copy. Placed after the patch-disable rule so patch bumps of these packages are still included, because a minor bump of one package often requires a patch bump of another.",
+      "enabled": true
     },
     {
       "groupName": "vite-plus and bundled vitest",

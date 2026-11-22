@@ -2,24 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
-import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
-import _memoize from 'lodash/memoize';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
+import memoizeOne from 'memoize-one';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
-  useLayoutPrefsStore,
+  useDisplayedLayoutStore,
   useTraceTimelineStore,
 } from './TraceTimelineViewer/store';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
@@ -36,22 +33,30 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
-import { actions as timelineActions } from './TraceTimelineViewer/duck';
+import { useSpanFilter } from './TraceTimelineViewer/useServiceFilter';
+import { makeSpanPillActions, SpanPillActionsContext } from './TraceTimelineViewer/spanPillActions';
+import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import {
   TUpdateViewRangeTimeFunction,
   IViewRange,
   ViewRangeTimeUpdate,
   ETraceViewType,
+  viewTypeIsNavigable,
   viewTypeShowsMinimap,
 } from './types';
+import {
+  clauseDisabledReason,
+  evaluateSpanFilter,
+  GENAI_VIEW_FILTER,
+  withoutHiddenSpans,
+} from './spanFilter';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
-import { LocationState, ReduxState, TNil } from '../../types';
-import { useTrace } from '../../hooks/useTraceLoading';
-import { IOtelTrace } from '../../types/otel';
+import { LocationState, TNil } from '../../types';
+import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
+import { isUploadedTrace } from '../SearchTracePage/useUploadedTraces';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
@@ -64,12 +69,6 @@ import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
 import withRouteProps from '../../utils/withRouteProps';
 
-type TDispatchProps = {
-  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
-  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
-  setTimelineBarsVisible: (visible: boolean) => void;
-};
-
 type TOwnProps = {
   location: Location<LocationState>;
   params: { id: string };
@@ -80,18 +79,21 @@ type TOwnProps = {
   disableJsonView: boolean;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
+  onReloadTrace?: () => void;
 };
 
-type TReduxProps = {
+type TUrlProps = {
   uiFind: string | TNil;
 };
 
-type TProps = TDispatchProps & TOwnProps & TReduxProps;
+type TProps = TOwnProps & TUrlProps;
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
+const NO_SPAN_IDS: ReadonlySet<string> = new Set();
+const EMPTY_TRACE = { spans: [], rootSpans: [] };
 
 // export for tests
 export function computeAdjustedRange(
@@ -147,15 +149,13 @@ export function TracePageImpl(props: TProps) {
     criticalPathEnabled,
     disableJsonView,
     enableSidePanel,
-    focusUiFindMatches: focusUiFindMatchesProp,
     location,
     params,
-    setDetailPanelMode: reduxSetDetailPanelMode,
-    setTimelineBarsVisible: reduxSetTimelineBarsVisible,
     backendCapabilities,
     traceGraphConfig,
     uiFind,
     useOtelTerms,
+    onReloadTrace,
   } = props;
 
   const id = params.id;
@@ -163,30 +163,53 @@ export function TracePageImpl(props: TProps) {
     data: traceData,
     isPending: traceLoading,
     isError: traceError,
+    isFetching: traceFetching,
     error: traceQueryError,
   } = useTrace(id);
 
-  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
-  const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
+  // Layout preferences are owned by Zustand. Each setter tracks before it updates the store.
+  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
+  const zustandSetTimelineBarsVisible = useDisplayedLayoutStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
-
-  const setDetailPanelMode = useCallback(
-    (mode: SpanDetailPanelMode) => {
-      setDetailPanelModeZustand(mode);
-      reduxSetDetailPanelMode(mode);
-    },
-    [reduxSetDetailPanelMode]
+  const zustandClearTrace = useTraceTimelineStore(s => s.clearTrace);
+  // Read the trace's own verdict rather than re-deriving it here. It is computed
+  // once from each span's cached genAIKind, so re-scanning attributes is both
+  // redundant and free to drift away from classifySpan as the detector evolves.
+  const traceIsGenAI = traceData?.isGenAITrace ?? false;
+  // The view is the one the user picked from the dropdown, or else the GenAI view for a GenAI trace
+  // and the timeline for any other. It is derived rather than set in an effect, so that the first
+  // render with the trace is already in the view the page settles on: a provisional timeline render
+  // would resolve the filter without the view default, and a span that filter hides would lose the
+  // focus the URL asked for before the view default made it visible again.
+  const [pickedView, setPickedView] = useState<ETraceViewType | null>(null);
+  const viewType =
+    pickedView ?? (traceIsGenAI ? ETraceViewType.GenAITimelineViewer : ETraceViewType.TraceTimelineViewer);
+  // The GenAI view of a GenAI trace hides the Non-GenAI spans and lifts their children while the
+  // URL is silent. A trace without GenAI spans gets no default, which would hide every span.
+  const viewDefault =
+    viewType === ETraceViewType.GenAITimelineViewer && traceIsGenAI ? GENAI_VIEW_FILTER : null;
+  const { spanFilter, filterTrace, applyFilter, spanFilterNode } = useSpanFilter(
+    traceData,
+    detailPanelMode,
+    viewDefault
   );
+  const { hiddenIDs } = useMemo(
+    () => evaluateSpanFilter(traceData?.spans, spanFilter),
+    [traceData?.spans, spanFilter]
+  );
+
+  const setDetailPanelMode = useCallback((mode: SpanDetailPanelMode) => {
+    trackDetailPanelMode(mode);
+    setDetailPanelModeZustand(mode);
+  }, []);
 
   const setTimelineBarsVisible = useCallback(
     (visible: boolean) => {
+      trackTimelineBarsVisible(visible);
       zustandSetTimelineBarsVisible(visible);
-      reduxSetTimelineBarsVisible(visible);
     },
-    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]
+    [zustandSetTimelineBarsVisible]
   );
 
   const navigate = useNavigate();
@@ -197,7 +220,6 @@ export function TracePageImpl(props: TProps) {
 
   const [headerHeight, setHeaderHeight] = useState<number | TNil>(null);
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
-  const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
   const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
 
@@ -206,22 +228,37 @@ export function TracePageImpl(props: TProps) {
   // which keeps the header count working for views without search wiring (flamegraph, logs).
   const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
 
-  // Read the trace's own verdict rather than re-deriving it here. It is computed
-  // once from each span's cached genAIKind, so re-scanning attributes is both
-  // redundant and free to drift away from classifySpan as the detector evolves.
-  const traceIsGenAI = traceData?.isGenAITrace ?? false;
-
   const searchBarRef = useRef<InputRef>(null);
   const headerElmRef = useRef<HTMLElement | TNil>(null);
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const idRef = useRef(id);
-  idRef.current = id;
+  const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
+  // The highlight set is the text matches that the filter leaves visible. The views that draw the
+  // whole trace get the text matches alone, and the graph view counts its own. It is memoized so
+  // that the row renderers keep one Set identity across renders.
+  const findMatchSplit = useMemo(() => {
+    if (!traceData || viewType === ETraceViewType.TraceGraph || !uiFind) return null;
+    const textMatches = filterSpansMemo(uiFind, traceData.spans);
+    const visible = viewTypeIsNavigable(viewType) ? withoutHiddenSpans(textMatches, hiddenIDs) : textMatches;
+    return { visible, hiddenCount: (textMatches?.size ?? 0) - (visible?.size ?? 0) };
+  }, [traceData, viewType, uiFind, hiddenIDs, filterSpansMemo]);
+  const timelineFindMatches = findMatchSplit?.visible ?? null;
+  // The text matches the filter hides, reported beside the match count so that a match the filter
+  // hides is not mistaken for no match.
+  const hiddenFindCount = findMatchSplit?.hiddenCount ?? 0;
 
-  const filterSpansMemo = useRef(
-    _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
-  ).current;
+  const keepDisabledReason = clauseDisabledReason(
+    'keep',
+    timelineFindMatches ?? NO_SPAN_IDS,
+    traceData ?? EMPTY_TRACE,
+    hiddenIDs,
+    spanFilter.treeMode
+  );
+  const hideDisabledReason = useMemo(() => {
+    if (!traceData || !timelineFindMatches) return null;
+    return clauseDisabledReason('hide', timelineFindMatches, traceData, hiddenIDs, spanFilter.treeMode);
+  }, [traceData, timelineFindMatches, hiddenIDs, spanFilter.treeMode]);
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
@@ -289,9 +326,15 @@ export function TracePageImpl(props: TProps) {
     scrollManagerRef.current.setTrace(traceData);
   }, [traceData]);
 
+  // The timeline store outlives this page. Clearing it on unmount makes opening the same trace
+  // again an open, not a reload. This belongs here and not in the timeline view, because switching
+  // to another view and back must keep the collapses and the selection.
+  useEffect(() => zustandClearTrace, [zustandClearTrace]);
+
   useEffect(() => {
     if (prevIdRef.current !== id) {
       prevIdRef.current = id;
+      setPickedView(null);
       updateViewRangeTime(0, 1);
       clearSearch();
       setCriticalPathErrorDismissed(false);
@@ -327,20 +370,10 @@ export function TracePageImpl(props: TProps) {
     });
   }, []);
 
-  const setTraceView = useCallback((newViewType: ETraceViewType) => {
-    setViewType(newViewType);
+  const onUserViewChange = useCallback((newViewType: ETraceViewType) => {
+    setPickedView(newViewType);
     setFindMatches(null);
   }, []);
-
-  useEffect(() => {
-    if (traceIsGenAI) {
-      setTraceView(ETraceViewType.GenAITimelineViewer);
-    } else {
-      setViewType(vt =>
-        vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
-      );
-    }
-  }, [traceIsGenAI, setTraceView]);
 
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);
@@ -353,10 +386,36 @@ export function TracePageImpl(props: TProps) {
   const focusUiFindMatches = useCallback(() => {
     if (traceData) {
       trackFocusMatches();
-      focusUiFindMatchesProp(traceData, uiFind);
-      zustandFocusUiFindMatches(traceData, uiFind);
+      zustandFocusUiFindMatches(traceData, timelineFindMatches);
     }
-  }, [focusUiFindMatchesProp, zustandFocusUiFindMatches, traceData, uiFind]);
+  }, [zustandFocusUiFindMatches, traceData, timelineFindMatches]);
+
+  // Turns the search text into a keep or hide chip and clears the input, in one URL update.
+  const convertSearchToClause = useCallback(
+    (verb: 'keep' | 'hide') => {
+      const text = uiFind?.trim();
+      if (!text) return;
+      applyFilter(
+        { ...spanFilter, clauses: [...spanFilter.clauses, { verb, criterion: { shape: 'text', text } }] },
+        { clearUiFind: true }
+      );
+    },
+    [applyFilter, spanFilter, uiFind]
+  );
+
+  const spanPillActions = useMemo(
+    () =>
+      traceData
+        ? makeSpanPillActions({
+            trace: traceData,
+            spanFilter,
+            hiddenIDs,
+            applyFilter,
+            setUiFind: uiFind => updateUiFind({ navigate, location, trackFindFunction: trackFilter, uiFind }),
+          })
+        : null,
+    [traceData, navigate, location, applyFilter, spanFilter, hiddenIDs]
+  );
 
   const nextResult = useCallback(() => {
     trackNextMatch();
@@ -376,25 +435,17 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
-  if (traceError) {
+  if (traceError && !traceData) {
     return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
   if (traceLoading || !traceData) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+    return <LoadingIndicator className="u-mt-vast" centered label="Loading trace" />;
   }
 
-  let findCount = 0;
-  let spanFindMatches: Set<string> | null | undefined;
+  // timelineFindMatches is null in the graph view, which counts the text matches alone.
+  let findCount = timelineFindMatches ? timelineFindMatches.size : 0;
   if (viewType === ETraceViewType.TraceGraph) {
     findCount = uiFind && findMatches ? findMatches.size : 0;
-  } else if (uiFind) {
-    const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
-    const otelTrace = traceData;
-    spanFindMatches =
-      otelTrace && prunedServices.size > 0
-        ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
-        : allMatches;
-    findCount = spanFindMatches ? spanFindMatches.size : 0;
   }
 
   const locationState = location.state;
@@ -416,13 +467,22 @@ export function TracePageImpl(props: TProps) {
     linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
+    onReloadTrace,
+    reloadingTrace: traceFetching,
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
-    onTraceViewChange: setTraceView,
+    onTraceViewChange: onUserViewChange,
     prevResult,
     ref: searchBarRef,
     resultCount: findCount,
+    hiddenResultCount: hiddenFindCount,
+    // The graph, statistics and flame graph views draw the whole trace, so the funnel belongs to
+    // the timeline views alone.
+    keepDisabledReason,
+    hideDisabledReason,
+    onConvertSearch: convertSearchToClause,
+    spanFilterNode: viewTypeIsNavigable(viewType) ? spanFilterNode : null,
     disableJsonView,
     showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
     showStandaloneLink: isEmbedded,
@@ -446,10 +506,12 @@ export function TracePageImpl(props: TProps) {
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
-        findMatchesIDs={spanFindMatches}
+        findMatchesIDs={timelineFindMatches}
         pageHeaderHeight={headerHeight}
         trace={traceData}
+        filterTrace={filterTrace}
         criticalPath={criticalPath}
+        spanFilterNode={spanFilterNode}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
         viewRange={viewRange}
@@ -461,10 +523,12 @@ export function TracePageImpl(props: TProps) {
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
-        findMatchesIDs={spanFindMatches}
+        findMatchesIDs={timelineFindMatches}
         pageHeaderHeight={headerHeight}
         trace={traceData}
+        filterTrace={filterTrace}
         criticalPath={criticalPath}
+        spanFilterNode={spanFilterNode}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
         viewRange={viewRange}
@@ -486,7 +550,7 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceStatistics
         trace={traceData}
-        uiFindVertexKeys={spanFindMatches}
+        uiFindVertexKeys={timelineFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
       />
@@ -496,7 +560,7 @@ export function TracePageImpl(props: TProps) {
       <TraceSpanView
         key={traceData.traceID}
         trace={traceData}
-        uiFindVertexKeys={spanFindMatches}
+        uiFindVertexKeys={timelineFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
       />
@@ -524,50 +588,49 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
+        {traceError && (
+          <Alert
+            type="warning"
+            showIcon
+            message="Trace reload failed. Showing the previously loaded trace."
+            description={traceQueryError?.message || 'Unknown error'}
+          />
+        )}
       </div>
-      {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
+      {headerHeight ? (
+        <section style={{ paddingTop: headerHeight }}>
+          <SpanPillActionsContext.Provider value={spanPillActions}>{view}</SpanPillActionsContext.Provider>
+        </section>
+      ) : null}
     </div>
   );
 }
-
-// export for tests
-export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }): TReduxProps {
-  // uiFind must come from the router search string, not window.location: connect() only re-runs a
-  // one-argument mapStateToProps when Redux state changes, so URL-only updates would leave uiFind stale.
-  return {
-    uiFind: parseUiFind(ownProps.search ?? ''),
-  };
-}
-
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
-    timelineActions,
-    dispatch
-  );
-  return {
-    focusUiFindMatches,
-    setDetailPanelMode,
-    setTimelineBarsVisible,
-  };
-}
-
-const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
 
 type TracePageProps = {
   location: Location<LocationState>;
   params: { id: string };
 };
 
-const TracePage = (props: TracePageProps) => {
+export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
   const traceID = props.params.id;
   const { data: traceData } = useTrace(traceID);
   useNormalizeTraceId(traceID, traceData);
+  // Uploads change only on the search page, which is unmounted on this route,
+  // so the registry needs no subscription here. Recheck in the handler before
+  // refetching to protect against a stale render.
+  const isUploaded = isUploadedTrace(traceID);
+
+  const onReloadTrace = useCallback(() => {
+    if (isUploadedTrace(traceID)) return;
+    void reloadBackendTrace(traceID);
+  }, [traceID]);
 
   return (
-    <ConnectedTracePage
+    <TracePageImpl
       {...props}
+      uiFind={parseUiFind(props.location.search ?? '')}
+      onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
@@ -580,4 +643,4 @@ const TracePage = (props: TracePageProps) => {
   );
 };
 
-export default withRouteProps(TracePage);
+export default withRouteProps(TracePageRoute);

@@ -80,6 +80,11 @@ type TListViewProps = {
    * - Ref:https://github.com/bvaughn/react-virtualized/blob/497e2a1942529560681d65a9ef9f5e9c9c9a49ba/docs/WindowScroller.md
    */
   windowScroller?: boolean;
+  /**
+   * Content above the list, such as the heatmap legend, can move it without a scroll or resize.
+   * When this value changes, the list measures its document offset again.
+   */
+  topOffsetKey?: unknown;
 };
 
 const DEFAULT_INITIAL_DRAW = 300;
@@ -279,19 +284,30 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     [_scanItemHeights]
   );
 
+  // Returns true when the wrapper's document offset changed since the last measurement.
+  const _measureTopOffset = useCallback(() => {
+    if (!props.windowScroller || !wrapperElm.current) {
+      return false;
+    }
+    const { top } = wrapperElm.current.getBoundingClientRect();
+    const offset = top + htmlElm.current.scrollTop;
+    if (offset === htmlTopOffset.current) {
+      return false;
+    }
+    htmlTopOffset.current = offset;
+    return true;
+  }, [props.windowScroller]);
+
   React.useLayoutEffect(() => {
     if (props.windowScroller) {
-      if (wrapperElm.current) {
-        const { top } = wrapperElm.current.getBoundingClientRect();
-        htmlTopOffset.current = top + htmlElm.current.scrollTop;
-      }
+      _measureTopOffset();
       window.addEventListener('scroll', _onScroll);
       return () => {
         window.removeEventListener('scroll', _onScroll);
       };
     }
     return undefined;
-  }, [props.windowScroller, _onScroll]);
+  }, [props.windowScroller, _onScroll, _measureTopOffset]);
 
   const didMount = useRef(false);
 
@@ -308,6 +324,17 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
       _scanItemHeights();
     }
   });
+
+  // The view height is derived from the top offset, so a stale value skews the visible row range.
+  // Measuring forces a layout, so it only happens when the content above the list changes.
+  const lastTopOffsetKey = useRef(props.topOffsetKey);
+  React.useLayoutEffect(() => {
+    if (lastTopOffsetKey.current === props.topOffsetKey) return;
+    lastTopOffsetKey.current = props.topOffsetKey;
+    if (_measureTopOffset()) {
+      _positionList();
+    }
+  }, [props.topOffsetKey, _measureTopOffset, _positionList]);
 
   const {
     dataLength,

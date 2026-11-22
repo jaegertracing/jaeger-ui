@@ -166,10 +166,10 @@ SPDX-License-Identifier: Apache-2.0
 .Flamegraph-context-menu {
   position: fixed;
   z-index: 1050;
-  background: var(--surface-primary);
+  background: var(--surface-elevated);
   border: 1px solid var(--border-default);
   border-radius: 8px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-elevated);
   padding: 4px 0;
   min-width: 200px;
 }
@@ -202,10 +202,10 @@ SPDX-License-Identifier: Apache-2.0
 .Flamegraph-tooltip {
   position: fixed;
   z-index: 1040;
-  background: var(--surface-primary);
+  background: var(--surface-elevated);
   border: 1px solid var(--border-default);
   border-radius: 6px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-elevated);
   padding: 10px 14px;
   pointer-events: none;
   font-size: 13px;

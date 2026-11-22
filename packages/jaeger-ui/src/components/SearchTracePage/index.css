@@ -10,6 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SearchTracePage--column {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   padding: 1rem 0.5rem;
@@ -173,5 +174,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .SearchTracePage--logo {
   display: block;
+  height: auto;
   margin: 13rem auto 0 auto;
+  max-width: 100%;
 }

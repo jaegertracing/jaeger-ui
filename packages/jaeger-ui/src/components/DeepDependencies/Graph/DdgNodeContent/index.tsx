@@ -8,8 +8,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import { IoLocate, IoEyeOff, IoSearch } from 'react-icons/io5';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { Dispatch } from 'redux';
 
 import calcPositioning from './calc-positioning';
 import { OP_PADDING_TOP, PROGRESS_BAR_STROKE_WIDTH, RADIUS, WORD_RX } from './constants';
@@ -19,7 +17,7 @@ import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
 import FilteredList from '../../../common/FilteredList';
 import { getUrl as getSearchUrl, getUrlState } from '../../../SearchTracePage/url';
-import padActions from '../../../../actions/path-agnostic-decorations';
+import usePathAgnosticDecoration from '../../../../hooks/usePathAgnosticDecoration';
 import {
   ECheckedStatus,
   EDdgDensity,
@@ -28,38 +26,30 @@ import {
   TDdgVertex,
   PathElem,
 } from '../../../../model/ddg/types';
-import extractDecorationFromState, {
-  TDecorationFromState,
-} from '../../../../model/path-agnostic-decorations';
-import { ReduxState } from '../../../../types/index';
+import { TDecoration } from '../../../../model/path-agnostic-decorations';
 import ActionsMenu, { IActionMenuItem } from '../../../common/ActionMenu/ActionsMenu';
 
 import './index.css';
 
-type TDispatchProps = {
-  getDecoration: (id: string, svc: string, op?: string) => void;
+type TProps = TDecoration & {
+  focalNodeUrl: string | null;
+  focusPathsThroughVertex: (vertexKey: string) => void;
+  getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  hideVertex: (vertexKey: string) => void;
+  isFocalNode: boolean;
+  isPositioned: boolean;
+  operation: string | string[] | null;
+  selectVertex: (selectedVertex: TDdgVertex) => void;
+  service: string;
+  setOperation: (operation: string) => void;
+  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
+  updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
+  vertex: TDdgVertex;
+  vertexKey: string;
+  search: string;
+  navigate: NavigateFunction;
 };
-
-type TProps = TDispatchProps &
-  TDecorationFromState & {
-    focalNodeUrl: string | null;
-    focusPathsThroughVertex: (vertexKey: string) => void;
-    getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
-    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
-    hideVertex: (vertexKey: string) => void;
-    isFocalNode: boolean;
-    isPositioned: boolean;
-    operation: string | string[] | null;
-    selectVertex: (selectedVertex: TDdgVertex) => void;
-    service: string;
-    setOperation: (operation: string) => void;
-    setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
-    updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
-    vertex: TDdgVertex;
-    vertexKey: string;
-    search: string;
-    navigate: NavigateFunction;
-  };
 
 type TState = {
   childrenVisibility?: ECheckedStatus | null;
@@ -130,16 +120,13 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   const [state, setState] = React.useState<TState>({});
   const hoveredIndices = React.useRef<Set<number>>(new Set());
   const nodeRef = React.useRef<HTMLDivElement | null>(null);
-  const prevDecorationID = React.useRef<string | undefined>(undefined);
   const setViewModifierRef = React.useRef<TProps['setViewModifier']>(() => {});
 
   const {
-    decorationID,
     decorationProgressbar,
     decorationValue,
     focalNodeUrl,
     focusPathsThroughVertex,
-    getDecoration,
     getGenerationVisibility,
     getVisiblePathElems,
     hideVertex: hideVertexProp,
@@ -160,14 +147,6 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   React.useEffect(() => {
     setViewModifierRef.current = setViewModifier;
   }, [setViewModifier]);
-
-  React.useEffect(() => {
-    // Match the former componentDidUpdate behavior: refresh only when decorationID changes.
-    if (decorationID && prevDecorationID.current !== decorationID) {
-      getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
-    }
-    prevDecorationID.current = decorationID;
-  }, [decorationID, getDecoration, operation, service]);
 
   React.useEffect(
     () => () => {
@@ -401,41 +380,18 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   );
 });
 
-type DdgNodeContentProps = Omit<
-  TProps,
-  keyof TDispatchProps | keyof TDecorationFromState | 'search' | 'navigate'
->;
+type DdgNodeContentProps = Omit<TProps, keyof TDecoration | 'search' | 'navigate'>;
 
 function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch<Dispatch<any>>();
-  const decorationProps = useSelector(
-    (state: ReduxState) =>
-      extractDecorationFromState(state, {
-        service: props.service,
-        operation: props.operation,
-        search,
-      }),
-    shallowEqual
-  );
+  const decoration = usePathAgnosticDecoration({
+    service: props.service,
+    operation: props.operation,
+    search,
+  });
 
-  const getDecoration = React.useCallback(
-    (id: string, svc: string, op?: string) => {
-      dispatch(padActions.getDecoration(id, svc, op));
-    },
-    [dispatch]
-  );
-
-  return (
-    <UnconnectedDdgNodeContent
-      {...props}
-      search={search}
-      navigate={navigate}
-      getDecoration={getDecoration}
-      {...decorationProps}
-    />
-  );
+  return <UnconnectedDdgNodeContent {...props} search={search} navigate={navigate} {...decoration} />;
 }
 
 export default DdgNodeContent;

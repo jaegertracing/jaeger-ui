@@ -33,10 +33,34 @@ SPDX-License-Identifier: Apache-2.0
   position: relative;
 }
 
+/*
+The buttons are laid over the value because a floated container takes space in
+the row and pushes a value that does not fit beside it onto the next line.
+*/
 .KeyValueTable--copyContainer {
-  float: right;
-  margin-left: 8px;
+  position: absolute;
+  right: 0.5rem;
+  top: 0.25rem;
   white-space: nowrap;
+}
+
+/*
+The buttons carry the border and radius of a pill in a span row, on an opaque
+background, so that they read as buttons and stay legible over the value text.
+*/
+.KeyValueTable--copyContainer .KeyValueTable--copyIcon.CopyIcon {
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  height: 18px;
+  padding: 0 6px;
+  width: auto;
+}
+
+.KeyValueTable--copyContainer .KeyValueTable--copyIcon.CopyIcon:hover {
+  background: var(--surface-tertiary);
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
 }
 
 .KeyValueTable--row:not(:hover) .KeyValueTable--copyContainer .KeyValueTable--copyIcon {
@@ -62,6 +86,84 @@ SPDX-License-Identifier: Apache-2.0
   padding-top: 0.1rem;
 }
 
+.KeyValueTable--row-jsonValue .KeyValueTable--copyContainer {
+  top: 0.1rem;
+}
+
 .KeyValueTable--valueColumn-full {
   width: auto;
+}
+/* The placeholder stands in for a large value until the user expands it. */
+.KeyValueTable--largeValuePlaceholder {
+  display: inline-block;
+  background: transparent;
+  border: 1px dashed var(--border-default);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 2px 8px;
+}
+
+.KeyValueTable--largeValuePlaceholder:hover:enabled {
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+}
+
+.KeyValueTable--largeValuePlaceholder:disabled {
+  cursor: progress;
+}
+
+.KeyValueTable--filterRow {
+  align-items: center;
+  background: var(--surface-primary);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  gap: 8px;
+  padding: 4px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.KeyValueTable--filter {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  color: var(--text-primary);
+  flex: 1;
+  font-size: 0.85em;
+  outline: none;
+  padding: 3px 6px;
+}
+
+.KeyValueTable--filter:focus {
+  border-color: var(--interactive-primary);
+}
+
+.KeyValueTable--filterCount {
+  color: var(--text-secondary);
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+.KeyValueTable--clearButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1em;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.KeyValueTable--clearButton:hover {
+  color: var(--text-primary);
+}
+
+.KeyValueTable--emptyState {
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: 0.5rem;
+  text-align: center;
 }

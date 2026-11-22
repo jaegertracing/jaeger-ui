@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event';
 
 import SpanDetailRow from './SpanDetailRow';
 import DetailState from './SpanDetail/DetailState';
+import colorGenerator from '../../../utils/color-generator';
 
 const MockSpanDetail = jest.fn(() => <div data-testid="mocked-span-detail" />);
 vi.mock('./SpanDetail', () => ({
@@ -96,12 +97,25 @@ describe('<SpanDetailRow>', () => {
     );
   });
 
+  it('draws the indent guides from the tree it is given', () => {
+    const tree = { parentOf: () => null };
+    render(<SpanDetailRow {...props} tree={tree} />);
+    expect(MockSpanTreeOffset).toHaveBeenCalledWith(expect.objectContaining({ tree }));
+  });
+
   it('renders the "expanded accent"', () => {
     render(<SpanDetailRow {...props} />);
     const accentSwitch = screen.getByRole('switch');
     expect(accentSwitch).toBeInTheDocument();
     expect(accentSwitch).toHaveClass('detail-row-expanded-accent');
     expect(accentSwitch).toHaveStyle(`border-color: ${props.color}`);
+  });
+
+  it('keeps the tree markers on the service color when the row takes another color', () => {
+    render(<SpanDetailRow {...props} color="var(--heatmap-7)" />);
+    expect(MockSpanTreeOffset).toHaveBeenCalledWith(
+      expect.objectContaining({ color: colorGenerator.getColorByKey(props.span.resource.serviceName) })
+    );
   });
 
   it('renders the SpanDetail', () => {

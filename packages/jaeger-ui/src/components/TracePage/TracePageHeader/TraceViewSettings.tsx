@@ -7,6 +7,7 @@ import type { MenuProps } from 'antd';
 import { IoSettingsOutline, IoCheckmark } from 'react-icons/io5';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import { useDisplayedLayoutStore } from '../TraceTimelineViewer/store';
 
 import './TraceViewSettings.css';
 
@@ -32,6 +33,9 @@ export default function TraceViewSettings(props: Props) {
     timelineBarsVisible,
   } = props;
 
+  const heatmapEnabled = useDisplayedLayoutStore(s => s.heatmapEnabled);
+  const toggleHeatmap = useDisplayedLayoutStore(s => s.toggleHeatmap);
+
   const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
 
   const items: MenuProps['items'] = [
@@ -40,6 +44,12 @@ export default function TraceViewSettings(props: Props) {
       icon: timelineBarsVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
       label: 'Show Timeline',
       onClick: onTimelineToggle,
+    },
+    {
+      key: 'heatmap',
+      icon: heatmapEnabled ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      label: 'Span Latency Heatmap',
+      onClick: toggleHeatmap,
     },
   ];
 

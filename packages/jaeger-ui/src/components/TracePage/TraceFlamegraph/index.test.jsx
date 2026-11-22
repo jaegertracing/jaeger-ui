@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
@@ -344,6 +344,41 @@ describe('<TraceFlamegraph />', () => {
   });
 
   describe('handleCollapseAbove', () => {
+    it('replaces a stale collapsed subtree on same-ID reload while retaining search and view mode', () => {
+      const { rerender } = render(<TraceFlamegraph trace={otelTrace} />);
+      const fullGraph = mockDatum.mock.lastCall[0];
+      const collapsedNode = fullGraph.children[0];
+      fireEvent.change(screen.getByTestId('flamegraph-search'), { target: { value: 'Vehicle' } });
+      act(() => callbacks.onClick({ parent: {}, data: collapsedNode }));
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+      expect(mockDatum.mock.lastCall[0]).toBe(collapsedNode);
+
+      const data = structuredClone(testTrace.data);
+      const root = data.spans[0];
+      root.duration += 100000;
+      data.spans.push({
+        ...root,
+        spanID: '0000000000004574',
+        operationName: 'VehicleLateChild',
+        startTime: root.startTime + 1000,
+        duration: 2000,
+        references: [{ refType: 'CHILD_OF', traceID: root.traceID, spanID: root.spanID }],
+      });
+      const refreshed = transformTraceData(data).asOtelTrace();
+      expect(refreshed.traceID).toBe(otelTrace.traceID);
+      rerender(<TraceFlamegraph trace={refreshed} />);
+
+      const refreshedGraph = mockDatum.mock.lastCall[0];
+      expect(refreshedGraph.name).toBe('total');
+      expect(refreshedGraph.duration).toBeGreaterThan(fullGraph.duration);
+      expect(JSON.stringify(refreshedGraph)).toContain('VehicleLateChild');
+      expect(screen.getByText('VehicleLateChild')).toBeInTheDocument();
+      expect(screen.getByTestId('flamegraph-search')).toHaveValue('Vehicle');
+      expect(mockChart.search).toHaveBeenLastCalledWith('Vehicle');
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByTestId('flamegraph-chart')).toBeInTheDocument();
+    });
+
     it('collapse button triggers re-render with collapsed root', () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       // Zoom into a node first
@@ -515,6 +550,47 @@ describe('<TraceFlamegraph />', () => {
       expect(screen.getByText('3')).toBeInTheDocument();
     });
 
+    it('tooltip follows the cursor while moving within the same g.frame', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.__data__ = { data: { name: 'svc: op', value: 100, duration: 100, count: 1 } };
+      svg.appendChild(g);
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      const tooltip = screen.getByText('svc: op').closest('.Flamegraph-tooltip');
+      expect(tooltip).toHaveStyle({ left: '210px', top: '310px' });
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 250, clientY: 320 }));
+      });
+      expect(tooltip).toHaveStyle({ left: '260px', top: '330px' });
+    });
+
+    it('tooltip stays hidden when moving within the g.frame that opened the context menu', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.setAttribute('name', 'svc: op');
+      g.__data__ = { data: { name: 'svc: op', value: 100, duration: 100, count: 1 } };
+      svg.appendChild(g);
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 250, clientY: 320 }));
+      });
+      expect(document.querySelector('.Flamegraph-tooltip')).not.toBeInTheDocument();
+    });
+
     it('mousemove without g.frame hides tooltip', async () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
@@ -549,6 +625,34 @@ describe('<TraceFlamegraph />', () => {
         svg.dispatchEvent(new Event('mouseleave', { bubbles: false }));
       });
       expect(screen.queryByText('svc: op')).not.toBeInTheDocument();
+    });
+
+    it('context menu runs Collapse nodes above and Reset View, closing after each', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.setAttribute('name', 'svc: op');
+      svg.appendChild(g);
+      const menu = () => document.querySelector('.Flamegraph-context-menu');
+      const openMenu = () =>
+        act(() => {
+          g.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 100, clientY: 100 }));
+        });
+
+      act(() => {
+        callbacks.onClick({ parent: {}, data: { name: 'svc: op' } });
+      });
+      await openMenu();
+      fireEvent.click(within(menu()).getByText('Collapse nodes above'));
+      expect(menu()).toBeNull();
+      expect(screen.getByTestId('flamegraph-collapse')).toBeDisabled();
+
+      await openMenu();
+      mockChart.resetZoom.mockClear();
+      fireEvent.click(within(menu()).getByText('Reset View'));
+      expect(mockChart.resetZoom).toHaveBeenCalled();
+      expect(menu()).toBeNull();
     });
 
     it('context menu closes on close handler', async () => {

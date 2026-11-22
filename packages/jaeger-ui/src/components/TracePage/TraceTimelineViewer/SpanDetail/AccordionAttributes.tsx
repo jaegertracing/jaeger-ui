@@ -9,10 +9,33 @@ import * as markers from './AccordionAttributes.markers';
 import AttributesTable from './AttributesTable';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttributes } from '../../../../types/otel';
+import { AttributeValue, IAttributes } from '../../../../types/otel';
 
 import './AccordionAttributes.css';
 import accordionToggle from './accordionToggle';
+
+// The summary is displayed on the initial, collapsed render. It must stay
+// bounded independently of CSS ellipsis, which only hides a value after React
+// has already converted it to text.
+const SUMMARY_VALUE_MAX_CHARS = 200;
+
+function formatSummaryValue(value: AttributeValue) {
+  if (typeof value === 'string') {
+    return value.length > SUMMARY_VALUE_MAX_CHARS ? `${value.length.toLocaleString()} chars` : value;
+  }
+  if (value instanceof Uint8Array) return `${value.byteLength.toLocaleString()} bytes`;
+  if (Array.isArray(value)) {
+    // The loop stops as soon as the joined text would exceed the bound, so a
+    // large array is never stringified.
+    let textLength = 0;
+    for (const item of value) {
+      textLength += String(item).length + 1;
+      if (textLength > SUMMARY_VALUE_MAX_CHARS) return `${value.length.toLocaleString()} items`;
+    }
+    return String(value);
+  }
+  return String(value);
+}
 
 // export for tests
 export function AttributesSummary({ data }: { data: IAttributes }) {
@@ -27,7 +50,7 @@ export function AttributesSummary({ data }: { data: IAttributes }) {
         <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
           <span className="AccordionAttributes--summaryLabel">{item.key}</span>
           <span className="AccordionAttributes--summaryDelim">=</span>
-          {String(item.value)}
+          {formatSummaryValue(item.value)}
         </li>
       ))}
     </ul>

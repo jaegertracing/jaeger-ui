@@ -35,6 +35,25 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary);
 }
 
+/* Sits after the value it marks, in the muted color of a label: noticeable on a scan,
+   not a warning banner. */
+.GenAITab--nonStandardMark {
+  margin-left: 4px;
+  vertical-align: text-bottom;
+  color: var(--text-secondary);
+  cursor: help;
+}
+
+/* Wide enough that an attribute name is never broken across lines. */
+.GenAITab--nonStandardTooltip {
+  max-width: 480px;
+}
+
+.GenAITab--nonStandardHint code {
+  color: var(--interactive-primary);
+  white-space: nowrap;
+}
+
 .GenAITab--section {
   display: flex;
   flex-direction: column;
@@ -108,6 +127,11 @@ SPDX-License-Identifier: Apache-2.0
   padding: 4px 8px;
   background: var(--surface-secondary);
   font-size: 12px;
+}
+
+.GenAITab--messageHeaderLead {
+  display: flex;
+  align-items: center;
 }
 
 .GenAITab--messageRole {
@@ -311,4 +335,137 @@ img.GenAITab--media {
 
 audio.GenAITab--media {
   width: 100%;
+}
+
+.GenAITab--toolsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 12px;
+  margin-top: 8px;
+}
+
+.GenAITab--toolsSummary {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.GenAITab--toolsToggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.GenAITab--toolItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.GenAITab--toolItem + .GenAITab--toolItem {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid var(--border-strong);
+}
+
+.GenAITab--toolParametersWrapper {
+  margin-top: 2px;
+  padding: 0;
+}
+
+.GenAITab--paramTableContainer {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  overflow-x: auto;
+  background: var(--surface-primary);
+}
+
+.GenAITab--paramTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.GenAITab--paramTableCaption {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  width: 1px;
+  height: 1px;
+  white-space: nowrap;
+}
+
+.GenAITab--paramSchema {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.GenAITab--paramSchema > summary {
+  cursor: pointer;
+}
+
+.GenAITab--paramSchema > .GenAITab--json {
+  margin-top: 6px;
+}
+
+.GenAITab--paramTable th {
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-default);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.GenAITab--paramTable td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+.GenAITab--paramTable tr:last-child td {
+  border-bottom: none;
+}
+
+.GenAITab--paramNameColumn {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.GenAITab--paramTypeBadge,
+.GenAITab--paramRequiredBadge,
+.GenAITab--paramOptionalBadge {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.GenAITab--paramDescColumn {
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.GenAITab--paramEnum {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.GenAITab--paramEnum code {
+  font-family: monospace;
+  background: var(--surface-secondary);
+  padding: 1px 4px;
+  border-radius: 2px;
 }

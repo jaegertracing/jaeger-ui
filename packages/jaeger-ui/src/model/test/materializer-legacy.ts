@@ -17,15 +17,16 @@ export function toLegacyTrace({
     spans: spans.map(span => {
       const {
         spanID,
-        operationName,
+        name: operationName,
         kind,
         parentSpanID,
-        references = [],
+        links: references = [],
         startTime,
         duration,
-        tags,
+        attributes: tags,
         events = [],
         scope,
+        warnings,
       } = {
         startTime: 1,
         duration: 1,
@@ -63,6 +64,8 @@ export function toLegacyTrace({
           ],
         })),
         processID: PROCESS_ID,
+        // transformTraceData appends to this array, so the spec's copy stays unchanged.
+        ...(warnings === undefined ? {} : { warnings: [...warnings] }),
       } as SpanData;
     }),
   };
