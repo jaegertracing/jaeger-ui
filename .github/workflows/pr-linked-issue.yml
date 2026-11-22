@@ -102,7 +102,7 @@ jobs:
         # The action is shared with jaegertracing/jaeger. The pin means that a
         # change there reaches this repository only when a reviewed pull request
         # bumps the SHA.
-        uses: jaegertracing/jaeger/.github/actions/pr-linked-issue@b8e2d5bd86559ede9be688c456e05f42b7ec707b
+        uses: jaegertracing/jaeger/.github/actions/pr-linked-issue@fdde0a9cdf9a4c07908974373063717d1d3204b4
         with:
           token: ${{ github.token }}
           pull-request-number: ${{ inputs.pullRequestNumber }}
