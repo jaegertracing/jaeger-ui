@@ -77,19 +77,15 @@ export function useLayoutSettings(
     [location.pathname, location.search, location.hash, location.state, navigate]
   );
 
+  // Toggles change only the URL. The layout effect applies the resolved value, so the store
+  // never briefly holds a value that the old URL would revert.
   const updateTimelineBarsVisible = useCallback(
-    (visible: boolean) => {
-      useDisplayedLayoutStore.getState().setTimelineBarsVisible(visible, { persist: false });
-      updateUrl({ timelineBarsVisible: visible });
-    },
+    (visible: boolean) => updateUrl({ timelineBarsVisible: visible }),
     [updateUrl]
   );
 
   const updateDetailPanelMode = useCallback(
-    (mode: SpanDetailPanelMode) => {
-      setDetailPanelMode(mode, { persist: false });
-      updateUrl({ detailPanelMode: mode });
-    },
+    (mode: SpanDetailPanelMode) => updateUrl({ detailPanelMode: mode }),
     [updateUrl]
   );
 

@@ -251,6 +251,23 @@ describe('useLayoutSettings', () => {
     expect(setItem).not.toHaveBeenCalled();
   });
 
+  it('changes the displayed layout once per toggle', () => {
+    const { result } = renderLayout();
+    const changes: string[] = [];
+    const unsubscribe = useDisplayedLayoutStore.subscribe((next, prev) => {
+      if (next.timelineBarsVisible !== prev.timelineBarsVisible) {
+        changes.push(`timeline:${next.timelineBarsVisible}`);
+      }
+      if (next.detailPanelMode !== prev.detailPanelMode) changes.push(`mode:${next.detailPanelMode}`);
+    });
+
+    act(() => result.current.settings.setTimelineBarsVisible(false));
+    act(() => result.current.settings.setDetailPanelMode('sidepanel'));
+    unsubscribe();
+
+    expect(changes).toEqual(['timeline:false', 'mode:sidepanel']);
+  });
+
   it('keeps a toggled layout after reopening the resulting URL', () => {
     const first = renderLayout();
     act(() => first.result.current.settings.setTimelineBarsVisible(false));

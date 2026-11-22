@@ -1276,35 +1276,35 @@ describe('<TracePage>', () => {
       mockDisplayedLayoutStore.setTimelineBarsVisible.mockClear();
     });
 
-    it('calls setDetailPanelMode (Zustand + tracking) with sidepanel when detailPanelMode is inline', () => {
+    it('writes and tracks sidepanel when detailPanelMode is inline', () => {
       mockDisplayedLayoutStore.detailPanelMode = 'inline';
       render(<TracePage {...defaultProps} enableSidePanel />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel', { persist: false });
+      expect(mockNavigate.mock.lastCall[0].search).toContain('sidebar=sidepanel');
       expect(trackDetailPanelMode).toHaveBeenCalledWith('sidepanel');
     });
 
-    it('calls setDetailPanelMode (Zustand + tracking) with inline when detailPanelMode is sidepanel', () => {
+    it('writes and tracks inline when detailPanelMode is sidepanel', () => {
       mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
       render(<TracePage {...defaultProps} enableSidePanel />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline', { persist: false });
+      expect(mockNavigate.mock.lastCall[0].search).toContain('sidebar=inline');
       expect(trackDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
-    it('calls setTimelineBarsVisible (Zustand + tracking) with false when timelineBarsVisible is true', () => {
+    it('writes and tracks timeline off when timelineBarsVisible is true', () => {
       mockDisplayedLayoutStore.timelineBarsVisible = true;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(false, { persist: false });
+      expect(mockNavigate.mock.lastCall[0].search).toContain('timeline=off');
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
-    it('calls setTimelineBarsVisible (Zustand + tracking) with true when timelineBarsVisible is false', () => {
+    it('writes and tracks timeline on when timelineBarsVisible is false', () => {
       mockDisplayedLayoutStore.timelineBarsVisible = false;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(true, { persist: false });
+      expect(mockNavigate.mock.lastCall[0].search).toContain('timeline=on');
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
 
