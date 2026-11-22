@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import getConfig from '../../utils/config/get-config';
-import { SpanKind } from '../../types/otel';
+import { SpanKind, StatusCode } from '../../types/otel';
 
 export function runTraceContractSuite(pipeline) {
   // Tag deduplication and ordering run inside the pipeline, so these two
@@ -152,16 +152,79 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it.each([
-      [0, SpanKind.UNSPECIFIED],
-      [1, SpanKind.INTERNAL],
-      [2, SpanKind.SERVER],
-      [3, SpanKind.CLIENT],
-      [4, SpanKind.PRODUCER],
-      [5, SpanKind.CONSUMER],
-      [99, SpanKind.UNSPECIFIED],
+      ['unspecified', SpanKind.UNSPECIFIED],
+      ['internal', SpanKind.INTERNAL],
+      ['server', SpanKind.SERVER],
+      ['client', SpanKind.CLIENT],
+      ['producer', SpanKind.PRODUCER],
+      ['consumer', SpanKind.CONSUMER],
     ])('maps span kind %s to %s', (kind, expected) => {
       const result = pipeline.parse(trace({ spanID: rootSpanID, name: rootOperationName, kind }));
       expect(result.spans[0].kind).toBe(expected);
+    });
+
+    it('reports an error status', () => {
+      const result = pipeline.parse(
+        trace({
+          spanID: rootSpanID,
+          name: rootOperationName,
+          status: { code: 'error', message: 'boom' },
+        })
+      );
+      // The legacy facade derives status from the error tag and drops the message.
+      expect(result.spans[0].status.code).toBe(StatusCode.ERROR);
+    });
+
+    it('keeps the trace and span IDs of same-trace and cross-trace links', () => {
+      const otherTraceID = '0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f';
+      const result = pipeline.parse(
+        trace(
+          { spanID: 'linkedParent', name: 'linkedParent' },
+          { spanID: 'linkedTarget', name: 'linkedTarget' },
+          {
+            spanID: 'subject',
+            name: 'subject',
+            parentSpanID: 'linkedParent',
+            links: [{ spanID: 'linkedTarget' }, { spanID: 'crossTarget', traceID: otherTraceID }],
+          }
+        )
+      );
+
+      const subject = result.spanMap.get(id('subject'));
+      expect(subject.parentSpanID).toBe(id('linkedParent'));
+      expect(subject.links.map(link => ({ traceID: link.traceID, spanID: link.spanID }))).toEqual([
+        { traceID, spanID: id('linkedTarget') },
+        { traceID: otherTraceID, spanID: id('crossTarget') },
+      ]);
+    });
+
+    it('materializes one process per service and the trace-level resource attributes', () => {
+      const resource = [{ key: 'deployment.environment', value: 'test' }];
+      const result = pipeline.parse(
+        pipeline.materialize({
+          traceID,
+          serviceName,
+          resource,
+          spans: [
+            { spanID: rootSpanID, name: rootOperationName },
+            {
+              spanID: 'other',
+              name: 'otherOperation',
+              parentSpanID: rootSpanID,
+              serviceName: 'otherService',
+            },
+          ],
+        })
+      );
+
+      expect(result.spans.map(span => span.resource.serviceName)).toEqual([serviceName, 'otherService']);
+      for (const span of result.spans) {
+        expect(span.resource.attributes.getValue('deployment.environment')).toBe('test');
+      }
+      expect(result.services).toEqual([
+        { name: serviceName, numberOfSpans: 1 },
+        { name: 'otherService', numberOfSpans: 1 },
+      ]);
     });
 
     it.each([undefined, {}, { name: '' }])('uses unknown for a missing scope name in %s', scope => {
@@ -687,7 +750,7 @@ export function runTraceContractSuite(pipeline) {
         spanID: 'linked',
         name: 'linked',
         parentSpanID: 'parent',
-        links: [{ refType: 'CHILD_OF', spanID: 'other' }],
+        links: [{ spanID: 'other' }],
       };
       const existingRefID = id('parent');
       const willBeReferencedID = id('other');
