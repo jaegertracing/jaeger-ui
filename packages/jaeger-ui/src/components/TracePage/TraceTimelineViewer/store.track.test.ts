@@ -163,6 +163,8 @@ const interactions: TInteraction[] = [
 ];
 
 // Exact category strings are "public API" and tests should fail if they are changed.
+// The Redux tracking middleware emitted these events for this session on main at 02beb5e4,
+// before #4742 deleted it.
 const expectedEvents = [
   ['jaeger/ux/trace/timeline/parent', 'close', 1],
   ['jaeger/ux/trace/timeline/parent', 'open', 1],

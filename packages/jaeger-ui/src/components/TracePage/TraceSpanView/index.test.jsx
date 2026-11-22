@@ -115,6 +115,9 @@ describe('<TraceSpanView>', () => {
     expect(renderedServiceNames()).toEqual(['service2']);
   });
 
+  // Rows start in the trace's tree order, and sorting keeps that order for ties: span-4 and span-6
+  // both last 20000 µs, and several spans share a service or operation name. These expected orders
+  // change if the tree order changes.
   it.each([
     ['Service Name', 'span-1 span-2 span-3 span-2_1 span-6 span-12 span-13 span-14 span-4 span-5'],
     ['Operation', 'span-1 span-4 span-2 span-5 span-2_1 span-3 span-7 span-6 span-12 span-13'],
