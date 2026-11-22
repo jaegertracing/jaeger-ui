@@ -5,9 +5,10 @@ import { describe, expect, it } from 'vitest';
 
 import genaiTestTrace from './genaiTestTrace.json';
 import DetailState from './SpanDetail/DetailState';
+import { parseOtelTrace } from '../../../api/v3/parser';
+import { refinedTracesData } from '../../../api/v3/schemas';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
 import { makeAttributes } from '../../../model/attributes';
-import transformTraceData from '../../../model/transform-trace-data';
 import generateRowStates, { collapseTargets, RECORDED_TREE } from './generateRowStates';
 import { EMPTY_SPAN_FILTER, evaluateSpanFilter, ISpanFilter, withHiddenServices } from '../spanFilter';
 
@@ -163,7 +164,7 @@ describe('generateRowStates', () => {
 // agent reached through two plain tiers (api-edge, graphql-gateway), whose tool calls fan
 // out through a plain mcp-gateway, with a nested agent below one of those calls.
 describe('service filter pruning on the GenAI sample trace', () => {
-  const trace = transformTraceData(genaiTestTrace as never)!.asOtelTrace();
+  const trace = parseOtelTrace(refinedTracesData.parse(genaiTestTrace))!;
   const PLAIN_LEAF_SERVICES = new Set([
     'auth-service',
     'metrics-backend',
@@ -472,7 +473,7 @@ describe('generateRowStates in lift mode', () => {
   });
 
   describe('the worked example of RFC 0009 on genaiTestTrace.json', () => {
-    const trace = transformTraceData(genaiTestTrace as never)!.asOtelTrace();
+    const trace = parseOtelTrace(refinedTracesData.parse(genaiTestTrace))!;
     const rowStates = (filter: ISpanFilter) =>
       generateRowStates(
         trace.spans,

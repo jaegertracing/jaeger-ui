@@ -28,18 +28,19 @@ import { writeFileSync } from 'fs';
  *
  * Attributes are limited to the ones the UI reads, so every span renders the way its
  * kind implies: gen_ai.* for the span pills and the GenAI detail tab sections in
- * genAiData.ts, http.* for the request spans, db.* for the datastore spans, plus
- * span.kind and error.
+ * genAiData.ts, http.* for the request spans, and db.* for the datastore spans. The
+ * kind is the OTLP kind field and an error is the span status, so neither is an
+ * attribute.
+ *
+ * The output is OTLP `TracesData` JSON, which the Upload tab accepts as it is.
  *
  * Instructions to run this script:
  *
- *    node scripts/utils/make-genai-trace.js [--turns N] [--out FILE] [--envelope]
+ *    node scripts/utils/make-genai-trace.js [--turns N] [--out FILE]
  *
  *    --turns N     agent turns to emit; each turn adds an LLM call, two tool calls and a
  *                  retrieval, with their downstream fan-out. Default 3.
  *    --out FILE    where to write. Default is the committed test fixture.
- *    --envelope    wrap the trace in {"data":[...]} so it can be loaded through the
- *                  Upload tab. Tests want the unwrapped form, which is the default.
  */
 
 const DEFAULT_OUT = 'packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/genaiTestTrace.json';
@@ -59,7 +60,15 @@ const SERVICES = {
   p10: 'summarizer-agent',
 };
 
-const TAG_TYPES = { string: 'string', number: 'int64', boolean: 'bool' };
+const SPAN_KINDS = { unspecified: 0, internal: 1, server: 2, client: 3, producer: 4, consumer: 5 };
+
+// The OTLP JSON encoding names the value type in the key, so the tag type field the
+// legacy encoding carried is gone.
+const anyValue = value => {
+  if (typeof value === 'number') return { intValue: String(value) };
+  if (typeof value === 'boolean') return { boolValue: value };
+  return { stringValue: value };
+};
 
 const httpServer = (method, route, status) => ({
   'http.request.method': method,
@@ -204,11 +213,10 @@ const toolCallAttrs = (name, callID, args, result) => ({
 });
 
 function parseArgs(argv) {
-  const args = { turns: 3, out: DEFAULT_OUT, envelope: false };
+  const args = { turns: 3, out: DEFAULT_OUT };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--turns') args.turns = Number(argv[++i]);
     else if (argv[i] === '--out') args.out = argv[++i];
-    else if (argv[i] === '--envelope') args.envelope = true;
   }
   if (!Number.isInteger(args.turns) || args.turns < 1) {
     throw new Error(`--turns must be a positive integer, got ${args.turns}`);
@@ -222,23 +230,23 @@ function createBuilder() {
 
   function span({ name, proc, parent, kind = 'internal', genAIOp, model, error = false, duration, attrs }) {
     const spanID = (++seq).toString(16).padStart(16, '0');
-    const tags = [{ key: 'span.kind', type: 'string', value: kind }];
-    if (genAIOp) tags.push({ key: 'gen_ai.operation.name', type: 'string', value: genAIOp });
-    if (model) tags.push({ key: 'gen_ai.request.model', type: 'string', value: model });
+    const attributes = [];
+    if (genAIOp) attributes.push({ key: 'gen_ai.operation.name', value: anyValue(genAIOp) });
+    if (model) attributes.push({ key: 'gen_ai.request.model', value: anyValue(model) });
     for (const [key, value] of Object.entries(attrs ?? {})) {
-      tags.push({ key, type: TAG_TYPES[typeof value], value });
+      attributes.push({ key, value: anyValue(value) });
     }
-    if (error) tags.push({ key: 'error', type: 'bool', value: true });
     spans.push({
-      traceID: TRACE_ID,
       spanID,
-      operationName: name,
-      references: parent ? [{ refType: 'CHILD_OF', traceID: TRACE_ID, spanID: parent }] : [],
+      parentSpanID: parent,
+      name,
+      kind: SPAN_KINDS[kind],
+      // Scratch values for layOut, converted to nanoseconds when the trace is emitted.
       startTime: 0,
       duration,
-      tags,
-      logs: [],
-      processID: proc,
+      attributes,
+      status: error ? { code: 2 } : {},
+      serviceKey: proc,
     });
     return spanID;
   }
@@ -263,7 +271,7 @@ const ENCLOSING_SPAN_OVERHEAD = 1.1;
 function layOut(spans) {
   const children = new Map();
   for (const s of spans) {
-    const parent = s.references[0]?.spanID ?? null;
+    const parent = s.parentSpanID ?? null;
     if (!children.has(parent)) children.set(parent, []);
     children.get(parent).push(s);
   }
@@ -272,9 +280,7 @@ function layOut(spans) {
     const busy = kids.reduce((sum, kid) => sum + size(kid), 0);
     if (span.duration === undefined) span.duration = Math.round(busy * ENCLOSING_SPAN_OVERHEAD);
     if (busy > span.duration) {
-      throw new Error(
-        `the children of "${span.operationName}" take ${busy}us, longer than its ${span.duration}us`
-      );
+      throw new Error(`the children of "${span.name}" take ${busy}us, longer than its ${span.duration}us`);
     }
     return span.duration;
   }
@@ -542,30 +548,57 @@ function llmCallIn(span, parent) {
   });
 }
 
+// Microseconds are what layOut works in; the wire wants nanoseconds, and the values are
+// too large for exact Number arithmetic.
+const toNanos = micros => String(BigInt(micros) * 1000n);
+
+function toOtelSpan(s) {
+  return {
+    traceId: TRACE_ID,
+    spanId: s.spanID,
+    ...(s.parentSpanID ? { parentSpanId: s.parentSpanID } : {}),
+    name: s.name,
+    kind: s.kind,
+    startTimeUnixNano: toNanos(s.startTime),
+    endTimeUnixNano: toNanos(s.startTime + s.duration),
+    attributes: s.attributes,
+    status: s.status,
+  };
+}
+
+// One resource per service, in the order of the SERVICES map, each holding that
+// service's spans in creation order.
+function toResourceSpans(spans) {
+  const resourceSpans = [];
+  for (const [key, serviceName] of Object.entries(SERVICES)) {
+    const serviceSpans = spans.filter(s => s.serviceKey === key);
+    if (serviceSpans.length === 0) continue;
+    resourceSpans.push({
+      resource: { attributes: [{ key: 'service.name', value: { stringValue: serviceName } }] },
+      scopeSpans: [{ spans: serviceSpans.map(toOtelSpan) }],
+    });
+  }
+  return resourceSpans;
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const spans = buildTrace(args.turns);
-  const processes = Object.fromEntries(
-    Object.entries(SERVICES).map(([id, serviceName]) => [id, { serviceName, tags: [] }])
-  );
-  // JSON has no comments, so provenance rides along as a field. transformTraceData
-  // reads only traceID, spans and processes, so the extra key is ignored everywhere.
-  const trace = {
+  const resourceSpans = toResourceSpans(spans);
+  // JSON has no comments, so provenance rides along as a field. The schema passes
+  // unknown top-level keys through, so the extra key is ignored everywhere.
+  const payload = {
     _comment:
       'Generated by scripts/utils/make-genai-trace.js (pnpm run generate:genai-trace). ' +
       'Do not edit by hand - see that script for what the topology covers and why.',
-    traceID: TRACE_ID,
-    spans,
-    processes,
-    warnings: null,
+    resourceSpans,
   };
-  const payload = args.envelope ? { data: [trace], total: 1, limit: 0, offset: 0, errors: null } : trace;
 
   writeFileSync(args.out, `${JSON.stringify(payload, null, 2)}\n`);
-  const genAICount = spans.filter(s => s.tags.some(t => t.key === 'gen_ai.operation.name')).length;
+  const genAICount = spans.filter(s => s.attributes.some(a => a.key === 'gen_ai.operation.name')).length;
   console.log(
     `wrote ${args.out}: ${spans.length} spans (${genAICount} GenAI), ` +
-      `${Object.keys(SERVICES).length} services, turns=${args.turns}`
+      `${resourceSpans.length} services, turns=${args.turns}`
   );
 }
 
