@@ -16,6 +16,8 @@ The UI supports customization via custom configuration as either JSON or Javascr
 
 The configuration is loaded into a `Config` object (see [src/types/config.tsx](./src/types/config.tsx) for the complete schema). This object is returned by the top-level function `getJaegerUiConfig` defined in [index.html](./index.html). By default this function just returns null, but its source is manipulated by the Jaeger backend such that the values are injected dynamically via search-replace. The returned value is then merged with [defaults](./src/utils/config/get-config.ts) once and memoized; components read it through the `useConfig()` hook.
 
+Set `timeFormat` to `12h` or `24h` to choose the clock shown in search results, trace details, and Monitor charts. When it is unset, each view keeps its existing display format. Search form time inputs always use `HH:mm`.
+
 ### Configuration as JSON
 
 When the config file has `.json` extension, Jaeger looks for the statement `JAEGER_CONFIG = DEFAULT_CONFIG` and replaces the right-hand side with the content of the loaded config file, which must contain a valid JSON.

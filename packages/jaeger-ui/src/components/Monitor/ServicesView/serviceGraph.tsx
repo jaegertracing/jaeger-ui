@@ -9,9 +9,9 @@ import { ServiceMetricsObject } from '../../../types/metrics';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
 import {
-  formatDatetime,
-  formatDisplayTimeShort,
-  isClockConfigured,
+  formatDisplayTime,
+  getConfiguredTimeFormat,
+  STANDARD_TIME_FORMAT,
   ONE_MILLISECOND,
 } from '../../../utils/date';
 
@@ -35,7 +35,15 @@ type MetricDataPoint = {
   [key: string]: number | null;
 };
 
-export const tickFormat = (v: number): string => formatDisplayTimeShort(v * ONE_MILLISECOND);
+export const tickFormat = (v: number): string => formatDisplayTime(v * ONE_MILLISECOND, STANDARD_TIME_FORMAT);
+
+function formatTooltipTime(value: string | number): string {
+  const timeFormat = getConfiguredTimeFormat();
+  const options: Intl.DateTimeFormatOptions | undefined = timeFormat
+    ? { hourCycle: timeFormat === '24h' ? 'h23' : 'h12' }
+    : undefined;
+  return new Date(Number(value)).toLocaleString(undefined, options);
+}
 
 type TPlaceholder = {
   name: string;
@@ -297,12 +305,7 @@ function ServiceGraphImpl({
 
           <Tooltip
             contentStyle={{ fontSize: '0.625rem' }}
-            labelFormatter={
-              ((value: string | number) =>
-                isClockConfigured()
-                  ? formatDatetime(Number(value) * ONE_MILLISECOND)
-                  : new Date(Number(value)).toLocaleString()) as never
-            }
+            labelFormatter={formatTooltipTime as never}
             formatter={tooltipFormatter as never}
           />
 

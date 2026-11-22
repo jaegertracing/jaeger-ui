@@ -5,7 +5,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 
-import { formatDisplayTime, formatRelativeDate, ONE_MILLISECOND } from '../../utils/date';
+import { formatDisplayTime, formatRelativeDate } from '../../utils/date';
 
 type Props = {
   fullMonthName: boolean | undefined | null;
@@ -19,6 +19,6 @@ export default function RelativeDate(props: Props): React.JSX.Element {
   const { value, includeTime, fullMonthName } = props;
   const m = dayjs.isDayjs(value) ? value : dayjs(value);
   const dateStr = formatRelativeDate(m, Boolean(fullMonthName));
-  const timeStr = includeTime ? `, ${formatDisplayTime(m.valueOf() * ONE_MILLISECOND)}` : '';
+  const timeStr = includeTime ? `, ${formatDisplayTime(m, 'h:mm:ss a')}` : '';
   return <span>{`${dateStr}${timeStr}`}</span>;
 }

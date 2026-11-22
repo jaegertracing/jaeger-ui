@@ -52,7 +52,7 @@ export default function ResultItem({
     orphanSpanCount,
   } = traceSummary;
 
-  const timeStr = formatDisplayTime(startTime);
+  const timeStr = formatDisplayTime(startTime, 'h:mm:ss a');
   const fromNow = formatRelativeTime(startTime);
 
   return (

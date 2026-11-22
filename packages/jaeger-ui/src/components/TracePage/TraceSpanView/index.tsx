@@ -9,7 +9,7 @@ import './index.css';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import RelativeBar from '../../common/RelativeBar';
-import { formatDatetime, formatDuration, formatDurationCompact } from '../../../utils/date';
+import { formatDisplayTime, formatDuration, formatDurationCompact } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
@@ -187,7 +187,7 @@ export default function TraceSpanView(props: Props) {
         const compactValue = formatDurationCompact(span.relativeStartTime);
 
         return (
-          <Tooltip title={`${formatDatetime(span.startTime, '12h')} (${preciseValue})`}>
+          <Tooltip title={`${formatDisplayTime(span.startTime, 'DD MMM YYYY hh:mm:ss A')} (${preciseValue})`}>
             <span style={{ fontFamily: 'monospace', fontSize: '12px', display: 'block', textAlign: 'right' }}>
               {compactValue}
             </span>

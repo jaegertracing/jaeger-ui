@@ -75,9 +75,9 @@ describe('<ServiceGraph>', () => {
   afterEach(cleanup);
 
   it.each([
-    ['12h', '3:04 pm', 'October 15 2026, 3:04:05.123 pm'],
-    ['24h', '15:04', 'October 15 2026, 15:04:05.123'],
-  ])('formats millisecond axis and tooltip timestamps in %s', (timeFormat, tick, tooltip) => {
+    ['12h', '3:04 pm', 'h12'],
+    ['24h', '15:04', 'h23'],
+  ])('formats millisecond axis and tooltip timestamps in %s', (timeFormat, tick, hourCycle) => {
     getConfig.mockReturnValue({ timeFormat });
     const timestamp = new Date(2026, 9, 15, 15, 4, 5, 123).getTime();
     const graph = ServiceGraphImpl({ ...defaultProps, loading: false, metricsData: mockMetricsData });
@@ -85,6 +85,7 @@ describe('<ServiceGraph>', () => {
 
     expect(children.find(child => child.type === XAxis).props.tickFormatter(timestamp)).toBe(tick);
     const { labelFormatter } = children.find(child => child.type === Tooltip).props;
+    const tooltip = new Date(timestamp).toLocaleString(undefined, { hourCycle });
     expect(labelFormatter(timestamp)).toBe(tooltip);
     expect(labelFormatter(String(timestamp))).toBe(tooltip);
   });

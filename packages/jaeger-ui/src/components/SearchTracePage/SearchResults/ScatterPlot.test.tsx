@@ -124,8 +124,9 @@ describe('ScatterPlot', () => {
   });
 
   it.each([
-    ['12h', '10:10:17 pm'],
-    ['24h', '22:10:17'],
+    [undefined, '03:04:05 pm'],
+    ['12h', '03:04:05 pm'],
+    ['24h', '15:04:05'],
   ])('uses %s time on the x axis', (timeFormat, label) => {
     mockGetConfig.mockReturnValue({ timeFormat });
     renderScatterPlot({ onValueClick: mockOnValueClick });
@@ -139,7 +140,7 @@ describe('ScatterPlot', () => {
       tickFormatter: (value: number) => string;
       ticks: number[];
     };
-    expect(tickFormatter(sampleData[0].x)).toBe(label);
+    expect(tickFormatter(generateTimestamp(15, 4, 5))).toBe(label);
     expect(new Set(ticks.map(tickFormatter)).size).toBe(ticks.length);
   });
 

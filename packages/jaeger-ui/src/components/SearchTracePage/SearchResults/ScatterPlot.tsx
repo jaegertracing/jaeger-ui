@@ -102,6 +102,8 @@ export default function ScatterPlot({
   It ensures that the ticks are unique by checking if the label for a given tick value has already been used.
   If it has, the tick is not added to the list of ticks.
   */
+  const formatTick = (tick: number) => formatDisplayTime(tick, 'hh:mm:ss a');
+
   const generateUniqueTicks = (min: number, max: number, count: number) => {
     const step = (max - min) / (count - 1);
     const ticks = [];
@@ -113,7 +115,7 @@ export default function ScatterPlot({
     }
 
     return ticks.filter(tick => {
-      const label = formatDisplayTime(tick);
+      const label = formatTick(tick);
       if (seenLabels.has(label)) {
         return false;
       }
@@ -140,7 +142,7 @@ export default function ScatterPlot({
               name="Time"
               domain={[xMin, xMax]}
               ticks={generateUniqueTicks(xMin, xMax, 10)}
-              tickFormatter={(t: number) => formatDisplayTime(t)}
+              tickFormatter={formatTick}
               tick={{ fontSize: 11, dy: 5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}

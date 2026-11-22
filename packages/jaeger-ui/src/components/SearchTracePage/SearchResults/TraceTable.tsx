@@ -14,7 +14,8 @@ import { TraceSummary } from '../../../types/trace-summary';
 import {
   formatDuration,
   formatDurationCompact,
-  formatDatetime,
+  formatDisplayTime,
+  STANDARD_DATETIME_FORMAT,
   formatRelativeTime,
 } from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
@@ -212,7 +213,7 @@ export default function TraceTable({
         key: 'startTime',
         onCell: () => ({ style: { overflow: 'hidden' } }),
         render: (_: unknown, trace: TraceSummary) => {
-          const formatted = formatDatetime(trace.startTime);
+          const formatted = formatDisplayTime(trace.startTime, STANDARD_DATETIME_FORMAT);
           const displayed = startTimeDisplay === 'relative' ? formatRelativeTime(trace.startTime) : formatted;
           return (
             <Tooltip title={formatted}>

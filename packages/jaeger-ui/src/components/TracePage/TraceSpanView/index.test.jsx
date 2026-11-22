@@ -54,8 +54,9 @@ describe('<TraceSpanView>', () => {
   });
 
   it.each([
-    ['12h', 'October 15 2026, 3:04:05.123 pm (1ms)'],
-    ['24h', 'October 15 2026, 15:04:05.123 (1ms)'],
+    [undefined, '15 Oct 2026 03:04:05 PM (1ms)'],
+    ['12h', '15 Oct 2026 03:04:05 PM (1ms)'],
+    ['24h', '15 Oct 2026 15:04:05 (1ms)'],
   ])('uses the configured %s timestamp in the start time tooltip', async (timeFormat, expected) => {
     getConfig.mockReturnValue({ timeFormat });
     const startTime = new Date(2026, 9, 15, 15, 4, 5, 123).getTime() * 1000;
