@@ -31,7 +31,6 @@ type SpanBarRowProps = {
   isDetailExpanded: boolean;
   isMatchingFilter: boolean;
   hasHiddenMatches?: boolean;
-  hasHiddenFilterMatches?: boolean;
   isSelected?: boolean;
   timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
@@ -104,8 +103,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   isChildrenExpanded,
   isDetailExpanded,
   isMatchingFilter,
-  hasHiddenMatches: hasHiddenMatchesProp,
-  hasHiddenFilterMatches,
+  hasHiddenMatches = false,
   isSelected,
   timelineBarsVisible,
   numTicks,
@@ -125,7 +123,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   useOtelTerms,
   tree = RECORDED_TREE,
 }) => {
-  const hasHiddenMatches = Boolean(hasHiddenMatchesProp ?? hasHiddenFilterMatches);
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
   }, [onDetailToggled, span.spanID]);
@@ -185,14 +182,14 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
           ${isMatchingFilter ? 'is-matching-filter' : ''}
-          ${hasHiddenMatches ? 'has-hidden-matches has-hidden-filter-matches' : ''}
+          ${hasHiddenMatches ? 'has-hidden-matches' : ''}
           ${isSelected ? 'is-selected' : ''}
         `}
     >
       <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
         <div
           className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''} ${
-            hasHiddenMatches ? 'has-hidden-matches has-hidden-filter-matches' : ''
+            hasHiddenMatches ? 'has-hidden-matches' : ''
           }`}
           title={hasHiddenMatches ? 'Contains hidden search matches' : undefined}
         >
@@ -204,6 +201,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             // The tree markers stay on the service color, like the indent guides, even when the
             // bar takes a heatmap color.
             color={colorGenerator.getColorByKey(span.resource.serviceName)}
+            hasHiddenMatches={hasHiddenMatches}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}

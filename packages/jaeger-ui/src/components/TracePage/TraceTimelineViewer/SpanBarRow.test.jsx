@@ -14,8 +14,13 @@ import { makeAttributes } from '../../../model/attributes';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick, color }) => (
-    <div data-testid="span-tree-offset" data-color={color} onClick={onClick}>
+  default: jest.fn(({ span, childrenVisible, onClick, color, hasHiddenMatches }) => (
+    <div
+      data-testid="span-tree-offset"
+      data-color={color}
+      data-has-hidden-matches={hasHiddenMatches ? 'true' : undefined}
+      onClick={onClick}
+    >
       SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
@@ -261,6 +266,7 @@ describe('<SpanBarRow>', () => {
     const wrapper = screen.getByTestId('span-tree-offset').parentElement;
     expect(wrapper).toHaveClass('span-name-wrapper', 'has-hidden-matches');
     expect(wrapper).toHaveAttribute('title', 'Contains hidden search matches');
+    expect(screen.getByTestId('span-tree-offset')).toHaveAttribute('data-has-hidden-matches', 'true');
   });
 
   it('does not apply has-hidden-matches classes when hasHiddenMatches is false', () => {
@@ -270,6 +276,7 @@ describe('<SpanBarRow>', () => {
     const wrapper = screen.getByTestId('span-tree-offset').parentElement;
     expect(wrapper).not.toHaveClass('has-hidden-matches');
     expect(wrapper).not.toHaveAttribute('title');
+    expect(screen.getByTestId('span-tree-offset')).not.toHaveAttribute('data-has-hidden-matches');
   });
 
   it('applies both is-matching-filter and has-hidden-matches classes simultaneously', () => {

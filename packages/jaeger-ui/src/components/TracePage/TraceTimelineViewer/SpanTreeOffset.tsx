@@ -19,6 +19,7 @@ type TProps = {
   color: string;
   // The tree the rows draw; it differs from the span tree when the filter lifts children.
   tree?: VisibleTree;
+  hasHiddenMatches?: boolean;
 };
 
 const SpanTreeOffset: React.FC<TProps> = ({
@@ -29,6 +30,7 @@ const SpanTreeOffset: React.FC<TProps> = ({
   span,
   color,
   tree = RECORDED_TREE,
+  hasHiddenMatches = false,
 }) => {
   // The visible ancestors, root first.
   const ancestors = useMemo(() => {
@@ -50,6 +52,11 @@ const SpanTreeOffset: React.FC<TProps> = ({
     }
   };
 
+  const ariaLabel =
+    hasHiddenMatches && !childrenVisible
+      ? 'Expand or collapse child spans (contains hidden search matches)'
+      : 'Expand or collapse child spans';
+
   const wrapperProps = hasChildren
     ? {
         onClick,
@@ -59,7 +66,7 @@ const SpanTreeOffset: React.FC<TProps> = ({
         }),
         role: 'switch',
         'aria-checked': childrenVisible,
-        'aria-label': 'Expand or collapse child spans',
+        'aria-label': ariaLabel,
       }
     : null;
 

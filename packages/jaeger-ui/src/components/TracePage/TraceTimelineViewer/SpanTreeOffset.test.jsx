@@ -285,4 +285,72 @@ describe('SpanTreeOffset', () => {
       expect(container.querySelector('.SpanTreeOffset--box')).toHaveTextContent('3');
     });
   });
+
+  describe('accessibility with hidden search matches', () => {
+    it('communicates hidden search matches in accessible name when collapsed', () => {
+      const spanWithChildren = { ...ownSpan, hasChildren: true, childSpans: [{}] };
+      const onClick = jest.fn();
+      const { getByRole } = render(
+        <SpanTreeOffset
+          {...props}
+          span={spanWithChildren}
+          onClick={onClick}
+          childrenVisible={false}
+          hasHiddenMatches
+        />
+      );
+      const toggle = getByRole('switch', {
+        name: 'Expand or collapse child spans (contains hidden search matches)',
+      });
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+      expect(toggle).toHaveAttribute('tabindex', '0');
+
+      // Preserves keyboard functionality
+      fireEvent.keyDown(toggle, { key: 'Enter' });
+      expect(onClick).toHaveBeenCalledTimes(1);
+
+      fireEvent.keyDown(toggle, { key: ' ' });
+      expect(onClick).toHaveBeenCalledTimes(2);
+    });
+
+    it('uses standard accessible name when children are expanded even if hasHiddenMatches is true', () => {
+      const spanWithChildren = { ...ownSpan, hasChildren: true, childSpans: [{}] };
+      const onClick = jest.fn();
+      const { getByRole, queryByRole } = render(
+        <SpanTreeOffset
+          {...props}
+          span={spanWithChildren}
+          onClick={onClick}
+          childrenVisible
+          hasHiddenMatches
+        />
+      );
+      expect(
+        queryByRole('switch', {
+          name: 'Expand or collapse child spans (contains hidden search matches)',
+        })
+      ).toBeNull();
+      const toggle = getByRole('switch', { name: 'Expand or collapse child spans' });
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('uses standard accessible name when hasHiddenMatches is false', () => {
+      const spanWithChildren = { ...ownSpan, hasChildren: true, childSpans: [{}] };
+      const onClick = jest.fn();
+      const { getByRole } = render(
+        <SpanTreeOffset
+          {...props}
+          span={spanWithChildren}
+          onClick={onClick}
+          childrenVisible={false}
+          hasHiddenMatches={false}
+        />
+      );
+      const toggle = getByRole('switch', { name: 'Expand or collapse child spans' });
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+    });
+  });
 });
