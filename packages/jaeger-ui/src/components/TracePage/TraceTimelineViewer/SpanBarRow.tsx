@@ -58,6 +58,7 @@ type SpanBarRowProps = {
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   spanPillsEnabled?: boolean;
+  showServiceName?: boolean;
   useOtelTerms: boolean;
   // The tree the rows draw; it differs from the span tree when the filter lifts children.
   tree?: VisibleTree;
@@ -114,6 +115,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   focusSpan,
   traceDuration,
   spanPillsEnabled,
+  showServiceName = true,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -182,6 +184,9 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const hasLinks = span.links && span.links.length > 0;
   const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
 
+  const shouldShowServiceName =
+    showServiceName || Boolean(rpc) || Boolean(noInstrumentedServer) || !operationName;
+
   return (
     <TimelineRow
       className={`
@@ -236,7 +241,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              {serviceName}{' '}
+              {shouldShowServiceName ? (
+                <>{serviceName} </>
+              ) : (
+                <span className="SpanBarRow--visuallyHidden">{serviceName} </span>
+              )}
               {rpc && (
                 <span>
                   <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
@@ -255,7 +264,13 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
                 </span>
               )}
             </span>
-            <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            <small
+              className={`endpoint-name ${
+                !shouldShowServiceName && isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''
+              }`}
+            >
+              {rpc ? rpc.operationName : operationName}
+            </small>
             {pills.map(pill => (
               <SpanPill key={pill.label} pill={pill} />
             ))}
