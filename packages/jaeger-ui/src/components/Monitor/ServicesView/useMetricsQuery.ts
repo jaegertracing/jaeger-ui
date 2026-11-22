@@ -144,7 +144,7 @@ export function transformOperationMetrics(payload: NamedOperationMetricResult[])
       const metric = promiseResult.value;
       if (metric.metrics && Array.isArray(metric.metrics)) {
         metric.metrics.forEach((metricDetails: MetricObject) => {
-          if (opsMetrics === null) opsMetrics = {};
+          if (opsMetrics === null) opsMetrics = Object.create(null) as OpsMap;
 
           let opsName: string | null = null;
           const avg = {

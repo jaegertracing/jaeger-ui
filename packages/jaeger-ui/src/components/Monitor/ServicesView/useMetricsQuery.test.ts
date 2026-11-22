@@ -268,6 +268,42 @@ describe('transformServiceMetrics', () => {
 });
 
 describe('transformOperationMetrics', () => {
+  it.each(['constructor', 'toString', 'hasOwnProperty', '__proto__'])(
+    'handles the inherited-property operation name %s',
+    operationName => {
+      const operationMetric = (name: MetricsAPIResponse<true>['name']) => ({
+        status: 'fulfilled' as const,
+        value: {
+          name,
+          type: 'GAUGE' as const,
+          help: '',
+          quantile: 0.95,
+          metrics: [
+            {
+              labels: [{ name: 'operation', value: operationName }],
+              metricPoints: [metricPoint],
+            },
+          ],
+        },
+      });
+
+      const payload = [
+        { errorKey: 'opsLatencies', result: operationMetric('service_operation_latencies') },
+        { errorKey: 'opsCalls', result: operationMetric('service_operation_call_rate') },
+        { errorKey: 'opsErrors', result: operationMetric('service_operation_error_rate') },
+      ] satisfies Parameters<typeof transformOperationMetrics>[0];
+
+      const result = transformOperationMetrics(payload);
+
+      expect(result.serviceOpsMetrics).toHaveLength(1);
+      expect(result.serviceOpsMetrics![0]).toMatchObject({
+        name: operationName,
+        latency: 100,
+        requests: 100,
+        errRates: 100,
+      });
+    }
+  );
   it('produces one ServiceOpsMetrics entry per operation', () => {
     const result = transformOperationMetrics(nameOperationResults(fullOpsPayload));
     expect(result.serviceOpsMetrics).toHaveLength(1);
