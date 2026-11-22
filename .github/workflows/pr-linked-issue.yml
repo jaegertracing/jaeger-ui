@@ -10,6 +10,10 @@ on:
     types: [opened, edited, reopened, labeled, unlabeled]
   issues:
     types: [labeled, unlabeled, closed, reopened]
+  schedule:
+    # Every day at 2:30 AM UTC, to close the pull requests that have been
+    # flagged for a week.
+    - cron: '30 2 * * *'
   workflow_dispatch:
     inputs:
       pullRequestNumber:
@@ -102,8 +106,24 @@ jobs:
         # The action is shared with jaegertracing/jaeger. The pin means that a
         # change there reaches this repository only when a reviewed pull request
         # bumps the SHA.
-        uses: jaegertracing/jaeger/.github/actions/pr-linked-issue@b8e2d5bd86559ede9be688c456e05f42b7ec707b
+        uses: jaegertracing/jaeger/.github/actions/pr-linked-issue@d5ad56cf9290ea69ea3b0fde91c17340e3bbfdcf
         with:
           token: ${{ github.token }}
           pull-request-number: ${{ inputs.pullRequestNumber }}
           dry-run: ${{ inputs.dryRun || 'false' }}
+
+  # This job does not share the concurrency group of a pull request. A check
+  # that an event starts while this job runs can therefore write to the same
+  # pull request, and each of the two acts on the labels it read at its start.
+  close-expired-pull-requests:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Close the pull requests that have been flagged for a week
+        uses: jaegertracing/jaeger/.github/actions/pr-linked-issue@d5ad56cf9290ea69ea3b0fde91c17340e3bbfdcf
+        with:
+          token: ${{ github.token }}
+          close-expired-pull-requests: 'true'
