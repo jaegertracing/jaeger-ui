@@ -5,12 +5,19 @@ import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
+import { DEFAULT_LOOKBACK } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
+import getConfig from '../../utils/config/get-config';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
-import { asValidLookback, lookbackFromDuration, lookbackToTimestamp } from '../../utils/time-range-options';
+import {
+  asValidConfigLookback,
+  asValidLookback,
+  lookbackFromDuration,
+  lookbackToTimestamp,
+} from '../../utils/time-range-options';
 import type { Microseconds } from '../../types/units';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
@@ -142,7 +149,8 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   let startStr = firstOf(q.start) ?? '';
   let endStr = firstOf(q.end) ?? '';
 
-  const lookback = lookbackFromUrlState(q);
+  const lookback =
+    lookbackFromUrlState(q) || asValidConfigLookback(getConfig().search?.defaultLookback) || DEFAULT_LOOKBACK;
 
   // Old-style URLs (e.g. from HotROD) carry only `lookback` without explicit
   // `start`/`end`.  Derive concrete timestamps so the v3 API call always
