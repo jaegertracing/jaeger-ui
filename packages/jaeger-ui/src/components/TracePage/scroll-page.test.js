@@ -92,8 +92,8 @@ describe('scroll-page', () => {
         scrollBy(100);
         scrollBy(100, true);
         expect(window.scrollTo.mock.calls).toEqual([
-          [{ top: 200, behavior: 'auto' }],
-          [{ top: 200, behavior: 'auto' }],
+          [{ top: 200, behavior: 'instant' }],
+          [{ top: 200, behavior: 'instant' }],
         ]);
       });
     });
@@ -101,33 +101,48 @@ describe('scroll-page', () => {
     it('does not animate when the user prefers reduced motion', () => {
       window.matchMedia = vi.fn(() => ({ matches: true }));
       scrollBy(10);
-      expect(window.scrollTo.mock.calls).toEqual([[{ top: 110, behavior: 'auto' }]]);
+      expect(window.scrollTo.mock.calls).toEqual([[{ top: 110, behavior: 'instant' }]]);
     });
   });
 
   describe('scrollTo()', () => {
-    it('scrolls smoothly to `y`', () => {
+    it('jumps to `y` without animating', () => {
       scrollTo(10);
-      expect(window.scrollTo.mock.calls).toEqual([[{ top: 10, behavior: 'smooth' }]]);
+      expect(window.scrollTo.mock.calls).toEqual([[{ top: 10, behavior: 'instant' }]]);
     });
 
     it('ignores the in-progress scroll', () => {
       scrollTo(50);
       scrollTo(10);
-      expect(window.scrollTo.mock.calls[1]).toEqual([{ top: 10, behavior: 'smooth' }]);
+      expect(window.scrollTo.mock.calls[1]).toEqual([{ top: 10, behavior: 'instant' }]);
+    });
+
+    it('does not let a later `scrollBy` add to the page it jumped from', () => {
+      scrollBy(10);
+      scrollTo(500);
+      scrollBy(10, true);
+      expect(window.scrollTo.mock.calls[2]).toEqual([{ top: 110, behavior: 'smooth' }]);
+    });
+
+    it('replaces a smooth scroll that is still running, so there is nothing left to cancel', () => {
+      scrollBy(10);
+      scrollTo(500);
+      window.scrollTo.mockClear();
+      cancel();
+      expect(window.scrollTo).not.toHaveBeenCalled();
     });
   });
 
   describe('cancel()', () => {
     it('replaces the in-progress scroll with an instant scroll to the current position', () => {
-      scrollTo(10);
+      scrollBy(10);
       window.scrollTo.mockClear();
       cancel();
       expect(window.scrollTo.mock.calls).toEqual([[{ top: 100, behavior: 'instant' }]]);
     });
 
     it('is a noop if there is not an in-progress scroll', () => {
-      scrollTo(10);
+      scrollBy(10);
       cancel();
       window.scrollTo.mockClear();
       cancel();
@@ -135,7 +150,7 @@ describe('scroll-page', () => {
     });
 
     it('stops a smooth scroll that is still running after the time appending is allowed for', () => {
-      scrollTo(15000);
+      scrollBy(15000);
       vi.advanceTimersByTime(1000);
       window.scrollTo.mockClear();
       cancel();
@@ -144,7 +159,7 @@ describe('scroll-page', () => {
 
     it('is a noop after the reduced-motion scroll, which is instant', () => {
       window.matchMedia = vi.fn(() => ({ matches: true }));
-      scrollTo(10);
+      scrollBy(10);
       window.scrollTo.mockClear();
       cancel();
       expect(window.scrollTo).not.toHaveBeenCalled();
@@ -166,7 +181,15 @@ describe('scroll-page', () => {
 
     it('scrollTo works with elements', () => {
       scrollTo(200, container);
-      expect(container.scrollTo.mock.calls).toEqual([[{ top: 200, behavior: 'smooth' }]]);
+      expect(container.scrollTo.mock.calls).toEqual([[{ top: 200, behavior: 'instant' }]]);
+    });
+
+    it('stops a smooth scroll on the window when scrollTo jumps an element', () => {
+      scrollBy(100);
+      window.scrollTo.mockClear();
+      scrollTo(10, container);
+      expect(window.scrollTo.mock.calls).toEqual([[{ top: 100, behavior: 'instant' }]]);
+      expect(container.scrollTo.mock.calls).toEqual([[{ top: 10, behavior: 'instant' }]]);
     });
 
     it('does not append to a window scroll when scrolling an element', () => {

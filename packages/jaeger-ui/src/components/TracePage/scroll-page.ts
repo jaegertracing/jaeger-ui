@@ -1,10 +1,14 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// The browser animates the scroll (`behavior: 'smooth'`). There is no way to ask it where a smooth scroll is
-// headed, so the last target is remembered here to let repeated key presses add up. It is only trusted for
-// `APPEND_WINDOW_MS`, roughly how long a smooth scroll takes, and only while the page is still on the way to it
-// (see `getAppendTarget`). A scroll can run longer than that, so `cancel()` does not use the window.
+// `scrollBy` moves about a page and lets the browser animate it (`behavior: 'smooth'`). There is no way to ask
+// the browser where a smooth scroll is headed, so the last target is remembered here to let repeated key
+// presses add up. It is only trusted for `APPEND_WINDOW_MS`, roughly how long a smooth scroll takes, and only
+// while the page is still on the way to it (see `getAppendTarget`). A scroll can run longer than that, so
+// `cancel()` does not use the window.
+//
+// `scrollTo` jumps, and does not animate: the browser sets the duration of a smooth scroll (up to about 1.5 s)
+// and it grows with the distance, which is far slower than needed to step through matches in a large trace.
 const APPEND_WINDOW_MS = 500;
 
 type TLastScroll = {
@@ -54,7 +58,7 @@ function startScroll(container: Element | Window, to: number) {
   }
   const from = getScrollTop(container);
   const instant = prefersReducedMotion();
-  scrollToPosition(container, to, instant ? 'auto' : 'smooth');
+  scrollToPosition(container, to, instant ? 'instant' : 'smooth');
   // An instant scroll is over at once, so there is no target for a later key press to add to.
   lastScroll = instant ? undefined : { container, startedAt: Date.now(), from, to };
 }
@@ -100,5 +104,11 @@ export function scrollBy(yDelta: number, appendToLast = false, container: Elemen
 }
 
 export function scrollTo(y: number, container: Element | Window = window) {
-  startScroll(container, y);
+  // Only one smooth scroll is tracked, so stop the one on another container instead of leaving it animating.
+  // On this container the instant scroll replaces it.
+  if (lastScroll && lastScroll.container !== container) {
+    cancel();
+  }
+  lastScroll = undefined;
+  scrollToPosition(container, y, 'instant');
 }
