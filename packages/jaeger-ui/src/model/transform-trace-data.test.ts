@@ -173,8 +173,8 @@ describe('transformTraceData()', () => {
     // Two spans referencing each other form a cycle, so neither is a root and
     // nothing is reachable by the traversal. The time range must not be left at
     // its sentinel value, which would yield a negative duration.
-    const spanA = { spanID: 'a', operationName: 'a', parentSpanID: 'b', startTime, duration };
-    const spanB = { spanID: 'b', operationName: 'b', parentSpanID: 'a', startTime, duration };
+    const spanA = { spanID: 'a', name: 'a', parentSpanID: 'b', startTime, duration };
+    const spanB = { spanID: 'b', name: 'b', parentSpanID: 'a', startTime, duration };
 
     const result = transformTraceData(toLegacyTrace({ traceID, serviceName, spans: [spanA, spanB] }))!;
 
