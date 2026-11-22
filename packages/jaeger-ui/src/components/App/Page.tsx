@@ -38,6 +38,33 @@ export function loadJaegerAssistantDock(importer = () => import('./JaegerAssista
 
 const JaegerAssistantDock = React.lazy(() => loadJaegerAssistantDock());
 
+type TErrorBoundaryProps = {
+  children: React.ReactNode;
+};
+
+type TErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class JaegerAssistantErrorBoundary extends React.Component<TErrorBoundaryProps, TErrorBoundaryState> {
+  state: TErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): TErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('[jaeger-assistant] failed to render the assistant panel', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
 // export for tests
 export const PageImpl: React.FC<TProps> = props => {
   const embedded = useEmbeddedState();
@@ -71,9 +98,11 @@ export const PageImpl: React.FC<TProps> = props => {
           {assistantEnvOn ? (
             <div className={cx('Page--assistantShell', assistantDockOpen && 'Page--assistantShell--open')}>
               <div className="Page--assistantMain">{children}</div>
-              <React.Suspense fallback={null}>
-                <JaegerAssistantDock />
-              </React.Suspense>
+              <JaegerAssistantErrorBoundary>
+                <React.Suspense fallback={null}>
+                  <JaegerAssistantDock />
+                </React.Suspense>
+              </JaegerAssistantErrorBoundary>
             </div>
           ) : (
             children

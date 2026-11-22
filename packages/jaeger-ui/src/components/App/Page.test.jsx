@@ -12,7 +12,7 @@ vi.mock('../../stores/embedded-store', () => ({
   useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
 
-const assistantMock = vi.hoisted(() => ({ configured: false }));
+const assistantMock = vi.hoisted(() => ({ configured: false, shouldThrow: false }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({
   useJaegerAssistantConfigured: () => assistantMock.configured,
@@ -20,11 +20,16 @@ vi.mock('../../hooks/useJaegerAssistant', () => ({
 }));
 
 vi.mock('./JaegerAssistantPanel', () => ({
-  JaegerAssistantDock: () => <aside data-testid="assistant-dock" />,
+  JaegerAssistantDock: () => {
+    if (assistantMock.shouldThrow) {
+      throw new Error('render failed');
+    }
+    return <aside data-testid="assistant-dock" />;
+  },
 }));
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -54,6 +59,7 @@ describe('<Page>', () => {
     trackPageView.mockReset();
     useEmbeddedStateMock.mockReturnValue(null);
     assistantMock.configured = false;
+    assistantMock.shouldThrow = false;
   });
 
   it('renders without exploding', () => {
@@ -125,6 +131,22 @@ describe('<Page>', () => {
       const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(err));
       expect(spy).toHaveBeenCalledWith('[jaeger-assistant] failed to load the assistant panel', err);
       expect(Fallback()).toBeNull();
+      spy.mockRestore();
+    });
+
+    it('renders page children when the dock throws during render', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      assistantMock.configured = true;
+      assistantMock.shouldThrow = true;
+      renderWithAssistant();
+      await waitFor(() => {
+        expect(spy).toHaveBeenCalledWith(
+          '[jaeger-assistant] failed to render the assistant panel',
+          expect.any(Error)
+        );
+      });
+      expect(screen.getByTestId('page-child')).toBeInTheDocument();
+      expect(screen.queryByTestId('assistant-dock')).not.toBeInTheDocument();
       spy.mockRestore();
     });
   });
