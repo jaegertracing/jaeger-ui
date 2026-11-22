@@ -709,4 +709,24 @@ describe('check self time', () => {
     );
     expect(detailsOfServiceOne.map(x => x.count)).toEqual([1]);
   });
+
+  it('second dropdown with tag counts a span with an empty tag value in its Without Tag row', () => {
+    const resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOthe, false);
+    const resultArraySecondGroupBy = getColumnValuesSecondDropdown(
+      resultArray,
+      'Service Name',
+      'sql',
+      transformedTraceSpanAmongEachOthe,
+      false
+    );
+
+    resultArraySecondGroupBy
+      .filter(x => !x.isDetail)
+      .forEach(group => {
+        const subRowCount = resultArraySecondGroupBy
+          .filter(x => x.isDetail && x.parentElement === group.name)
+          .reduce((sum, x) => sum + x.count, 0);
+        expect(subRowCount).toBe(group.count);
+      });
+  });
 });

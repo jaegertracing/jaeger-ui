@@ -310,7 +310,7 @@ function generateDetailRest(
           allColumnValues[i].name ===
           getAttributeValueFromSpan(selectedAttributeKey, allSpans[j], useOtelTerms)
         ) {
-          const rest = !allSpans[j].attributes.has(selectedAttributeKeySecond);
+          const rest = !getAttributeValueFromSpan(selectedAttributeKeySecond, allSpans[j], useOtelTerms);
           if (rest) {
             resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           }
