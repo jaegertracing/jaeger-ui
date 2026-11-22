@@ -37,6 +37,25 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
+/* The row already shows the pointer cursor, so the cursor cannot tell a pill from its row, and a
+   hovered pill changes colour instead. */
+.SpanBarRow--pillWrap:hover .SpanBarRow--pill:not(.is-error),
+.SpanBarRow--pillWrap:focus-visible .SpanBarRow--pill:not(.is-error) {
+  background: var(--surface-component-background-hover);
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+}
+
+.SpanBarRow--pillWrap:hover .SpanBarRow--pill.is-error,
+.SpanBarRow--pillWrap:focus-visible .SpanBarRow--pill.is-error {
+  background: color-mix(in srgb, var(--feedback-error) 28%, var(--surface-primary));
+}
+
+.SpanBarRow--pillHint {
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
 .SpanBarRow--pill.is-error {
   background: color-mix(in srgb, var(--feedback-error) 12%, var(--surface-primary));
   border-color: var(--feedback-error-text);
@@ -156,7 +175,8 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 1.05em;
 }
 
-.span-svc-name.is-children-collapsed {
+.span-svc-name.is-children-collapsed,
+.endpoint-name.is-children-collapsed {
   font-weight: bold;
   font-style: italic;
 }
@@ -281,6 +301,19 @@ SPDX-License-Identifier: Apache-2.0
   font-style: italic;
   list-style: none;
   margin-left: -1.25em;
+}
+
+/* Visually hide content while keeping it accessible to screen readers. */
+.SpanBarRow--visuallyHidden {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
 }
 
 /* The hidden-errors badge credits the errors of hidden descendants to their nearest visible

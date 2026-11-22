@@ -16,7 +16,7 @@ import { useArchiveStore } from '../../stores/archive-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
-  useLayoutPrefsStore,
+  useDisplayedLayoutStore,
   useTraceTimelineStore,
 } from './TraceTimelineViewer/store';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
@@ -34,6 +34,7 @@ import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { useSpanFilter } from './TraceTimelineViewer/useServiceFilter';
+import { makeSpanPillActions, SpanPillActionsContext } from './TraceTimelineViewer/spanPillActions';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import {
   TUpdateViewRangeTimeFunction,
@@ -44,10 +45,9 @@ import {
   viewTypeShowsMinimap,
 } from './types';
 import {
+  clauseDisabledReason,
   evaluateSpanFilter,
   GENAI_VIEW_FILTER,
-  KEEP_NEEDS_LIFT,
-  LEAVES_NO_SPAN,
   withoutHiddenSpans,
 } from './spanFilter';
 import { getUrl } from './url';
@@ -92,6 +92,8 @@ type TProps = TOwnProps & TUrlProps;
 export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
+const NO_SPAN_IDS: ReadonlySet<string> = new Set();
+const EMPTY_TRACE = { spans: [], rootSpans: [] };
 
 // export for tests
 export function computeAdjustedRange(
@@ -166,10 +168,11 @@ export function TracePageImpl(props: TProps) {
   } = useTrace(id);
 
   // Layout preferences are owned by Zustand. Each setter tracks before it updates the store.
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
-  const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
+  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
+  const zustandSetTimelineBarsVisible = useDisplayedLayoutStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
+  const zustandClearTrace = useTraceTimelineStore(s => s.clearTrace);
   // Read the trace's own verdict rather than re-deriving it here. It is computed
   // once from each span's cached genAIKind, so re-scanning attributes is both
   // redundant and free to drift away from classifySpan as the detector evolves.
@@ -245,24 +248,16 @@ export function TracePageImpl(props: TProps) {
   // hides is not mistaken for no match.
   const hiddenFindCount = findMatchSplit?.hiddenCount ?? 0;
 
-  // The conversion menu's entries are disabled when the chip they would make leaves no span shown:
-  // keep when no visible span matches the text, hide when every visible span matches or, in remove
-  // mode, when every root span does. The popover holds such edits with a warning; the menu has
-  // nowhere to show one.
-  const keepDisabledReason =
-    spanFilter.treeMode !== 'lift'
-      ? KEEP_NEEDS_LIFT
-      : !timelineFindMatches || timelineFindMatches.size === 0
-        ? LEAVES_NO_SPAN
-        : null;
+  const keepDisabledReason = clauseDisabledReason(
+    'keep',
+    timelineFindMatches ?? NO_SPAN_IDS,
+    traceData ?? EMPTY_TRACE,
+    hiddenIDs,
+    spanFilter.treeMode
+  );
   const hideDisabledReason = useMemo(() => {
     if (!traceData || !timelineFindMatches) return null;
-    if (timelineFindMatches.size >= traceData.spans.length - hiddenIDs.size) return LEAVES_NO_SPAN;
-    // A root the filter already hides has no subtree on screen, so it counts as covered.
-    const everyRoot = traceData.rootSpans.every(
-      span => hiddenIDs.has(span.spanID) || timelineFindMatches.has(span.spanID)
-    );
-    return spanFilter.treeMode === 'remove' && everyRoot ? LEAVES_NO_SPAN : null;
+    return clauseDisabledReason('hide', timelineFindMatches, traceData, hiddenIDs, spanFilter.treeMode);
   }, [traceData, timelineFindMatches, hiddenIDs, spanFilter.treeMode]);
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
@@ -330,6 +325,11 @@ export function TracePageImpl(props: TProps) {
   useEffect(() => {
     scrollManagerRef.current.setTrace(traceData);
   }, [traceData]);
+
+  // The timeline store outlives this page. Clearing it on unmount makes opening the same trace
+  // again an open, not a reload. This belongs here and not in the timeline view, because switching
+  // to another view and back must keep the collapses and the selection.
+  useEffect(() => zustandClearTrace, [zustandClearTrace]);
 
   useEffect(() => {
     if (prevIdRef.current !== id) {
@@ -403,6 +403,20 @@ export function TracePageImpl(props: TProps) {
     [applyFilter, spanFilter, uiFind]
   );
 
+  const spanPillActions = useMemo(
+    () =>
+      traceData
+        ? makeSpanPillActions({
+            trace: traceData,
+            spanFilter,
+            hiddenIDs,
+            applyFilter,
+            setUiFind: uiFind => updateUiFind({ navigate, location, trackFindFunction: trackFilter, uiFind }),
+          })
+        : null,
+    [traceData, navigate, location, applyFilter, spanFilter, hiddenIDs]
+  );
+
   const nextResult = useCallback(() => {
     trackNextMatch();
     scrollManagerRef.current.scrollToNextVisibleSpan();
@@ -425,7 +439,7 @@ export function TracePageImpl(props: TProps) {
     return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
   if (traceLoading || !traceData) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+    return <LoadingIndicator className="u-mt-vast" centered label="Loading trace" />;
   }
 
   // timelineFindMatches is null in the graph view, which counts the text matches alone.
@@ -583,7 +597,11 @@ export function TracePageImpl(props: TProps) {
           />
         )}
       </div>
-      {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
+      {headerHeight ? (
+        <section style={{ paddingTop: headerHeight }}>
+          <SpanPillActionsContext.Provider value={spanPillActions}>{view}</SpanPillActionsContext.Provider>
+        </section>
+      ) : null}
     </div>
   );
 }

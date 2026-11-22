@@ -2,7 +2,7 @@
 
 * **Status**: Partially Implemented
 * **Created**: 2026-04-09
-* **Last Updated**: 2026-07-28
+* **Last Updated**: 2026-11-20
 
 > Originally filed as ADR-0008. It describes a target architecture that does not exist yet rather than a decision taken, so it now lives here.
 
@@ -14,7 +14,7 @@
 | :--- | :--- |
 | **[ADR-0004](../adr/0004-state-management-strategy.md)** | **The decision**: Zustand for client UI state, TanStack Query for server state, and why. |
 | **[RFC 0004](./0004-state-management-strategy.md)** | **The analysis and the plan**: alternatives weighed, plus the phased migration checklist (Phase 0–4) with rollback and testing notes. |
-| **[ADR-0005](../adr/0005-current-state-management-architecture.md)** | **Where the code actually is**: how Query, Zustand, URL, localStorage, and the residual Redux interact today, while the migration is incomplete. |
+| **[ADR-0005](../adr/0005-current-state-management-architecture.md)** | **Where the code actually is**: how Query, Zustand, URL, and localStorage interact today. |
 | **This RFC (0006)** | **The target**: where each kind of state *should* live when the migration is complete, and how data flows between layers. |
 
 Execution order and checkmarks belong in [RFC 0004 → Migration Path](./0004-state-management-strategy.md#migration-path), not here. Where this document and [RFC 0004](./0004-state-management-strategy.md) disagree on strategic direction, RFC 0004 wins.
@@ -33,13 +33,13 @@ Read the store shapes below as the intended design at the time of writing, not a
 | **Local storage** | User preferences that survive sessions: theme, last search service/operation, column widths, detail-panel mode | Server data; application state | `store` utility, direct `localStorage` for per-preference keys |
 | **`useState` / `useMemo`** | Transient leaf UI (hover, draft inputs) and heavy derivations (critical path, stats) keyed to a trace reference | Global sharing; URL persistence | Colocated in component files |
 
-**Redux is absent** in the target. During migration, see **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current hybrid wiring.
+**Redux is absent** in the target, and the code has had no Redux store since [RFC 0004](./0004-state-management-strategy.md) Phase 4. See **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current wiring.
 
 ---
 
 ## Architecture overview
 
-The diagram below shows the **target** data flow by actual page/component. Until migration completes, Redux sits between some of these boxes - see **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current picture.
+The diagram below shows the **target** data flow by actual page/component. See **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current picture.
 
 ```mermaid
 flowchart LR
@@ -72,7 +72,7 @@ flowchart TD
   Router["URL / Router\n/trace/:traceId?uiFind=…"]
   Query["TanStack Query\n(fetches & caches trace)"]
   API["Jaeger API"]
-  Page["TracePage\n(derives facade, criticalPath)"]
+  Page["TracePage\n(derives criticalPath)"]
   Store["traceTimeline store\n(expand, collapse, widths)"]
 
   Router -->|"traceId + uiFind"| Page
@@ -141,9 +141,10 @@ Legacy class components receive URL-derived props via the project's `withRoutePr
 
 The tables below document the **intended** store shapes. For migration steps — which Redux ducks these replace and which components need rewiring — see **[RFC 0004](./0004-state-management-strategy.md)**, Phase 1.
 
-**How the delivered stores differ from the shapes below.** The inventory of what exists is in [ADR-0005](../adr/0005-current-state-management-architecture.md); four divergences are worth naming here, because each one was a deliberate departure from this design rather than an omission:
+**How the delivered stores differ from the shapes below.** The inventory of what exists is in [ADR-0005](../adr/0005-current-state-management-architecture.md); five divergences are worth naming here, because each one was a deliberate departure from this design rather than an omission:
 
-- The single `useTraceTimelineStore` proposed below was **delivered as two stores**, split by lifetime: `useTraceTimelineStore` (`store.timeline.ts`) for state that resets with the trace, and `useLayoutPrefsStore` (`store.layout.ts`) for preferences that outlive it. The reset rule below then needs no exceptions, which is why the split was made.
+- Saved layout preferences persist through Zustand's `persist` middleware ([#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112)) in `useSavedLayoutPrefsStore`, under `localStorage['jaeger.layout']`. The per-field keys in the table below are migration inputs, not current write targets. URL priority resolution is tracked in [RFC 0007](./0007-layout-settings-priority-stack.md).
+- The single `useTraceTimelineStore` proposed below was **delivered as two stores**, split by lifetime: `useTraceTimelineStore` (`store.timeline.ts`) for state that resets with the trace, and `useDisplayedLayoutStore` (`store.layout.ts`) for the displayed layout, which outlives it. The reset rule below then needs no exceptions, which is why the split was made.
 - `hoverIndentGuideIds` was **dead state, deleted rather than migrated** — the indent-guide highlight that consumed it was removed in [#3302](https://github.com/jaegertracing/jaeger-ui/pull/3302), so the Redux field and its writers were dropped instead of moved to a store ([RFC 0004](./0004-state-management-strategy.md), Phase 1c step 3).
 - `prunedServices` was added to the interaction store after this was written, for the timeline service filter ([ADR-0009](../adr/0009-service-filter-trace-timeline.md)); [RFC 0009](0009-trace-span-search-and-filter.md) replaced it with `spanFilter`.
 - The DDG store shipped as `useDdgViewModifiersStore`, and its graph query as `useDeepDependencyGraphQuery`.
@@ -203,7 +204,7 @@ Holds **view modifier flags** only. The DDG graph JSON (nodes + edges) lives in 
 3. **Should survive refresh and live in the URL?** → **URL** - use the page's `url.ts` `getUrl` / `getUrlState` helpers; never construct URLs inline.
 4. **Must survive a session across browser tabs?** → **Local storage** - use the existing `store` utility or `localStorage` for simple string keys.
 5. **Only this component needs it, or it is a pure function of a trace reference?** → **`useState` / `useMemo`** - keep it colocated; avoid globalising heavy derivations.
-6. **App configuration or feature flags?** → Keep a stable hook surface (e.g. **`useConfig()`**); implementation may be a Zustand slice or module constant - do **not** spread raw Redux selectors or global singletons in components.
+6. **App configuration or feature flags?** → Keep a stable hook surface (e.g. **`useConfig()`**); implementation may be a Zustand slice or module constant - do **not** spread global singletons in components.
 
 ---
 
@@ -226,7 +227,7 @@ Rollback strategy and phase-level testing are defined next to the migration chec
 - **[ADR-0004: State management strategy](../adr/0004-state-management-strategy.md)** - the decision.
 - **[RFC 0004: State management strategy](./0004-state-management-strategy.md)** - comparison and migration checklist.
 - **[RFC 0002: Making Jaeger UI OpenTelemetry-Native](./0002-otel-native-jaeger-ui.md)** - server API direction; Query hooks align with `api/v3`.
-- **[ADR-0005: Current state management architecture](../adr/0005-current-state-management-architecture.md)** - current wiring, valid during migration.
+- **[ADR-0005: Current state management architecture](../adr/0005-current-state-management-architecture.md)** - current wiring.
 - [Zustand](https://github.com/pmndrs/zustand)
 - [TanStack Query](https://tanstack.com/query/latest)
 - [TanStack Virtual](https://tanstack.com/virtual/latest)

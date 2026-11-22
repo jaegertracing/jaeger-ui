@@ -6,6 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import SpanBarRow, { SpanListTooltip, TOOLTIP_SPAN_LIMIT } from './SpanBarRow';
+import { SpanPillActionsContext } from './spanPillActions';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import colorGenerator from '../../../utils/color-generator';
@@ -44,6 +45,15 @@ vi.mock('./utils', async importOriginal => {
     formatDurationCompact: jest.fn(d => `formatted-${d}`),
   };
 });
+
+// SpanPill throws without a SpanPillActionsContext provider. In the app the trace page is that
+// provider; a test that renders a row with pills wraps it in this one.
+const spanPillActions = { applyVerb: vi.fn(), disabledReasons: () => ({ keep: null, hide: null }) };
+function SpanPillActionsProvider({ children }) {
+  return (
+    <SpanPillActionsContext.Provider value={spanPillActions}>{children}</SpanPillActionsContext.Provider>
+  );
+}
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -277,7 +287,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '500' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const errorPill = screen.getByLabelText('http.status_code: 500');
       expect(errorPill).toBeInTheDocument();
@@ -293,7 +304,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const pill = screen.getByLabelText('http.status_code: 200');
       expect(pill).toBeInTheDocument();
@@ -309,7 +321,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
     });
@@ -323,7 +336,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const pill = screen.getByLabelText('gen_ai.request.model: gpt-4o');
       expect(pill).toBeInTheDocument();
@@ -342,7 +356,8 @@ describe('<SpanBarRow>', () => {
               { key: GEN_AI_REQUEST_MODEL, value: 'claude-3-haiku' },
             ]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       expect(screen.getByLabelText('http.status_code: 500')).toBeInTheDocument();
       expect(screen.getByLabelText('gen_ai.request.model: claude-3-haiku')).toBeInTheDocument();
@@ -360,7 +375,8 @@ describe('<SpanBarRow>', () => {
               { key: 'http.method', value: 'GET' },
             ]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       expect(screen.getByLabelText('http.status_code: 200')).toBeInTheDocument();
       expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
@@ -375,7 +391,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       fireEvent.mouseEnter(screen.getByLabelText('http.status_code: 200').parentElement);
       expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code: 200');
@@ -391,7 +408,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: longModel }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const pill = screen.getByLabelText(`gen_ai.request.model: ${longModel}`);
       fireEvent.mouseEnter(pill.parentElement);
@@ -552,6 +570,71 @@ describe('<SpanBarRow>', () => {
       render(<SpanBarRow {...defaultProps} />);
       expect(screen.queryByTestId('lifted-glyph')).toBeNull();
       expect(screen.queryByTestId('hidden-errors')).toBeNull();
+    });
+  });
+
+  describe('showServiceName', () => {
+    it('renders the service name by default', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+    });
+
+    it('renders the service name when showServiceName is true', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+    });
+
+    it('visually hides the service name when showServiceName is false', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('service-name')).toHaveClass('SpanBarRow--visuallyHidden');
+      expect(screen.getByRole('switch', { name: /service-name\s*op-name/ })).toBeInTheDocument();
+    });
+
+    it('still shows the operation name when service name is hidden', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('op-name')).toBeInTheDocument();
+    });
+
+    it('keeps service name visible when rpc is present even if showServiceName is false', () => {
+      const rpc = {
+        color: '#f00',
+        operationName: 'rpc-op',
+        serviceName: 'rpc-service',
+        viewEnd: 1,
+        viewStart: 0,
+      };
+      render(<SpanBarRow {...defaultProps} rpc={rpc} showServiceName={false} />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+      expect(screen.getByText('rpc-service')).toBeInTheDocument();
+    });
+
+    it('keeps service name visible when noInstrumentedServer is present even if showServiceName is false', () => {
+      const noInstrumentedServer = {
+        serviceName: 'peer-service',
+        color: '#0f0',
+      };
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          rpc={null}
+          noInstrumentedServer={noInstrumentedServer}
+          showServiceName={false}
+        />
+      );
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+      expect(screen.getByText('peer-service')).toBeInTheDocument();
+    });
+
+    it('keeps service name visible when operationName is empty even if showServiceName is false', () => {
+      const span = { ...defaultProps.span, name: '' };
+      render(<SpanBarRow {...defaultProps} span={span} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('service-name')).not.toHaveClass('SpanBarRow--visuallyHidden');
+    });
+
+    it('applies is-children-collapsed to endpoint-name when showServiceName is false and children are collapsed', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} isChildrenExpanded={false} />);
+      const endpoint = screen.getByText('op-name');
+      expect(endpoint).toHaveClass('endpoint-name', 'is-children-collapsed');
     });
   });
 });

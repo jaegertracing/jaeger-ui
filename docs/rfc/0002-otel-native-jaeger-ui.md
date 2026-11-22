@@ -354,7 +354,7 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
   };
   ```
 
-> **What was built instead.** The selectors and hooks sketched in 1.3 and 1.4 do not exist, and neither does a `src/selectors/` directory — they became unnecessary once trace state moved out of Redux into TanStack Query ([ADR-0004](../adr/0004-state-management-strategy.md)). The facade is applied at the point where a trace enters the Query cache: `transformTraceData(json)` returns a legacy trace whose `asOtelTrace()` method yields the `IOtelTrace` that components consume, called from `hooks/useTraceLoading.ts` (API route) and `SearchTracePage/FileLoader.tsx` (uploaded files). Components receive `IOtelTrace` / `IOtelSpan` as plain data and never construct a facade themselves. The sketches above are kept as the record of what was proposed; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) describes the design that shipped.
+> **What was built instead.** The selectors and hooks sketched in 1.3 and 1.4 do not exist, and neither does a `src/selectors/` directory — they became unnecessary once trace state moved out of Redux into TanStack Query ([ADR-0004](../adr/0004-state-management-strategy.md)). API loading and native OTLP uploads use `parseOtelTrace()`; only legacy uploads still use `transformTraceData(...).asOtelTrace()` in `SearchTracePage/FileLoader.tsx`. Components receive `IOtelTrace` / `IOtelSpan` as plain data and never construct a facade themselves. The sketches above are kept as the record of what was proposed; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) describes the design that shipped.
 
 #### 1.6 Terminology Toggle Feature Flag ✅
 Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to `false`) to control the display terminology.
@@ -527,11 +527,11 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.4: Extended Operations & Legacy Decommission
 **Goal**: Migrate remaining operations and decommission legacy code.
 
-**Not everything has a v3 counterpart.** `jaeger-idl`'s api_v3 service defines only `traces/{trace_id}`, `traces`, `services`, `operations`, `dependencies`, and `trace-summaries`. Trace archival (`/api/archive/:id`), SPM metrics (`/api/metrics/*`), DDG (`/analytics/v1/dependencies`), OTLP file transform (`/api/transform`), and config-driven decoration URLs have no v3 endpoint, so they legitimately stay on their current routes. Removing `src/api/jaeger.ts` therefore means folding those calls into `JaegerClient` (or a sibling module) rather than migrating them to `/api/v3/`.
+**Client consolidation is delivered.** `JaegerClient` owns the remaining requests, preserving existing endpoints rather than moving every call to `/api/v3/`. Dependencies and DDG retain `/api/dependencies` and `/api/deep-dependencies` ([#4629](https://github.com/jaegertracing/jaeger-ui/pull/4629)); metrics retain `/api/metrics/*` ([#4647](https://github.com/jaegertracing/jaeger-ui/pull/4647)). Native uploads parse in the browser instead of calling `/api/transform` ([#4634](https://github.com/jaegertracing/jaeger-ui/pull/4634)).
 
 - [x] Implement `archiveTrace` and `fetchDecoration` in `JaegerClient` and migrate their callers.
-- [ ] Implement `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
-- [ ] Update remaining components to use the new client.
+- [x] Carry dependency, DDG, and metrics requests into `JaegerClient`, preserving their existing routes.
+- [x] Update remaining components to use the new client.
 - [ ] Gradually decommission Redux actions/reducers for trace data.
 - [x] Remove legacy `src/api/jaeger.ts`.
 - [ ] Transition to Phase 4 (Cleanup).
@@ -836,7 +836,7 @@ We will move towards a model where the Search page only fetches **Trace Summarie
 
 The blast radius is already small: outside tests, the facade classes have three importers (`model/transform-trace-data.ts`, `components/TracePage/TraceFlamegraph/index.tsx`, and each other) and `transform-trace-data` has three (`hooks/useTraceLoading.ts`, `SearchTracePage/FileLoader.tsx`, `TraceTimelineViewer/generateRowStates.ts`). Once the parser from Milestone 3.2 produces `IOtelTrace` natively, all six call sites lose their reason to exist.
 
-> **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. Uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade. Native uploads, a fresh caller audit, and visual/performance parity remain prerequisites for deletion.
+> **Implementation note:** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605)), and native uploads use the parser directly ([#4634](https://github.com/jaegertracing/jaeger-ui/pull/4634)). The historical caller inventory above is no longer current. Legacy uploads and test fixtures still use the transformer and facades; [#4761](https://github.com/jaegertracing/jaeger-ui/issues/4761) tracks their remaining callers. Visual/performance parity remains a prerequisite for deletion.
 
 > **Legacy-upload window (decided October 2026, [recorded on #4278](https://github.com/jaegertracing/jaeger-ui/issues/4278#issuecomment-6372283243)):** Legacy Jaeger JSON uploads stay supported for about six months through the existing transformer. The unchecked transformer, facade, and legacy-type items below are deferred to the end of that window, not dropped.
 

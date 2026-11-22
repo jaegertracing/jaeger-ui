@@ -157,6 +157,67 @@ describe('<VirtualizedTraceViewImpl>', () => {
     return { ...result, listViewProps };
   }
 
+  function makeSpansWithServices() {
+    // Build a small trace with known services:
+    //   span-0: svc-a (depth 0, root)
+    //     span-1: svc-b (depth 1)
+    //       span-2: svc-b (depth 2)
+    //     span-3: svc-c (depth 1)
+    const base = trace.spans[0];
+    const spans = [
+      {
+        ...base,
+        attributes: base.attributes,
+        spanID: 'span-0',
+        depth: 0,
+        hasChildren: true,
+        childSpans: [],
+        resource: { ...base.resource, serviceName: 'svc-a' },
+        status: { code: 'UNSET' },
+      },
+      {
+        ...base,
+        attributes: base.attributes,
+        spanID: 'span-1',
+        depth: 1,
+        hasChildren: true,
+        childSpans: [],
+        parentSpan: null,
+        resource: { ...base.resource, serviceName: 'svc-b' },
+        status: { code: 'UNSET' },
+      },
+      {
+        ...base,
+        attributes: base.attributes,
+        spanID: 'span-2',
+        depth: 2,
+        hasChildren: false,
+        childSpans: [],
+        parentSpan: null,
+        resource: { ...base.resource, serviceName: 'svc-b' },
+        status: { code: 'ERROR' }, // StatusCode.ERROR is the string 'ERROR' (see types/otel.ts)
+      },
+      {
+        ...base,
+        attributes: base.attributes,
+        spanID: 'span-3',
+        depth: 1,
+        hasChildren: false,
+        childSpans: [],
+        parentSpan: null,
+        resource: { ...base.resource, serviceName: 'svc-c' },
+        status: { code: 'UNSET' },
+      },
+    ];
+    // Wire up childSpans for error counting
+    spans[1].childSpans = [spans[2]];
+    spans[0].childSpans = [spans[1], spans[3]];
+    spans[1].parentSpan = spans[0];
+    spans[2].parentSpan = spans[1];
+    spans[3].parentSpan = spans[0];
+    return { ...trace, spans, spanMap: new Map(spans.map(s => [s.spanID, s])) };
+  }
+
   it('renders without exploding', () => {
     const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
     expect(container).toBeTruthy();
@@ -167,7 +228,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     expect(screen.getByTestId('list-view')).toBeInTheDocument();
   });
 
-  it('sets the trace for global state.traceTimeline', () => {
+  it('calls setTrace with the trace and uiFind when the trace changes', () => {
     render(<VirtualizedTraceViewImpl {...mockProps} />);
     expect(mockProps.setTrace).toHaveBeenCalledWith(trace, mockProps.findMatchesIDs);
 
@@ -536,6 +597,84 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const { listViewProps } = renderAndCapture({ ...mockProps, selectedSpanID: selectedSpan.spanID });
       const result = listViewProps.itemRenderer('key', {}, 0, {});
       expect(result.props.children.props.isSelected).toBe(true);
+    });
+
+    describe('showServiceName prop passed to SpanBarRow', () => {
+      it('passes showServiceName=true for root spans without a parentSpan', () => {
+        const { listViewProps } = renderAndCapture();
+        const rowResult = listViewProps.itemRenderer('key-0', {}, 0, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+
+      it('passes showServiceName=false when child span has the same serviceName as its parent', () => {
+        const newProcesses = {};
+        Object.entries(legacyTrace.processes).forEach(([id, proc]) => {
+          newProcesses[id] = { ...proc, serviceName: 'service-alpha' };
+        });
+        const altTrace = transformTraceData({ ...legacyTrace, processes: newProcesses }).asOtelTrace();
+        const { listViewProps } = renderAndCapture({ ...mockProps, trace: altTrace });
+        const rowResult = listViewProps.itemRenderer('key-1', {}, 1, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(false);
+      });
+
+      it('passes showServiceName=true when child span has a different serviceName from its parent', () => {
+        const newProcesses = {
+          ...legacyTrace.processes,
+          p_root: { serviceName: 'service-alpha' },
+          p_child: { serviceName: 'service-beta' },
+        };
+        const newLegacySpans = legacyTrace.spans.map((s, index) => ({
+          ...s,
+          processID: index === 0 ? 'p_root' : 'p_child',
+        }));
+        const altTrace = transformTraceData({
+          ...legacyTrace,
+          spans: newLegacySpans,
+          processes: newProcesses,
+        }).asOtelTrace();
+        const { listViewProps } = renderAndCapture({ ...mockProps, trace: altTrace });
+        const rowResult = listViewProps.itemRenderer('key-1', {}, 1, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+
+      it('passes showServiceName=true when same-service child is lifted across a hidden service to a different visible service', () => {
+        // Trace structure:
+        // span-0 (svc-a) -> span-1 (svc-b, hidden) -> span-2 (svc-b)
+        // In lift mode, span-2 is lifted under span-0 (svc-a).
+        // Since visible parent is svc-a, span-2 crosses a visible service boundary and must show service name.
+        const customTrace = makeSpansWithServices();
+        const { listViewProps } = renderAndCapture({
+          ...mockProps,
+          trace: customTrace,
+          hiddenIDs: new Set(['span-1']),
+          treeMode: 'lift',
+        });
+        const span2Index = listViewProps.getIndexFromKey('span-2--bar');
+        const rowResult = listViewProps.itemRenderer('key-2', {}, span2Index, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+
+      it('passes showServiceName=true when same-service child is lifted to a root in lift mode', () => {
+        // Trace structure:
+        // span-0 (svc-b, hidden) -> span-1 (svc-b) -> span-2 (svc-b)
+        // In lift mode, span-1 becomes a visible root.
+        // As a visible root, span-1 must show service name.
+        // span-2 is under visible parent span-1 (both svc-b), so span-2 hides service name.
+        const customTrace = makeSpansWithServices();
+        customTrace.spans[0].resource = { ...customTrace.spans[0].resource, serviceName: 'svc-b' };
+        const { listViewProps } = renderAndCapture({
+          ...mockProps,
+          trace: customTrace,
+          hiddenIDs: new Set(['span-0']),
+          treeMode: 'lift',
+        });
+        const span1Index = listViewProps.getIndexFromKey('span-1--bar');
+        const span2Index = listViewProps.getIndexFromKey('span-2--bar');
+        const span1Result = listViewProps.itemRenderer('key-1', {}, span1Index, {});
+        const span2Result = listViewProps.itemRenderer('key-2', {}, span2Index, {});
+        expect(span1Result.props.children.props.showServiceName).toBe(true);
+        expect(span2Result.props.children.props.showServiceName).toBe(false);
+      });
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {
@@ -918,67 +1057,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   describe('service filter pruning', () => {
-    function makeSpansWithServices() {
-      // Build a small trace with known services:
-      //   span-0: svc-a (depth 0, root)
-      //     span-1: svc-b (depth 1)
-      //       span-2: svc-b (depth 2)
-      //     span-3: svc-c (depth 1)
-      const base = trace.spans[0];
-      const spans = [
-        {
-          ...base,
-          attributes: base.attributes,
-          spanID: 'span-0',
-          depth: 0,
-          hasChildren: true,
-          childSpans: [],
-          resource: { ...base.resource, serviceName: 'svc-a' },
-          status: { code: 'UNSET' },
-        },
-        {
-          ...base,
-          attributes: base.attributes,
-          spanID: 'span-1',
-          depth: 1,
-          hasChildren: true,
-          childSpans: [],
-          parentSpan: null,
-          resource: { ...base.resource, serviceName: 'svc-b' },
-          status: { code: 'UNSET' },
-        },
-        {
-          ...base,
-          attributes: base.attributes,
-          spanID: 'span-2',
-          depth: 2,
-          hasChildren: false,
-          childSpans: [],
-          parentSpan: null,
-          resource: { ...base.resource, serviceName: 'svc-b' },
-          status: { code: 'ERROR' }, // StatusCode.ERROR is the string 'ERROR' (see types/otel.ts)
-        },
-        {
-          ...base,
-          attributes: base.attributes,
-          spanID: 'span-3',
-          depth: 1,
-          hasChildren: false,
-          childSpans: [],
-          parentSpan: null,
-          resource: { ...base.resource, serviceName: 'svc-c' },
-          status: { code: 'UNSET' },
-        },
-      ];
-      // Wire up childSpans for error counting
-      spans[1].childSpans = [spans[2]];
-      spans[0].childSpans = [spans[1], spans[3]];
-      spans[1].parentSpan = spans[0];
-      spans[2].parentSpan = spans[1];
-      spans[3].parentSpan = spans[0];
-      return { ...trace, spans, spanMap: new Map(spans.map(s => [s.spanID, s])) };
-    }
-
     // generateRowStates.test.ts covers the pruning computation itself (subtree
     // removal, placeholder counts, error counting). These tests cover the rows
     // VirtualizedTraceView actually hands to ListView as a result.
@@ -1122,6 +1200,29 @@ describe('<VirtualizedTraceViewImpl>', () => {
       // renderRow should not throw for pruned placeholder
       const result = listViewProps.itemRenderer('key', {}, prunedIdx, {});
       expect(result).toBeTruthy();
+    });
+
+    it('merges the pruned subtree into the critical path of its parent row', () => {
+      const customTrace = makeSpansWithServices();
+      // The spread copies drop the prototype's attributes getter, which renderSpanBarRow reads.
+      customTrace.spans[0].attributes = trace.spans[0].attributes;
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        trace: customTrace,
+        hiddenIDs: hiddenFor(customTrace.spans, 'svc-b'),
+        criticalPath: [
+          { spanID: 'span-0', sectionStart: 0, sectionEnd: 10 },
+          { spanID: 'span-1', sectionStart: 10, sectionEnd: 20 },
+        ],
+      });
+      const rowResult = listViewProps.itemRenderer(
+        'key',
+        {},
+        listViewProps.getIndexFromKey('span-0--bar'),
+        {}
+      );
+      const spanIDs = rowResult.props.children.props.criticalPath.map(section => section.spanID);
+      expect(spanIDs).toEqual(expect.arrayContaining(['span-0', 'span-1']));
     });
   });
 });
