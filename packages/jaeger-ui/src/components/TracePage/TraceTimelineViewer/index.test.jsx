@@ -10,6 +10,7 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import { EMPTY_SPAN_FILTER, withHiddenServices } from '../spanFilter';
+import filterSpans from '../../../utils/filter-spans';
 
 const { mockDisplayedLayoutStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
   const mockTraceTimelineStore = {
@@ -64,7 +65,11 @@ vi.mock('./spanPills', () => ({
 }));
 vi.mock('./VirtualizedTraceView', () =>
   mockDefault(props => (
-    <div data-testid="virtualized-trace-view-mock" data-list-top-offset-key={props.listTopOffsetKey} />
+    <div
+      data-testid="virtualized-trace-view-mock"
+      data-list-top-offset-key={props.listTopOffsetKey}
+      data-find-matches={props.findMatchesIDs ? [...props.findMatchesIDs].sort().join(',') : 'none'}
+    />
   ))
 );
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
@@ -103,6 +108,8 @@ describe('<TraceTimelineViewer>', () => {
   const trace = legacyTrace.asOtelTrace();
   const props = {
     trace,
+    hiddenIDs: new Set(),
+    onSearchResults: jest.fn(),
     textFilter: null,
     viewRange: {
       time: {
@@ -145,6 +152,35 @@ describe('<TraceTimelineViewer>', () => {
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     render(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
+  });
+
+  it('highlights and reports the search matches the filter leaves visible', () => {
+    const [root, hidden] = trace.spans;
+    const uiFind = `${root.spanID} ${hidden.spanID}`;
+    const onSearchResults = jest.fn();
+    render(
+      <TraceTimelineViewerImpl
+        {...props}
+        uiFind={uiFind}
+        hiddenIDs={new Set([hidden.spanID])}
+        onSearchResults={onSearchResults}
+      />
+    );
+    const textMatches = filterSpans(uiFind, trace.spans);
+    expect(textMatches.has(hidden.spanID)).toBe(true);
+    const visible = [...textMatches].filter(id => id !== hidden.spanID);
+    expect(screen.getByTestId('virtualized-trace-view-mock')).toHaveAttribute(
+      'data-find-matches',
+      visible.sort().join(',')
+    );
+    expect(onSearchResults).toHaveBeenLastCalledWith(new Set(visible), textMatches.size - visible.length);
+  });
+
+  it('highlights nothing and reports no matches without search text', () => {
+    const onSearchResults = jest.fn();
+    render(<TraceTimelineViewerImpl {...props} onSearchResults={onSearchResults} />);
+    expect(screen.getByTestId('virtualized-trace-view-mock')).toHaveAttribute('data-find-matches', 'none');
+    expect(onSearchResults).toHaveBeenLastCalledWith(null, 0);
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {

@@ -25,6 +25,7 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import { collapseTargets } from './generateRowStates';
 import { evaluateSpanFilter } from '../spanFilter';
 import { useSpanPillsEnabled } from './spanPills';
+import useTimelineSearch, { TOnSearchResults } from './useTimelineSearch';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
@@ -38,7 +39,11 @@ import './index.css';
 
 type TProps = {
   registerAccessors: (accessors: Accessors) => void;
-  findMatchesIDs: Set<string> | TNil;
+  // The search text. The view finds its own matches and reports them through `onSearchResults`.
+  uiFind: string | TNil;
+  // The spans the page's span filter hides, which the search leaves out of the matches.
+  hiddenIDs: ReadonlySet<string>;
+  onSearchResults: TOnSearchResults;
   scrollToFirstVisibleSpan: () => void;
   // Height of the TracePage header, which pads this view down by that much. The side panel measures
   // its own document offset, so it has to know when that padding changes.
@@ -76,8 +81,13 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     trace,
     spanFilterNode,
     useOtelTerms,
+    uiFind,
+    hiddenIDs,
+    onSearchResults,
     ...rest
   } = props;
+
+  const findMatchesIDs = useTimelineSearch(uiFind, trace.spans, hiddenIDs, onSearchResults);
 
   // Layout preferences are owned by Zustand. Each handler tracks before it updates the store.
   const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
@@ -250,6 +260,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const virtualizedView = (
     <VirtualizedTraceView
       {...rest}
+      findMatchesIDs={findMatchesIDs}
       trace={trace}
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}

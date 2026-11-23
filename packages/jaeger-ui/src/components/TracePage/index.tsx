@@ -44,12 +44,7 @@ import {
   viewTypeIsNavigable,
   viewTypeShowsMinimap,
 } from './types';
-import {
-  clauseDisabledReason,
-  evaluateSpanFilter,
-  GENAI_VIEW_FILTER,
-  withoutHiddenSpans,
-} from './spanFilter';
+import { clauseDisabledReason, evaluateSpanFilter, GENAI_VIEW_FILTER } from './spanFilter';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -93,6 +88,7 @@ export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
 const NO_SPAN_IDS: ReadonlySet<string> = new Set();
+const NO_VIEW_FIND: { matches: Set<string> | TNil; hiddenCount: number } = { matches: null, hiddenCount: 0 };
 const EMPTY_TRACE = { spans: [], rootSpans: [] };
 
 // export for tests
@@ -223,10 +219,15 @@ export function TracePageImpl(props: TProps) {
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
   const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
 
-  // TraceGraph owns its search (DAG + vertex-key matching) and reports matches through
-  // onSearchResults. Every other view uses the span matches computed below in this component,
-  // which keeps the header count working for views without search wiring (flamegraph, logs).
-  const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
+  // TraceGraph (DAG + vertex-key matching) and the timeline views (span matches the filter leaves
+  // visible) own their search and report it through onSearchResults. Every other view uses the span
+  // matches computed below in this component, which keeps the header count working for views
+  // without search wiring (flamegraph, logs).
+  const [viewFind, setViewFind] = useState(NO_VIEW_FIND);
+  const onSearchResults = useCallback(
+    (matches: Set<string> | TNil, hiddenCount = 0) => setViewFind({ matches, hiddenCount }),
+    []
+  );
 
   const searchBarRef = useRef<InputRef>(null);
   const headerElmRef = useRef<HTMLElement | TNil>(null);
@@ -234,19 +235,21 @@ export function TracePageImpl(props: TProps) {
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
   const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
-  // The highlight set is the text matches that the filter leaves visible. The views that draw the
-  // whole trace get the text matches alone, and the graph view counts its own. It is memoized so
-  // that the row renderers keep one Set identity across renders.
-  const findMatchSplit = useMemo(() => {
-    if (!traceData || viewType === ETraceViewType.TraceGraph || !uiFind) return null;
-    const textMatches = filterSpansMemo(uiFind, traceData.spans);
-    const visible = viewTypeIsNavigable(viewType) ? withoutHiddenSpans(textMatches, hiddenIDs) : textMatches;
-    return { visible, hiddenCount: (textMatches?.size ?? 0) - (visible?.size ?? 0) };
-  }, [traceData, viewType, uiFind, hiddenIDs, filterSpansMemo]);
-  const timelineFindMatches = findMatchSplit?.visible ?? null;
+  // The text matches of the views without their own search. They draw the whole trace, so the
+  // filter takes none of them out.
+  const pageFindMatches = useMemo(() => {
+    if (!traceData || !uiFind) return null;
+    if (viewType === ETraceViewType.TraceGraph || viewTypeIsNavigable(viewType)) return null;
+    return filterSpansMemo(uiFind, traceData.spans);
+  }, [traceData, viewType, uiFind, filterSpansMemo]);
+  // A report is ignored once the search is cleared, so that a view's last report is never counted
+  // for an empty search.
+  const viewFindMatches = uiFind ? viewFind.matches : null;
+  // The span matches the header acts on. The graph view has none: its matches are vertex keys.
+  const timelineFindMatches = viewTypeIsNavigable(viewType) ? viewFindMatches : pageFindMatches;
   // The text matches the filter hides, reported beside the match count so that a match the filter
   // hides is not mistaken for no match.
-  const hiddenFindCount = findMatchSplit?.hiddenCount ?? 0;
+  const hiddenFindCount = viewTypeIsNavigable(viewType) && uiFind ? viewFind.hiddenCount : 0;
 
   const keepDisabledReason = clauseDisabledReason(
     'keep',
@@ -372,7 +375,7 @@ export function TracePageImpl(props: TProps) {
 
   const onUserViewChange = useCallback((newViewType: ETraceViewType) => {
     setPickedView(newViewType);
-    setFindMatches(null);
+    setViewFind(NO_VIEW_FIND);
   }, []);
 
   const archiveTrace = useCallback(() => {
@@ -442,10 +445,10 @@ export function TracePageImpl(props: TProps) {
     return <LoadingIndicator className="u-mt-vast" centered label="Loading trace" />;
   }
 
-  // timelineFindMatches is null in the graph view, which counts the text matches alone.
+  // timelineFindMatches is null in the graph view, which counts the vertex keys it reports.
   let findCount = timelineFindMatches ? timelineFindMatches.size : 0;
   if (viewType === ETraceViewType.TraceGraph) {
-    findCount = uiFind && findMatches ? findMatches.size : 0;
+    findCount = viewFindMatches ? viewFindMatches.size : 0;
   }
 
   const locationState = location.state;
@@ -506,7 +509,9 @@ export function TracePageImpl(props: TProps) {
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
-        findMatchesIDs={timelineFindMatches}
+        uiFind={uiFind}
+        hiddenIDs={hiddenIDs}
+        onSearchResults={onSearchResults}
         pageHeaderHeight={headerHeight}
         trace={traceData}
         filterTrace={filterTrace}
@@ -523,7 +528,9 @@ export function TracePageImpl(props: TProps) {
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
-        findMatchesIDs={timelineFindMatches}
+        uiFind={uiFind}
+        hiddenIDs={hiddenIDs}
+        onSearchResults={onSearchResults}
         pageHeaderHeight={headerHeight}
         trace={traceData}
         filterTrace={filterTrace}
@@ -541,7 +548,7 @@ export function TracePageImpl(props: TProps) {
         headerHeight={headerHeight}
         trace={traceData}
         uiFind={uiFind}
-        onSearchResults={setFindMatches}
+        onSearchResults={onSearchResults}
         traceGraphConfig={traceGraphConfig}
         useOtelTerms={useOtelTerms}
       />

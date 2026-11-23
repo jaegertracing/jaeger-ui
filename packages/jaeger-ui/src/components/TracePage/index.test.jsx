@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
+import { onTestFinished } from 'vitest';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
@@ -31,6 +32,13 @@ import * as configHook from '../../hooks/useConfig';
 import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
 
+// The page draws a view only once it has measured its header, and the timeline views find their
+// own search matches, so a test of the timeline's match count needs a header height.
+function mockHeaderHeight() {
+  const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+  onTestFinished(() => clientHeightSpy.mockRestore());
+}
+
 let capturedHeaderProps = {};
 // The view type of every header render, in order, so that a test can assert what the first render
 // with the trace showed and not only where the page settled.
@@ -42,8 +50,11 @@ let capturedSpanPillActions = null;
 
 vi.mock('./TraceTimelineViewer', async () => {
   const { SpanPillActionsContext } = await import('./TraceTimelineViewer/spanPillActions');
-  return mockDefault(function MockTraceTimelineViewer() {
+  const { default: useTimelineSearch } = await import('./TraceTimelineViewer/useTimelineSearch');
+  return mockDefault(function MockTraceTimelineViewer({ uiFind, trace, hiddenIDs, onSearchResults }) {
     capturedSpanPillActions = React.useContext(SpanPillActionsContext);
+    // The timeline's own search, so that the header count follows the view as it does in the app.
+    useTimelineSearch(uiFind, trace.spans, hiddenIDs, onSearchResults);
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
   });
 });
@@ -421,6 +432,7 @@ describe('<TracePage>', () => {
       });
 
       it('updates Zustand with the highlighted span set when props.trace.data is present', () => {
+        mockHeaderHeight();
         const uiFind = 'test ui find';
         const matched = new Set([trace.spans[0].spanID]);
         filterSpansSpy.mockReturnValue(matched);
@@ -482,6 +494,7 @@ describe('<TracePage>', () => {
   });
 
   it('memoizes search matches by uiFind and spans', () => {
+    mockHeaderHeight();
     const uiFind = 'uiFind';
     const localTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
@@ -506,6 +519,7 @@ describe('<TracePage>', () => {
   });
 
   it('excludes the spans of a pruned service and their descendants from the search matches', async () => {
+    mockHeaderHeight();
     const { default: realFilterSpans } = await vi.importActual('../../utils/filter-spans');
     filterSpansSpy.mockImplementation(realFilterSpans);
     const raw = traceGenerator.trace({ numberOfSpans: 3 });
@@ -551,6 +565,7 @@ describe('<TracePage>', () => {
   });
 
   it('enables the keep entry in lift mode while the text matches a span', () => {
+    mockHeaderHeight();
     mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'lift' };
     filterSpansSpy.mockImplementation(() => new Set([trace.spans[1].spanID]));
     try {
@@ -564,6 +579,7 @@ describe('<TracePage>', () => {
   });
 
   it('disables the keep entry when the text matches no span, and the hide entry when it matches every span', () => {
+    mockHeaderHeight();
     mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'lift' };
     try {
       const { unmount } = render(<TracePage {...defaultProps} uiFind="x" />);
@@ -580,6 +596,7 @@ describe('<TracePage>', () => {
   });
 
   it('counts a root the filter already hides as covered by the hide entry guard', () => {
+    mockHeaderHeight();
     // Two roots: the first is hidden by its kind, and the text matches only the second.
     const raw = traceGenerator.trace({ numberOfSpans: 3 });
     raw.spans[1].references = [];
@@ -606,6 +623,7 @@ describe('<TracePage>', () => {
   });
 
   it('disables the hide entry in remove mode when the text matches every root span', () => {
+    mockHeaderHeight();
     mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
     filterSpansSpy.mockImplementation(() => new Set(trace.rootSpans.map(s => s.spanID)));
     try {
@@ -618,6 +636,7 @@ describe('<TracePage>', () => {
   });
 
   it('counts every text match in the statistics view, which draws the whole trace', () => {
+    mockHeaderHeight();
     const [root] = trace.spans;
     mockTraceTimelineStore.spanFilter = {
       clauses: [
@@ -708,6 +727,7 @@ describe('<TracePage>', () => {
   });
 
   it('updates search matches when a same-ID reload adds a matching span', async () => {
+    mockHeaderHeight();
     const { default: realFilterSpans } = await vi.importActual('../../utils/filter-spans');
     filterSpansSpy.mockImplementation(realFilterSpans);
     const raw = traceGenerator.trace({});
