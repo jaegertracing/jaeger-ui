@@ -2,6 +2,7 @@
 
 * **Status**: Implemented
 * **Date**: 2026-03-07
+* **Update**: [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) deleted `TraceTimelineViewer/duck.ts` and its Redux state. The Zustand stores in `store.timeline.ts` and `store.layout.ts` now hold this state; the rest of this ADR records the original Redux design.
 
 ## Context
 

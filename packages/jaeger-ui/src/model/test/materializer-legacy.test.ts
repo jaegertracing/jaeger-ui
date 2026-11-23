@@ -14,7 +14,7 @@ it.each([
   const trace = toLegacyTrace({
     traceID: 'trace',
     serviceName: 'service',
-    spans: [{ spanID: 'span', operationName: 'op', ...timing }],
+    spans: [{ spanID: 'span', name: 'op', ...timing }],
   });
   expect(trace.spans[0].duration).toBe(expected.duration);
   expect(trace.spans[0].startTime).toBe(expected.startTime);

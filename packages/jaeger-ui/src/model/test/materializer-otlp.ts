@@ -37,13 +37,13 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
         scopeSpans: spans.map(span => {
           const {
             spanID,
-            operationName,
+            name: operationName,
             kind,
             parentSpanID,
-            references = [],
+            links: references = [],
             startTime,
             duration,
-            tags = [],
+            attributes: tags = [],
             events = [],
             scope,
             warnings,
