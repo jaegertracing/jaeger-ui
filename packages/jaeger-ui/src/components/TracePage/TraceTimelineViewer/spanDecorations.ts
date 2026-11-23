@@ -16,7 +16,7 @@ import {
 } from 'react-icons/md';
 import { RiGraduationCapFill as LLMCallIcon } from 'react-icons/ri';
 
-import { GEN_AI_REQUEST_MODEL, GEN_AI_RESPONSE_MODEL } from '../../../constants/span-attributes';
+import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import type { AttributeValue, GenAISpanKind, IAttributes, IOtelSpan } from '../../../types/otel';
 import { stringifyAttributeValue } from '../../../utils/filter-spans';
 
@@ -97,7 +97,7 @@ const SPAN_DECORATIONS: readonly ISpanDecoration[] = [
   },
   {
     namespace: 'gen_ai',
-    pills: [{ label: GEN_AI_REQUEST_MODEL, attrKeys: [GEN_AI_REQUEST_MODEL, GEN_AI_RESPONSE_MODEL] }],
+    pills: [{ label: GEN_AI_REQUEST_MODEL, attrKeys: [GEN_AI_REQUEST_MODEL] }],
   },
 ];
 

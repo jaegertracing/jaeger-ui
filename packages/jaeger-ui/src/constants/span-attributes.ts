@@ -6,7 +6,6 @@ export const GEN_AI_NAMESPACE = 'gen_ai.';
 export const GEN_AI_OPERATION_NAME = 'gen_ai.operation.name';
 
 export const GEN_AI_REQUEST_MODEL = 'gen_ai.request.model';
-export const GEN_AI_RESPONSE_MODEL = 'gen_ai.response.model';
 
 export const GEN_AI_TOOL_NAME = 'gen_ai.tool.name';
 
@@ -16,9 +15,3 @@ export const GEN_AI_TOOL_CALL_ID = 'gen_ai.tool.call.id';
 
 // The list of tool definitions offered to the model for the current span.
 export const GEN_AI_TOOL_DEFINITIONS = 'gen_ai.tool.definitions';
-
-export const GEN_AI_AGENT_NAME = 'gen_ai.agent.name';
-export const GEN_AI_AGENT_ID = 'gen_ai.agent.id';
-
-export const GEN_AI_USAGE_INPUT_TOKENS = 'gen_ai.usage.input_tokens';
-export const GEN_AI_USAGE_OUTPUT_TOKENS = 'gen_ai.usage.output_tokens';

@@ -54,21 +54,35 @@ describe('classifySpan', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'retrieval' }]))).toBe('RETRIEVAL');
   });
 
-  it('classifies rerank as RETRIEVAL', () => {
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'rerank' }]))).toBe('RETRIEVAL');
-  });
-
-  it('classifies evaluate as AGENT', () => {
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'evaluate' }]))).toBe('AGENT');
-  });
-
-  it('classifies fine_tuning as LLM_CALL', () => {
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'fine_tuning' }]))).toBe('LLM_CALL');
-  });
-
-  it('classifies image_generation as LLM_CALL', () => {
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'image_generation' }]))).toBe(
+  it('classifies realtime_inference as LLM_CALL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'realtime_inference' }]))).toBe(
       'LLM_CALL'
+    );
+  });
+
+  it('classifies plan as AGENT', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'plan' }]))).toBe('AGENT');
+  });
+
+  it('classifies search_memory as RETRIEVAL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'search_memory' }]))).toBe(
+      'RETRIEVAL'
+    );
+  });
+
+  it.each([
+    'user_speech',
+    'fetch_response',
+    'invoke_runner',
+    'create_memory',
+    'update_memory',
+    'upsert_memory',
+    'delete_memory',
+    'create_memory_store',
+    'delete_memory_store',
+  ])('keeps the spec operation %s, which has no matching kind, as UNKNOWN_GENAI', operation => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: operation }]))).toBe(
+      'UNKNOWN_GENAI'
     );
   });
 
@@ -78,10 +92,8 @@ describe('classifySpan', () => {
     );
   });
 
-  it('returns UNKNOWN_GENAI for a span with generic gen_ai.* attrs but no operation.name or secondary signals', () => {
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.unrecognized_attr', value: 'custom_value' }]))).toBe(
-      'UNKNOWN_GENAI'
-    );
+  it('returns UNKNOWN_GENAI for a span with gen_ai.* attrs but no operation.name', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.system', value: 'openai' }]))).toBe('UNKNOWN_GENAI');
   });
 
   it('returns undefined for a span with no gen_ai.* attrs', () => {
@@ -96,22 +108,7 @@ describe('classifySpan', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.tool.name', value: 'get_weather' }]))).toBe('TOOL_CALL');
   });
 
-  it('classifies gen_ai.agent.name as AGENT when operation.name is absent', () => {
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.agent.name', value: 'research_assistant' }]))).toBe('AGENT');
-  });
-
-  it('classifies gen_ai.request.model or gen_ai.response.model as LLM_CALL when operation.name is absent', () => {
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.request.model', value: 'gpt-4o' }]))).toBe('LLM_CALL');
-    expect(classifySpan(makeSpan([{ key: 'gen_ai.response.model', value: 'gpt-4o' }]))).toBe('LLM_CALL');
-  });
-
-  it('classifies gen_ai.retrieval.query as RETRIEVAL when operation.name is absent', () => {
-    expect(
-      classifySpan(makeSpan([{ key: 'gen_ai.retrieval.query', value: 'distributed tracing in k8s' }]))
-    ).toBe('RETRIEVAL');
-  });
-
-  it('lets a recognized operation.name win over secondary signals', () => {
+  it('lets a recognized operation.name win over gen_ai.tool.name', () => {
     const span = makeSpan([
       { key: 'gen_ai.tool.name', value: 'get_weather' },
       { key: 'gen_ai.operation.name', value: 'chat' },
@@ -139,10 +136,10 @@ describe('classifySpan', () => {
     expect(classifySpan(span)).toBe('TOOL_CALL');
   });
 
-  it('still returns UNKNOWN_GENAI when tool.call.id accompanies an unrecognized gen_ai.* key', () => {
+  it('still returns UNKNOWN_GENAI when tool.call.id accompanies another gen_ai.* key', () => {
     const span = makeSpan([
       { key: 'gen_ai.tool.call.id', value: 'abc-123' },
-      { key: 'gen_ai.unrecognized_attr', value: 'val' },
+      { key: 'gen_ai.system', value: 'openai' },
     ]);
     expect(classifySpan(span)).toBe('UNKNOWN_GENAI');
   });
