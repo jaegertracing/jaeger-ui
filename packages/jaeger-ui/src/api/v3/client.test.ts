@@ -24,6 +24,24 @@ describe('JaegerClient', () => {
     vi.useRealTimers();
   });
 
+  describe('fetchMetricDimensions', () => {
+    it('GETs /api/metrics/dimensions', async () => {
+      mockFetch.mockReset();
+      mockFetch.mockReturnValue(
+        Promise.resolve({
+          status: 200,
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+      );
+
+      await client.fetchMetricDimensions();
+      expect(mockFetch).toHaveBeenLastCalledWith('/api/metrics/dimensions', {
+        signal: expect.any(AbortSignal),
+      });
+    });
+  });
+
   describe('fetchMetrics', () => {
     const query = {
       endTs: 1_700_000_000_000,
@@ -33,6 +51,31 @@ describe('JaegerClient', () => {
       spanKind: 'server' as const,
       quantile: 0.95,
     };
+
+    it('GETs metrics query with repeated filter params', async () => {
+      mockFetch.mockReset();
+      const metricsType = 'calls';
+      const serviceName = 'serviceName';
+      const filterQuery = {
+        ...query,
+        quantile: 95,
+        filter: ['deployment.environment:prod', 'k8s.cluster:us-west-1'],
+      };
+      mockFetch.mockReturnValue(
+        Promise.resolve({
+          status: 200,
+          ok: true,
+          json: () => Promise.resolve({ name: 'service_call_rate', type: 'GAUGE', metrics: [] }),
+        })
+      );
+
+      await client.fetchMetrics(metricsType, serviceName, filterQuery);
+      const url = mockFetch.mock.calls[mockFetch.mock.calls.length - 1][0];
+      // Each filter must be its own query-string entry so the Go backend's
+      // r.URL.Query()[filterParam] returns both values.
+      expect(url).toContain('filter=deployment.environment%3Aprod');
+      expect(url).toContain('filter=k8s.cluster%3Aus-west-1');
+    });
 
     it('encodes the service and preserves operation query parameters in milliseconds', async () => {
       mockFetch.mockResolvedValue({
@@ -434,6 +477,114 @@ describe('JaegerClient', () => {
     });
   });
 
+  describe('fetchQualityMetrics', () => {
+    it('keeps the default endpoint when the UI config only enables quality metrics', async () => {
+      const configSpy = vi.spyOn(window, 'getJaegerUiConfig').mockReturnValue({
+        qualityMetrics: { menuEnabled: true },
+      });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ scores: [], metrics: [] }) });
+      vi.resetModules();
+
+      try {
+        const { JaegerClient: IsolatedClient } = await import('./client');
+
+        await new IsolatedClient().fetchQualityMetrics('frontend', 48);
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/quality-metrics?hours=48&service=frontend', {
+          signal: undefined,
+        });
+      } finally {
+        configSpy.mockRestore();
+        vi.resetModules();
+      }
+    });
+
+    it.each([
+      ['qualityMetrics is null', { qualityMetrics: null }],
+      ['apiEndpoint is empty', { qualityMetrics: { apiEndpoint: '' } }],
+    ])('rejects without a request when %s in the UI config', async (_case, uiConfig) => {
+      const configSpy = vi.spyOn(window, 'getJaegerUiConfig').mockReturnValue(uiConfig);
+      vi.resetModules();
+
+      try {
+        const { JaegerClient: IsolatedClient } = await import('./client');
+
+        await expect(new IsolatedClient().fetchQualityMetrics('frontend', 48)).rejects.toThrow(
+          'qualityMetrics.apiEndpoint is not set in the UI config'
+        );
+        expect(mockFetch).not.toHaveBeenCalled();
+      } finally {
+        configSpy.mockRestore();
+        vi.resetModules();
+      }
+    });
+
+    it('GETs the configured endpoint with the encoded service and lookback hours', async () => {
+      const data = { scores: [], metrics: [], extra: 'retained' };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+      await expect(client.fetchQualityMetrics('frontend /?&=+#', 48)).resolves.toBe(data);
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/quality-metrics?hours=48&service=frontend%20%2F%3F%26%3D%2B%23',
+        { signal: undefined }
+      );
+    });
+
+    it('preserves HTTP error details for ErrorMessage', async () => {
+      const body = { error: 'quality metrics unavailable' };
+      mockFetch.mockResolvedValue(
+        new Response(JSON.stringify(body), { status: 503, statusText: 'Service Unavailable' })
+      );
+
+      await expect(client.fetchQualityMetrics('frontend', 48)).rejects.toMatchObject({
+        message: 'Failed to fetch quality metrics: 503 Service Unavailable',
+        httpStatus: 503,
+        httpStatusText: 'Service Unavailable',
+        httpBody: JSON.stringify(body, null, 2),
+        httpUrl: '/api/quality-metrics',
+        httpQuery: 'hours=48&service=frontend',
+      });
+    });
+
+    it('allows successful headers and bodies to arrive after the default transport deadline', async () => {
+      const data = { scores: [], metrics: [] };
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            setTimeout(
+              () =>
+                resolve({ ok: true, json: () => new Promise(done => setTimeout(() => done(data), 11000)) }),
+              11000
+            );
+          })
+      );
+
+      const promise = client.fetchQualityMetrics('frontend', 48);
+      await vi.advanceTimersByTimeAsync(22000);
+
+      await expect(promise).resolves.toBe(data);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('forwards cancellation and preserves the caller abort reason', async () => {
+      const controller = new AbortController();
+      const reason = new Error('quality metrics query abandoned');
+      mockFetch.mockImplementation(
+        (_url, { signal }) =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+          })
+      );
+
+      const promise = client.fetchQualityMetrics('frontend', 48, controller.signal);
+      controller.abort(reason);
+
+      await expect(promise).rejects.toBe(reason);
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: controller.signal });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
   describe('fetchServices', () => {
     it('successfully fetches and returns service list', async () => {
       const mockServices = ['service-a', 'service-b', 'service-c'];
@@ -647,7 +798,8 @@ describe('JaegerClient', () => {
 
     it('preserves caller cancellation for a request with a deadline', async () => {
       const caller = new AbortController();
-      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      const abortError = new Error('Caller cancelled request');
+      abortError.name = 'AbortError';
       mockFetch.mockImplementation((_url: string, options: RequestInit) => {
         return new Promise((_resolve, reject) => {
           options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
@@ -663,7 +815,8 @@ describe('JaegerClient', () => {
 
     it('forwards an already cancelled caller signal to a request with a deadline', async () => {
       const caller = new AbortController();
-      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      const abortError = new Error('Caller cancelled request');
+      abortError.name = 'AbortError';
       caller.abort(abortError);
       mockFetch.mockImplementation((_url: string, options: RequestInit) => {
         expect(options.signal?.aborted).toBe(true);
@@ -673,6 +826,28 @@ describe('JaegerClient', () => {
       await expect(
         client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal })
       ).rejects.toBe(abortError);
+    });
+
+    it('reports a timeout with a caller signal when AbortSignal.any is unavailable', async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(AbortSignal, 'any');
+      const caller = new AbortController();
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      try {
+        Reflect.deleteProperty(AbortSignal, 'any');
+        expect(AbortSignal.any).toBeUndefined();
+        const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal });
+        vi.advanceTimersByTime(1000);
+
+        await expect(promise).rejects.toThrow('Request timeout after 1000ms');
+        expect(caller.signal.aborted).toBe(false);
+      } finally {
+        if (descriptor) Object.defineProperty(AbortSignal, 'any', descriptor);
+      }
     });
 
     it('clears timeout after successful request', async () => {
@@ -1331,6 +1506,7 @@ describe('JaegerClient with non-default base path', () => {
   afterEach(() => {
     (global as any).fetch = originalFetch;
     vi.doUnmock('../../site-prefix');
+    vi.doUnmock('../../utils/config/get-config');
   });
 
   it('calls services endpoint with base path prefix from site-prefix', async () => {
@@ -1371,6 +1547,22 @@ describe('JaegerClient with non-default base path', () => {
       '/jaeger/api/deep-dependencies?end=200&operation=%2A&service=frontend&start=100',
       { signal: undefined }
     );
+  });
+
+  it('reads the quality-metrics endpoint from config under the deployment base path', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    vi.doMock('../../utils/config/get-config', () => ({
+      default: () => ({ qualityMetrics: { apiEndpoint: '/quality/v2' } }),
+    }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
+
+    await new IsolatedClient().fetchQualityMetrics('frontend', 48);
+
+    expect(mockFetch).toHaveBeenCalledWith('/jaeger/quality/v2?hours=48&service=frontend', {
+      signal: undefined,
+    });
   });
 
   it('keeps metrics under the deployment base path', async () => {

@@ -12,13 +12,13 @@ import { useServices } from '../../../hooks/useTraceDiscovery';
 import { useServiceMetricsQuery, useOperationMetricsQuery } from './useMetricsQuery';
 import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../utils/time-range-options';
 import store from '../../../utils/storage';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import {
   serviceMetrics,
   serviceOpsMetrics,
   serviceMetricsWithOneServiceLatency,
   originInitialState,
-} from '../../../reducers/metrics.mock';
+} from '../metrics.mock';
 import * as track from './index.track';
 
 global.ResizeObserver = jest.fn().mockImplementation(function () {
@@ -79,8 +79,13 @@ const defaultOperationMetricsImpl = () => ({
 vi.mock('lodash/debounce', async () => mockDefault(fn => fn));
 
 vi.mock('../../common/LoadingIndicator', async () => {
-  return mockDefault(function LoadingIndicator() {
-    return <div data-testid="loading-indicator">Loading...</div>;
+  const { default: ActualLoadingIndicator } = await vi.importActual('../../common/LoadingIndicator');
+  return mockDefault(function LoadingIndicator(props) {
+    return (
+      <div data-testid="loading-indicator">
+        <ActualLoadingIndicator {...props} />
+      </div>
+    );
   });
 });
 
@@ -144,8 +149,8 @@ vi.mock('../../common/SearchableSelect', async () => {
   });
 });
 
-vi.mock('../../../api/jaeger', async () => ({
-  default: {
+vi.mock('../../../api/v3/client', async () => ({
+  jaegerClient: {
     fetchMetricDimensions: jest.fn(() => Promise.resolve([])),
   },
 }));
@@ -206,6 +211,14 @@ describe('<MonitorATMServicesView>', () => {
     useServices.mockReturnValue({ data: [], isLoading: true });
     renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+  });
+
+  it('announces a single loading status when loading services list', () => {
+    cleanup();
+    useServices.mockReturnValue({ data: [], isLoading: true });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent('Loading services');
   });
 
   it('do not show a loading indicator once data loaded', () => {
@@ -827,22 +840,22 @@ describe('<MonitorATMServicesView> on page load', () => {
 
 describe('Dimension filters', () => {
   const renderWithDimensions = (dimensions, extraProps = {}) => {
-    JaegerAPI.fetchMetricDimensions.mockResolvedValue(dimensions);
+    jaegerClient.fetchMetricDimensions.mockResolvedValue(dimensions);
     return renderWithRouter(<MonitorATMServicesView {...extraProps} />);
   };
 
   afterEach(() => {
     cleanup();
     jest.clearAllMocks();
-    JaegerAPI.fetchMetricDimensions.mockReset();
-    JaegerAPI.fetchMetricDimensions.mockResolvedValue([]);
+    jaegerClient.fetchMetricDimensions.mockReset();
+    jaegerClient.fetchMetricDimensions.mockResolvedValue([]);
     store.getJSON.mockReset();
   });
 
   it('renders no dropdown when the backend reports an empty dimensions list', async () => {
     renderWithDimensions([]);
     // Wait for the fetchMetricDimensions promise to resolve and React to flush.
-    await waitFor(() => expect(JaegerAPI.fetchMetricDimensions).toHaveBeenCalled());
+    await waitFor(() => expect(jaegerClient.fetchMetricDimensions).toHaveBeenCalled());
     expect(screen.queryByTestId('dimension-selector')).not.toBeInTheDocument();
   });
 
@@ -955,10 +968,10 @@ describe('Dimension filters', () => {
   });
 
   it('does not crash when fetchMetricDimensions rejects', async () => {
-    JaegerAPI.fetchMetricDimensions.mockReset();
-    JaegerAPI.fetchMetricDimensions.mockRejectedValueOnce(new Error('501 Not Implemented'));
+    jaegerClient.fetchMetricDimensions.mockReset();
+    jaegerClient.fetchMetricDimensions.mockRejectedValueOnce(new Error('501 Not Implemented'));
     renderWithRouter(<MonitorATMServicesView />);
-    await waitFor(() => expect(JaegerAPI.fetchMetricDimensions).toHaveBeenCalled());
+    await waitFor(() => expect(jaegerClient.fetchMetricDimensions).toHaveBeenCalled());
     expect(screen.queryByTestId('dimension-selector')).not.toBeInTheDocument();
     // Page still renders the rest of the Monitor UI.
     expect(screen.getByText('Service')).toBeInTheDocument();

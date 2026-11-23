@@ -19,7 +19,7 @@ import {
   ServiceOpsMetrics,
   spanKinds,
 } from '../../../types/metrics';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 import { ONE_HOUR_MS, timeFrameOptions, getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
@@ -322,7 +322,8 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   // cases we just render no dropdowns and the rest of the page is unaffected.
   useEffect(() => {
     let cancelled = false;
-    JaegerAPI.fetchMetricDimensions()
+    jaegerClient
+      .fetchMetricDimensions()
       .then((response: unknown) => {
         if (cancelled) return;
         if (Array.isArray(response)) {
@@ -393,7 +394,7 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
     !serviceMetricsFetching && !serviceMetricsInitialLoading && _isEmpty(serviceMetrics?.service_latencies);
 
   if (servicesLoading) {
-    return <LoadingIndicator vcentered centered />;
+    return <LoadingIndicator vcentered centered label="Loading services" />;
   }
 
   return (

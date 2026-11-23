@@ -132,6 +132,7 @@ const defaultConfig: Config = {
     enableSidePanel: true,
     defaultDetailPanelMode: 'inline',
     spanPillsEnabled: true,
+    filterApplyThreshold: 10000,
   },
   useOpenTelemetryTerms: true,
   tracing: {
@@ -139,9 +140,15 @@ const defaultConfig: Config = {
   },
 };
 
-// Fields that should be merged with user-supplied config values rather than overwritten.
-type TMergeField = 'dependencies' | 'monitor' | 'search' | 'tracking';
-export const mergeFields: readonly TMergeField[] = ['dependencies', 'monitor', 'search', 'tracking'];
+// The user-supplied object for each of these fields is merged into the default
+// instead of replacing it.
+export const mergeFields = [
+  'dependencies',
+  'monitor',
+  'qualityMetrics',
+  'search',
+  'tracking',
+] as const satisfies readonly (keyof Config)[];
 
 export default deepFreeze(defaultConfig);
 

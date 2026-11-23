@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ListView from './index';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
@@ -245,6 +245,44 @@ describe('<ListView /> functional', () => {
     rafSpy.mockRestore();
   });
 
+  it('draws through the last item when the view reaches the end of the list', () => {
+    // The test queues animation frames by hand so that the positioning pass runs synchronously.
+    const rafCallbacks = [];
+    const rafSpy = jest.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+    const runQueuedFrames = () => {
+      act(() => {
+        rafCallbacks.splice(0).forEach(cb => cb());
+      });
+    };
+    const itemRenderer = jest.fn(renderItem);
+
+    try {
+      const { container } = render(<ListView {...props} itemRenderer={itemRenderer} />);
+      const wrapper = getWrapper(container);
+      const lastKey = () => {
+        const items = getItems(container);
+        return items[items.length - 1].getAttribute('data-item-key');
+      };
+      expect(lastKey()).not.toBe(String(DATA_LENGTH - 1));
+
+      // The list is 1640px tall, so a 300px viewport scrolled by 1400px reaches past the last item.
+      simulateScroll(wrapper, 1400);
+      runQueuedFrames();
+      expect(lastKey()).toBe(String(DATA_LENGTH - 1));
+
+      // Once the end is drawn, a further scroll within the drawn range redraws nothing.
+      itemRenderer.mockClear();
+      simulateScroll(wrapper, 1340);
+      runQueuedFrames();
+      expect(itemRenderer).not.toHaveBeenCalled();
+    } finally {
+      rafSpy.mockRestore();
+    }
+  });
+
   it('handles scroll events correctly', () => {
     const { container } = render(<ListView {...props} />);
     const wrapper = getWrapper(container);
@@ -272,6 +310,35 @@ describe('<ListView /> functional', () => {
 
     render(<ListView {...props} ref={ref} windowScroller />);
 
+    expect(ref.current.getViewHeight()).toBe(window.innerHeight - 120);
+    rectSpy.mockRestore();
+  });
+
+  it('remeasures the wrapper offset when content above the list moves it', () => {
+    const ref = React.createRef();
+    const rectSpy = jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top: 120 });
+
+    const { rerender } = render(<ListView {...props} ref={ref} windowScroller topOffsetKey="a" />);
+    expect(ref.current.getViewHeight()).toBe(window.innerHeight - 120);
+
+    rectSpy.mockReturnValue({ top: 192 });
+    rerender(<ListView {...props} ref={ref} windowScroller topOffsetKey="b" />);
+
+    expect(ref.current.getViewHeight()).toBe(window.innerHeight - 192);
+    rectSpy.mockRestore();
+  });
+
+  it('does not measure the wrapper offset on a render where topOffsetKey is unchanged', () => {
+    const ref = React.createRef();
+    const rectSpy = jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top: 120 });
+
+    const { rerender } = render(<ListView {...props} ref={ref} windowScroller topOffsetKey="a" />);
+    const callsAfterMount = rectSpy.mock.calls.length;
+
+    rectSpy.mockReturnValue({ top: 192 });
+    rerender(<ListView {...props} ref={ref} windowScroller topOffsetKey="a" />);
+
+    expect(rectSpy.mock.calls.length).toBe(callsAfterMount);
     expect(ref.current.getViewHeight()).toBe(window.innerHeight - 120);
     rectSpy.mockRestore();
   });

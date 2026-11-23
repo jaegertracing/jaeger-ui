@@ -13,30 +13,62 @@ import { ROUTES } from './src/components/App/routes';
 // Extract and compile the base-path detection script from index.html once
 // to test the base path determination logic.
 const indexHtml = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'index.html'), 'utf-8');
-// Locate the script that injects <base data-inject-target="BASE_URL"> — that attribute
+// Locate the script that tags <base> with data-inject-target="BASE_URL" — that attribute
 // is unique to this script and survives tag-attribute additions or script reordering.
 const scriptMatch = indexHtml.match(
-  /<script[^>]*>([\s\S]*?data-inject-target="BASE_URL"[\s\S]*?)<\/script>/i
+  /<script[^>]*>([\s\S]*?'data-inject-target', 'BASE_URL'[\s\S]*?)<\/script>/i
 );
 if (!scriptMatch) throw new Error('No base-path detection script found in index.html');
 // eslint-disable-next-line no-new-func
 const scriptFn = new Function('document', 'window', scriptMatch[1]);
 
-function detectBasePath(pathname: string): string {
-  let insertedHtml = '';
+const ORIGIN = 'https://jaeger.example:8443';
+
+interface ILocation {
+  href: string;
+  origin: string;
+  pathname: string;
+}
+
+// Runs the script with the given window.location and returns the href of the
+// <base> element it inserts after itself.
+function runScript(location: ILocation): string {
+  const attrs: Record<string, string> = {};
+  let inserted: unknown = null;
+  const base = {
+    setAttribute: (name: string, value: string) => {
+      attrs[name] = value;
+    },
+  };
   const mockDoc = {
+    createElement: (tag: string) => {
+      if (tag !== 'base') throw new Error(`Unexpected element: ${tag}`);
+      return base;
+    },
     currentScript: {
-      insertAdjacentHTML: (_pos: string, html: string) => {
-        insertedHtml = html;
+      after: (node: unknown) => {
+        inserted = node;
       },
     },
     addEventListener: () => {},
     getElementById: () => null,
   };
-  scriptFn(mockDoc, { location: { pathname } });
-  const m = insertedHtml.match(/href="([^"]*)"/);
-  if (!m) throw new Error(`Script produced no <base href>. Output: ${insertedHtml}`);
-  return m[1];
+  scriptFn(mockDoc, { location });
+  if (inserted !== base) throw new Error('Script did not insert the <base> element');
+  expect(attrs['data-inject-target']).toBe('BASE_URL');
+  return attrs.href;
+}
+
+// Builds window.location the way a browser does, so the path is normalized
+// (backslashes become slashes, dot segments are removed, and so on).
+function detectBasePath(path: string): string {
+  const url = new URL(`${ORIGIN}${path}`);
+  return runScript({ href: url.href, origin: url.origin, pathname: url.pathname });
+}
+
+// The origin a browser resolves the page's assets against.
+function assetOrigin(href: string): string {
+  return new URL('./static/index.js', new URL(href, ORIGIN)).origin;
 }
 
 describe('KNOWN_SUB_PATHS covers every registered route (enforcement)', () => {
@@ -59,8 +91,8 @@ describe('inline base-path detection script', () => {
       expect(detectBasePath('/')).toBe('/');
     });
 
-    it('handles empty string (non-browser environment)', () => {
-      expect(detectBasePath('')).toBe('/');
+    it('falls back to / when the page URL cannot be a base', () => {
+      expect(runScript({ href: 'about:blank', origin: 'null', pathname: '' })).toBe('/');
     });
 
     it('strips /search to /', () => expect(detectBasePath('/search')).toBe('/'));
@@ -76,6 +108,8 @@ describe('inline base-path detection script', () => {
       expect(detectBasePath('/jaeger/trace/abc')).toBe('/jaeger/'));
     it('strips /jaeger/dependencies to /jaeger/', () =>
       expect(detectBasePath('/jaeger/dependencies')).toBe('/jaeger/'));
+    it('ignores the query and fragment', () =>
+      expect(detectBasePath('/jaeger/search?x=//evil.example/#//evil.example/')).toBe('/jaeger/'));
   });
 
   describe('at /a/b/c/ prefix', () => {
@@ -100,5 +134,42 @@ describe('inline base-path detection script', () => {
       expect(detectBasePath('/a/trace/trace/abc')).toBe('/a/trace/'));
     it('/jaeger/search/trace/abc → /jaeger/search/', () =>
       expect(detectBasePath('/jaeger/search/trace/abc')).toBe('/jaeger/search/'));
+  });
+
+  describe('keeps assets on this origin for a crafted path', () => {
+    // Each of these produced a <base href> on evil.example before the fix.
+    const crafted = [
+      '//evil.example/search',
+      '/\\evil.example/search',
+      '/.//evil.example/search',
+      '/%2e%2e//evil.example/search',
+      '/a/..//evil.example/search',
+      '/&/evil.example/search',
+    ];
+    for (const path of crafted) {
+      it(`${path} → same-origin base`, () => {
+        expect(assetOrigin(detectBasePath(path))).toBe(ORIGIN);
+      });
+    }
+
+    it('falls back to / when the path starts with //', () => {
+      expect(detectBasePath('//evil.example/search')).toBe('/');
+      expect(detectBasePath('/\\evil.example/search')).toBe('/');
+    });
+
+    it('falls back to / for a pathname the browser did not normalize', () => {
+      const location = { href: `${ORIGIN}/`, origin: ORIGIN, pathname: '/.//evil.example/search' };
+      expect(runScript(location)).toBe('/');
+    });
+
+    it('keeps characters instead of dropping them', () => {
+      expect(detectBasePath('/&/evil.example/search')).toBe('/&/evil.example/');
+      expect(detectBasePath('/a&b/search')).toBe('/a&b/');
+    });
+
+    it('keeps encoded slashes as a path', () => {
+      expect(detectBasePath('/%2F%2Fevil.example/search')).toBe('/%2F%2Fevil.example/');
+      expect(detectBasePath('/%5Cevil.example/search')).toBe('/%5Cevil.example/');
+    });
   });
 });

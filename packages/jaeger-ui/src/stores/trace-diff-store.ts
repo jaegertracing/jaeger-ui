@@ -17,7 +17,7 @@ import type { TraceSummary } from '../types/trace-summary';
 //     / `removeTraceFromCohort`. These are the only direct writes to `cohort`
 //     and `cohortSummaries`.
 //   - On the TraceDiff page, `a`, `b`, and `cohort` are derived from the URL
-//     (`mapStateToProps` in `TraceDiff.tsx`) and pushed into the store via
+//     (`getTraceDiffProps` in `TraceDiff.tsx`) and pushed into the store via
 //     `hydrateCohort` so other components (e.g. TopNav's "Compare" link) can
 //     observe them. The URL is the source of truth on that page; the store
 //     is downstream.

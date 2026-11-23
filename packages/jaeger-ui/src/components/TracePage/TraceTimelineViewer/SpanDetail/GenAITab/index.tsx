@@ -14,14 +14,19 @@ import {
   deepParseJson,
   GenAiAgent,
   GenAiAttributeSource,
+  GenAiContentEntry,
+  GenAiMemory,
   GenAiMessage,
   GenAiPart,
+  GenAiRetrieval,
   GenAiTokenSources,
   GenAiTokenUsage,
   GenAiToolCall,
+  GenAiToolDefinition,
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
+import AttributesTable from '../AttributesTable';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import { isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
@@ -37,6 +42,10 @@ type Props = { span: IOtelSpan };
 // reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
 // cap since neither does Markdown's block-level reparsing.
 const MARKDOWN_SIZE_LIMIT = 150_000;
+
+// The collapsed summary should not turn an unusually large telemetry attribute into a
+// large text node before CSS has a chance to truncate it.
+const TOOLS_SUMMARY_MAX_CHARS = 200;
 
 // markdown-to-jsx only wraps its output in a block element (a <div>) once it has more
 // than one top-level child; a single short sentence with no other formatting compiles
@@ -820,6 +829,288 @@ function ConversationDetails({
   );
 }
 
+function ToolParameters({ parameters, toolName }: { parameters: unknown; toolName: string }) {
+  const [isSchemaOpen, setIsSchemaOpen] = useState(false);
+  const parsed = typeof parameters === 'string' ? tryParseJson(parameters) : parameters;
+
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    'type' in parsed &&
+    typeof parsed.type === 'string' &&
+    parsed.type.toLowerCase() === 'object' &&
+    'properties' in parsed &&
+    typeof parsed.properties === 'object' &&
+    parsed.properties !== null &&
+    !Array.isArray(parsed.properties)
+  ) {
+    const props = parsed.properties as Record<string, unknown>;
+    const parsedObj = parsed as Record<string, unknown>;
+    const required = Array.isArray(parsedObj.required) ? parsedObj.required : [];
+
+    return (
+      <>
+        <div className="GenAITab--paramTableContainer">
+          <table className="GenAITab--paramTable">
+            <caption className="GenAITab--paramTableCaption">Parameters for {toolName}</caption>
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(props).map(([key, propDef]) => {
+                const isRequired = required.includes(key);
+                const def =
+                  typeof propDef === 'object' && propDef !== null ? (propDef as Record<string, unknown>) : {};
+                return (
+                  <tr key={key}>
+                    <td className="GenAITab--paramNameColumn">{key}</td>
+                    <td>
+                      {typeof def.type === 'string' && (
+                        <span className="GenAITab--paramTypeBadge">{def.type}</span>
+                      )}
+                    </td>
+                    <td>
+                      {isRequired ? (
+                        <span className="GenAITab--paramRequiredBadge">Yes</span>
+                      ) : (
+                        <span className="GenAITab--paramOptionalBadge">No</span>
+                      )}
+                    </td>
+                    <td className="GenAITab--paramDescColumn">
+                      {typeof def.description === 'string' && <div>{def.description}</div>}
+                      {Array.isArray(def.enum) && (
+                        <div className="GenAITab--paramEnum">
+                          Allowed values: <code>{def.enum.map(formatEnumValue).join(', ')}</code>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <details
+          className="GenAITab--paramSchema"
+          open={isSchemaOpen}
+          onToggle={event => setIsSchemaOpen(event.currentTarget.open)}
+        >
+          <summary>Full schema</summary>
+          {isSchemaOpen && <JsonBlock value={parsed} />}
+        </details>
+      </>
+    );
+  }
+
+  return <JsonBlock value={parsed} />;
+}
+
+function formatEnumValue(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value === null) return 'null';
+  if (typeof value === 'object' || typeof value === 'function') {
+    try {
+      return JSON.stringify(value) ?? '[unserializable]';
+    } catch {
+      return '[unserializable]';
+    }
+  }
+  return String(value);
+}
+
+function toolLabel(tool: GenAiToolDefinition): string {
+  return tool.name || 'Tool';
+}
+
+function asDisplayAttributeValue(value: unknown): AttributeValue {
+  if (value == null) return String(value);
+  if (typeof value === 'object' || typeof value === 'function') {
+    try {
+      return JSON.stringify(value) ?? '[unserializable]';
+    } catch {
+      return '[unserializable]';
+    }
+  }
+  return value as AttributeValue;
+}
+
+function formatToolsSummary(tools: GenAiToolDefinition[]): string {
+  if (tools.length === 0) return 'No tools defined';
+  const labels: string[] = [];
+  let textLength = 0;
+  for (const tool of tools) {
+    const label = toolLabel(tool);
+    textLength += label.length + (labels.length ? 2 : 0);
+    if (textLength > TOOLS_SUMMARY_MAX_CHARS) return `${tools.length.toLocaleString()} tools`;
+    labels.push(label);
+  }
+  return labels.join(', ');
+}
+
+function SingleToolDetails({ tool }: { tool: GenAiToolDefinition }) {
+  const data = useMemo(() => {
+    const entries: IAttribute[] = [];
+    const label = tool.name || 'Tool';
+    if ('raw' in tool) {
+      if (typeof tool.raw === 'object' && tool.raw !== null) {
+        const rawEntries = Object.entries(tool.raw as Record<string, unknown>);
+        rawEntries.forEach(([k, v]) => {
+          entries.push({ key: k, value: asDisplayAttributeValue(v) });
+        });
+        if (rawEntries.length === 0) {
+          entries.push({ key: 'Value', value: asDisplayAttributeValue(tool.raw) });
+        }
+      } else {
+        entries.push({
+          key: 'Value',
+          value: asDisplayAttributeValue(tool.raw),
+        });
+      }
+    } else {
+      entries.push({ key: 'Name', value: label });
+      if (tool.type) entries.push({ key: 'Type', value: tool.type });
+      if (tool.description) entries.push({ key: 'Description', value: tool.description });
+      if (tool.metadata) {
+        Object.entries(tool.metadata).forEach(([key, value]) => {
+          entries.push({ key, value: asDisplayAttributeValue(value) });
+        });
+      }
+    }
+    return makeAttributes(entries);
+  }, [tool]);
+
+  return (
+    <div className="GenAITab--toolItem">
+      <AttributesTable data={data} linksGetter={null} />
+      {tool.parameters !== undefined && (
+        <div className="GenAITab--toolParametersWrapper">
+          <ToolParameters parameters={tool.parameters} toolName={toolLabel(tool)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToolsSection({
+  tools,
+  isOpen,
+  onToggle,
+}: {
+  tools: GenAiToolDefinition[];
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="GenAITab--section u-tx-ellipsis">
+      <button
+        type="button"
+        className="AccordionAttributes--header GenAITab--toolsToggle"
+        aria-expanded={isOpen}
+        onClick={onToggle}
+      >
+        {isOpen ? <IoChevronDown className="u-align-icon" /> : <IoChevronForward className="u-align-icon" />}
+        <strong>Tools{isOpen || ':'}</strong>
+        {!isOpen && <span className="GenAITab--toolsSummary">{formatToolsSummary(tools)}</span>}
+      </button>
+      {isOpen && (
+        <div className="GenAITab--toolsContainer">
+          {tools.length === 0 ? (
+            <div>No tools defined.</div>
+          ) : (
+            tools.map((tool, i) => <SingleToolDetails key={`${toolLabel(tool)}-${i}`} tool={tool} />)
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * One retrieved document or memory record: its content shown prominently, sharing the
+ * message box styling so it reads consistently with the rest of the tab, followed by
+ * whatever other fields it carries (score, metadata, id, ...) in an attributes table -
+ * present only when there is at least one such field, per neither schema fixing a set.
+ */
+function ContentEntryCard({ label, entry }: { label: string; entry: GenAiContentEntry }) {
+  const restAttributes = useMemo(
+    () =>
+      makeAttributes(
+        Object.entries(entry.rest).map(([key, value]): IAttribute => ({
+          key,
+          // AttributesTable expects span attribute values: a direct null (id, score, ... may
+          // legitimately be null) crashes it, and an object or array (e.g. metadata) copies as
+          // "[object Object]" or breaks the header renderer. A JSON string still renders as a
+          // tree, since the table parses it back.
+          value:
+            value === null
+              ? 'null'
+              : typeof value === 'object'
+                ? JSON.stringify(value)
+                : (value as AttributeValue),
+        }))
+      ),
+    [entry]
+  );
+  return (
+    <div className="GenAITab--message">
+      <div className="GenAITab--messageHeader">
+        <span className="GenAITab--messageRole">{label}</span>
+      </div>
+      {entry.content && (
+        <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{entry.content}</pre>
+      )}
+      {restAttributes.size > 0 && <AttributesTable data={restAttributes} linksGetter={null} />}
+    </div>
+  );
+}
+
+function RetrievalDetails({ queryText, topK, dataSourceId, documents }: GenAiRetrieval) {
+  const metaData = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (dataSourceId !== undefined) entries.push({ key: 'Data source', value: dataSourceId });
+    if (queryText !== undefined) entries.push({ key: 'Query', value: queryText });
+    if (topK !== undefined) entries.push({ key: 'Top K', value: topK });
+    return makeAttributes(entries);
+  }, [queryText, topK, dataSourceId]);
+
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Retrieved documents</h3>
+      {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {documents?.length === 0 && <div className="GenAITab--empty">No documents returned.</div>}
+      {documents?.map((doc, i) => (
+        <ContentEntryCard key={i} label={`Document ${i + 1}`} entry={doc} />
+      ))}
+    </div>
+  );
+}
+
+function MemoryDetails({ queryText, storeId, recordCount, records }: GenAiMemory) {
+  const metaData = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (storeId !== undefined) entries.push({ key: 'Store', value: storeId });
+    if (queryText !== undefined) entries.push({ key: 'Query', value: queryText });
+    if (recordCount !== undefined) entries.push({ key: 'Record count', value: recordCount });
+    return makeAttributes(entries);
+  }, [queryText, storeId, recordCount]);
+
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Memory</h3>
+      {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {records?.length === 0 && <div className="GenAITab--empty">No records returned.</div>}
+      {records?.map((record, i) => (
+        <ContentEntryCard key={i} label={`Record ${i + 1}`} entry={record} />
+      ))}
+    </div>
+  );
+}
+
 function ToolCallDetails({
   id,
   name,
@@ -831,8 +1122,8 @@ function ToolCallDetails({
   const data = useMemo(() => {
     const entries: IAttribute[] = [];
     if (id) entries.push({ key: 'ID', value: id });
-    if (args !== undefined) entries.push({ key: 'Arguments', value: args as AttributeValue });
-    if (result !== undefined) entries.push({ key: 'Result', value: result as AttributeValue });
+    if (args !== undefined) entries.push({ key: 'Arguments', value: asDisplayAttributeValue(args) });
+    if (result !== undefined) entries.push({ key: 'Result', value: asDisplayAttributeValue(result) });
     return makeAttributes(entries);
   }, [id, args, result]);
   return (
@@ -887,10 +1178,11 @@ function UnknownDetails({
 export default function GenAITab({ span }: Props): React.ReactElement {
   const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
   const hasOnlyOtherSection = sections.length === 1 && sections[0].type === 'other';
-  // LLM/Agent/Tool Call/Unknown default open since they're primary content for the
+  // LLM/Agent/Tools/Tool Call/Unknown default open since they're primary content for the
   // span, unlike Other GenAI Attributes which is genuinely secondary overflow data.
   const [isLlmOpen, setIsLlmOpen] = useState(true);
   const [isAgentOpen, setIsAgentOpen] = useState(true);
+  const [isToolsOpen, setIsToolsOpen] = useState(true);
   const [isToolCallOpen, setIsToolCallOpen] = useState(true);
   const [isUnknownOpen, setIsUnknownOpen] = useState(true);
   const [isOtherOpen, setIsOtherOpen] = useState(hasOnlyOtherSection);
@@ -926,6 +1218,19 @@ export default function GenAITab({ span }: Props): React.ReactElement {
             return <TokenDetails key="tokens" usage={section.data} sources={section.sources} />;
           case 'conversation':
             return <ConversationDetails key="conversation" {...section.data} sources={section.sources} />;
+          case 'retrieval':
+            return <RetrievalDetails key="retrieval" {...section.data} />;
+          case 'memory':
+            return <MemoryDetails key="memory" {...section.data} />;
+          case 'tools':
+            return (
+              <ToolsSection
+                key="tools"
+                tools={section.data.tools}
+                isOpen={isToolsOpen}
+                onToggle={() => setIsToolsOpen(o => !o)}
+              />
+            );
           case 'toolCall':
             return (
               <ToolCallDetails

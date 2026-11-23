@@ -9,6 +9,7 @@ import { pooledMap } from '../../../utils/pooledMap';
 import type { TraceSummary } from '../../../types/trace-summary';
 import { uploadedTraceId } from '../../../utils/otel-upload';
 import { toTraceIdHex } from '../../../utils/trace-id';
+import { downloadTraces } from '../../../utils/download-traces';
 
 import './DownloadResults.css';
 
@@ -16,15 +17,6 @@ type Props = {
   traceSummaries: TraceSummary[];
   rawTraces: unknown[];
 };
-
-// The v3 schema parses proto3's "NaN", "Infinity", and "-Infinity" doubleValues into numbers,
-// which JSON.stringify writes as null. Write them back as proto3 strings.
-const proto3Doubles = (key: string, value: unknown) =>
-  key === 'doubleValue' && typeof value === 'number' && !Number.isFinite(value) ? String(value) : value;
-
-export function createBlob(traces: unknown[]) {
-  return new Blob([`{"data":${JSON.stringify(traces, proto3Doubles)}}`], { type: 'application/json' });
-}
 
 export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
   // undefined = idle; 0–1 = fraction of traces fetched from backend
@@ -76,14 +68,10 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
       }
     }
     // Every summary now has a raw trace: uploads are cached and fetches resolve or throw.
-    const file = createBlob(traceSummaries.map(s => rawByID.get(s.traceID)));
-    const element = document.createElement('a');
-    element.href = URL.createObjectURL(file);
-    element.download = `traces-${Date.now()}.json`;
-    document.body.appendChild(element);
-    element.click();
-    URL.revokeObjectURL(element.href);
-    element.remove();
+    downloadTraces(
+      traceSummaries.map(s => rawByID.get(s.traceID)),
+      `traces-${Date.now()}.json`
+    );
   }, [rawTraces, traceSummaries]);
 
   const downloading = progress !== undefined;
