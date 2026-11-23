@@ -213,10 +213,6 @@ describe('criticalPath', () => {
       expect(sections).toHaveLength(2);
       expect(sections[0].spanID).toBe('r1');
       expect(sections[1].spanID).toBe('c-pruned');
-
-      // Verify reference memoization for pruned combined sections
-      const secondCall = ctx.sectionsFor(root, false, true);
-      expect(sections).toBe(secondCall);
     });
   });
 });
