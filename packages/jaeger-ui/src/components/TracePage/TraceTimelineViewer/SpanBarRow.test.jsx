@@ -143,11 +143,183 @@ describe('<SpanBarRow>', () => {
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
   });
 
+  it.each(['shiftKey', 'altKey', 'ctrlKey', 'metaKey'])(
+    'triggers onDetailToggled when Enter or Space is pressed with %s on span name',
+    modifier => {
+      const onDetailToggled = jest.fn();
+      render(<SpanBarRow {...defaultProps} onDetailToggled={onDetailToggled} />);
+      const spanName = screen.getByRole('switch');
+      fireEvent.keyDown(spanName, { key: 'Enter', [modifier]: true });
+      fireEvent.keyDown(spanName, { key: ' ', [modifier]: true });
+      expect(onDetailToggled).toHaveBeenCalledTimes(2);
+      expect(onDetailToggled).toHaveBeenCalledWith(spanID);
+    }
+  );
+
+  it('does not toggle children when an arrow is pressed on a focused span pill', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const { container } = render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow
+          {...defaultProps}
+          isChildrenExpanded={false}
+          onChildrenToggled={onChildrenToggled}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />
+      </div>,
+      { wrapper: SpanPillActionsProvider }
+    );
+    const pill = container.querySelector('.SpanBarRow--pillWrap');
+    fireEvent.keyDown(pill, { key: 'ArrowRight' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(1);
+  });
+
   it('does not trigger onDetailToggled for other keys on span name', () => {
     render(<SpanBarRow {...defaultProps} />);
     const spanName = screen.getByRole('switch');
     fireEvent.keyDown(spanName, { key: 'Tab' });
     expect(defaultProps.onDetailToggled).not.toHaveBeenCalled();
+  });
+
+  it('triggers onChildrenToggled and stops propagation when ArrowRight is pressed on a collapsed parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowRight' });
+    expect(onChildrenToggled).toHaveBeenCalledWith(defaultProps.span.spanID);
+    expect(parentKeyDown).not.toHaveBeenCalled();
+  });
+
+  it('triggers onChildrenToggled and stops propagation when ArrowLeft is pressed on an expanded parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: true,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowLeft' });
+    expect(onChildrenToggled).toHaveBeenCalledWith(defaultProps.span.spanID);
+    expect(parentKeyDown).not.toHaveBeenCalled();
+  });
+
+  it('does not trigger onChildrenToggled or stop propagation when ArrowRight is pressed on an expanded parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: true,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowRight' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not trigger onChildrenToggled or stop propagation when ArrowLeft is pressed on a collapsed parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowLeft' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not trigger onChildrenToggled or stop propagation when arrows are pressed on a leaf span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+      span: { ...defaultProps.span, hasChildren: false, childSpans: [] },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowRight' });
+    fireEvent.keyDown(spanName, { key: 'ArrowLeft' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['shiftKey', 'altKey', 'ctrlKey', 'metaKey'])(
+    'leaves modified arrows (%s) to the global shortcuts without toggling children',
+    modifier => {
+      const onChildrenToggled = jest.fn();
+      const parentKeyDown = jest.fn();
+      const collapsed = { ...defaultProps, isChildrenExpanded: false, onChildrenToggled };
+      const expanded = { ...collapsed, isChildrenExpanded: true };
+      const { rerender } = render(
+        <div onKeyDown={parentKeyDown}>
+          <SpanBarRow {...collapsed} span={{ ...defaultProps.span, hasChildren: true }} />
+        </div>
+      );
+      expect(fireEvent.keyDown(screen.getByRole('switch'), { key: 'ArrowRight', [modifier]: true })).toBe(
+        true
+      );
+      rerender(
+        <div onKeyDown={parentKeyDown}>
+          <SpanBarRow {...expanded} span={{ ...defaultProps.span, hasChildren: true }} />
+        </div>
+      );
+      expect(fireEvent.keyDown(screen.getByRole('switch'), { key: 'ArrowLeft', [modifier]: true })).toBe(
+        true
+      );
+      expect(onChildrenToggled).not.toHaveBeenCalled();
+      expect(parentKeyDown).toHaveBeenCalledTimes(2);
+    }
+  );
+
+  it('preserves visible text in accessible name without overriding via aria-label', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    expect(spanName).not.toHaveAttribute('aria-label');
   });
 
   it('triggers onChildrenToggled when SpanTreeOffset is clicked', () => {
