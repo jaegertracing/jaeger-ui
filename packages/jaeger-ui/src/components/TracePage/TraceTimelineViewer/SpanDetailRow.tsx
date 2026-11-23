@@ -6,9 +6,11 @@ import React from 'react';
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
+import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import TimelineRow from './TimelineRow';
 
 import { IOtelSpan, IAttributes, IEvent } from '../../../types/otel';
+import colorGenerator from '../../../utils/color-generator';
 import { Hyperlink } from '../../../types/hyperlink';
 
 import './SpanDetailRow.css';
@@ -26,6 +28,7 @@ type SpanDetailRowProps = {
   linksToggle: (spanID: string) => void;
   warningsToggle: (spanID: string) => void;
   span: IOtelSpan;
+  tree?: VisibleTree;
   attributesToggle: (spanID: string) => void;
   traceStartTime: number;
   focusSpan: (uiFind: string) => void;
@@ -56,6 +59,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     linksToggle,
     warningsToggle,
     span,
+    tree = RECORDED_TREE,
     attributesToggle,
     traceStartTime,
     focusSpan,
@@ -69,7 +73,13 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     <TimelineRow className="detail-row">
       {timelineBarsVisible && (
         <TimelineRow.Cell width={nameColumnWidth}>
-          <SpanTreeOffset span={span} showChildrenIcon={false} isDetailRow color={color} />
+          <SpanTreeOffset
+            span={span}
+            tree={tree}
+            showChildrenIcon={false}
+            isDetailRow
+            color={colorGenerator.getColorByKey(span.resource.serviceName)}
+          />
           <span>
             {/* This row only renders while the span's details are open, so the accent always
                 reads as expanded, and clicking it collapses them. */}

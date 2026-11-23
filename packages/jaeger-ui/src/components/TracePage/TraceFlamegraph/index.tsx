@@ -16,7 +16,7 @@ import { generateTableData } from './generateTableData';
 import FlamegraphToolbar, { ViewMode } from './FlamegraphToolbar';
 import FlamegraphTable from './FlamegraphTable';
 import FlamegraphContextMenu from './FlamegraphContextMenu';
-import FlamegraphTooltip from './FlamegraphTooltip';
+import FlamegraphTooltip, { TOOLTIP_CURSOR_OFFSET_PX } from './FlamegraphTooltip';
 import VerticalResizer from '../../common/VerticalResizer';
 
 import 'd3-flame-graph/dist/d3-flamegraph.css';
@@ -53,6 +53,7 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
   const searchActiveRef = useRef(false);
   const zoomedNodeRef = useRef<IFlameNode | null>(null);
   const hoveredFrameRef = useRef<Element | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   // Fraction of the content width allotted to the table in "both" mode (rest goes to the chart).
@@ -164,6 +165,11 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
             setTooltip(null);
           }
           return;
+        }
+        const tooltipEl = tooltipRef.current;
+        if (tooltipEl) {
+          tooltipEl.style.left = `${e.clientX + TOOLTIP_CURSOR_OFFSET_PX}px`;
+          tooltipEl.style.top = `${e.clientY + TOOLTIP_CURSOR_OFFSET_PX}px`;
         }
         if (target === hoveredFrameRef.current) return;
         hoveredFrameRef.current = target;
@@ -376,6 +382,7 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
       )}
       {tooltip && !contextMenu && (
         <FlamegraphTooltip
+          ref={tooltipRef}
           x={tooltip.x}
           y={tooltip.y}
           name={tooltip.name}

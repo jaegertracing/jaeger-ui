@@ -8,8 +8,8 @@ import { isWaEnabled, trackEvent } from '../../../utils/tracking';
 import { getToggleValue } from '../../../utils/tracking/common';
 
 // Analytics for timeline interactions. Call each tracker immediately before the matching
-// store action: it reads the pre-update state, as the Redux tracking middleware in
-// `duck.track.ts` does, to report whether the interaction opens or closes something.
+// store action: it reads the pre-update state to report whether the interaction opens or
+// closes something.
 
 const ACTION_RESIZE = 'resize';
 const ACTION_COLLAPSE_ALL = 'collapse-all';
@@ -30,8 +30,7 @@ export const CATEGORY_TAGS = `${CATEGORY_BASE}/tags`;
 export const CATEGORY_PANEL_MODE = `${CATEGORY_BASE}/panel-mode`;
 export const CATEGORY_TIMELINE_VISIBLE = `${CATEGORY_BASE}/timeline-visible`;
 
-// The Redux tracking middleware is only installed when web analytics is enabled, so a
-// reporter whose isEnabled() returns false never receives timeline events. Keep that gate.
+// A reporter whose isEnabled() returns false never receives timeline events.
 function track(...args: Parameters<typeof trackEvent>) {
   if (isWaEnabled) trackEvent(...args);
 }

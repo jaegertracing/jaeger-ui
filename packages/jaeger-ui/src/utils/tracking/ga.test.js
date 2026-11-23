@@ -44,7 +44,7 @@ describe('google analytics tracking', () => {
   describe('init', () => {
     it('check init function (no cookies)', () => {
       tracking.init();
-      expect(window.dataLayer).toEqual([
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
         ['js', new Date()],
         ['config', 'UA-123456'],
         [
@@ -61,7 +61,7 @@ describe('google analytics tracking', () => {
     it('check init function (with cookies)', () => {
       document.cookie = 'page=1;';
       tracking.init();
-      expect(window.dataLayer).toEqual([
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
         ['js', new Date()],
         ['config', 'UA-123456'],
         [
@@ -80,32 +80,38 @@ describe('google analytics tracking', () => {
   describe('trackPageView', () => {
     it('tracks a page view', () => {
       tracking.trackPageView('a', 'b');
-      expect(window.dataLayer).toEqual([['event', 'page_view', { page_path: 'ab' }]]);
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
+        ['event', 'page_view', { page_path: 'ab' }],
+      ]);
     });
 
     it('ignores search when it is falsy', () => {
       tracking.trackPageView('a');
-      expect(window.dataLayer).toEqual([['event', 'page_view', { page_path: 'a' }]]);
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
+        ['event', 'page_view', { page_path: 'a' }],
+      ]);
     });
   });
 
   describe('trackError', () => {
     it('tracks an error', () => {
       tracking.trackError('a');
-      expect(window.dataLayer).toEqual([
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
         ['event', 'exception', { description: expect.any(String), fatal: false }],
       ]);
     });
 
     it('ensures "jaeger" is prepended', () => {
       tracking.trackError('a');
-      expect(window.dataLayer).toEqual([['event', 'exception', { description: 'jaeger/a', fatal: false }]]);
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
+        ['event', 'exception', { description: 'jaeger/a', fatal: false }],
+      ]);
     });
 
     it('truncates if needed', () => {
       const str = `jaeger/${getStr(200)}`;
       tracking.trackError(str);
-      expect(window.dataLayer).toEqual([
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
         ['event', 'exception', { description: str.slice(0, 149), fatal: false }],
       ]);
     });
@@ -116,7 +122,7 @@ describe('google analytics tracking', () => {
       const category = 'jaeger/some-category';
       const action = 'some-action';
       tracking.trackEvent(category, action);
-      expect(window.dataLayer).toEqual([
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
         [
           'event',
           'some-action',
@@ -131,13 +137,15 @@ describe('google analytics tracking', () => {
       const category = 'some-category';
       const action = 'some-action';
       tracking.trackEvent(category, action);
-      expect(window.dataLayer).toEqual([['event', 'some-action', { event_category: `jaeger/${category}` }]]);
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
+        ['event', 'some-action', { event_category: `jaeger/${category}` }],
+      ]);
     });
 
     it('truncates values, if needed', () => {
       const str = `jaeger/${getStr(600)}`;
       tracking.trackEvent(str, str, str);
-      expect(window.dataLayer).toEqual([
+      expect(window.dataLayer.map(command => Array.from(command))).toEqual([
         [
           'event',
           str.slice(0, 499),
@@ -154,7 +162,7 @@ describe('google analytics tracking', () => {
     window.onunhandledrejection({
       reason: new Error('abc'),
     });
-    expect(window.dataLayer).toEqual([
+    expect(window.dataLayer.map(command => Array.from(command))).toEqual([
       ['event', 'exception', { description: expect.any(String), fatal: false }],
       [
         'event',

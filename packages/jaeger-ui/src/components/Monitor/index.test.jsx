@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 import store from '../../utils/storage';
 import MonitorATMPage from '.';
 import getConfig from '../../utils/config/get-config';
-import { serviceMetrics, serviceOpsMetrics, originInitialState } from '../../reducers/metrics.mock';
+import { serviceMetrics, serviceOpsMetrics, originInitialState } from './metrics.mock';
 
 vi.mock('../../utils/config/get-config', () => ({
   default: jest.fn(() => ({

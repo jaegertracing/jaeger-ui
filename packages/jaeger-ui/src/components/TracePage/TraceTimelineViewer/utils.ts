@@ -61,13 +61,20 @@ export function isErrorSpan(span: IOtelSpan): boolean {
  * @param      {number}       parentSpanIndex  The index of the parent span - only
  *                                             subsequent spans with depth less than
  *                                             the parent span will be checked.
+ * @param      {Set<string>}  [skipIDs]        Descendants to leave out, such as the spans the
+ *                                             filter hides in lift mode, whose errors the
+ *                                             row reports as hidden errors.
  * @return     {boolean}      Returns `true` if a descendant contains an error status.
  */
-export function spanContainsErredSpan(spans: ReadonlyArray<IOtelSpan>, parentSpanIndex: number): boolean {
+export function spanContainsErredSpan(
+  spans: ReadonlyArray<IOtelSpan>,
+  parentSpanIndex: number,
+  skipIDs?: ReadonlySet<string>
+): boolean {
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
-    if (isErrorSpan(spans[i])) {
+    if (isErrorSpan(spans[i]) && !skipIDs?.has(spans[i].spanID)) {
       return true;
     }
   }

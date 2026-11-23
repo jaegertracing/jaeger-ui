@@ -11,6 +11,7 @@ import DetailState from '../SpanDetail/DetailState';
 import * as track from '../store.track';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER } from '../../spanFilter';
 
 vi.mock('../SpanDetail', () =>
   mockDefault(
@@ -31,6 +32,7 @@ vi.mock('../store.track');
 
 const mockZustandState = vi.hoisted(() => ({
   detailStates: new Map(),
+  spanFilter: { clauses: [], treeMode: 'remove' },
   detailLogItemToggle: jest.fn(),
   detailLogsToggle: jest.fn(),
   detailProcessToggle: jest.fn(),
@@ -65,6 +67,7 @@ describe('<SpanDetailSidePanelImpl>', () => {
     };
     // reset Zustand mock state
     mockZustandState.detailStates = new Map();
+    mockZustandState.spanFilter = EMPTY_SPAN_FILTER;
     vi.clearAllMocks();
     Object.values(mockZustandState).forEach(v => typeof v === 'function' && v.mockReset?.());
   });
@@ -84,6 +87,19 @@ describe('<SpanDetailSidePanelImpl>', () => {
     mockZustandState.detailStates = new Map([[secondSpan.spanID, new DetailState()]]);
     render(<SpanDetailSidePanelImpl {...baseProps} />);
     expect(screen.getByTestId('span-detail-mock').dataset.spanId).toBe(secondSpan.spanID);
+  });
+
+  it('falls back to the first span the filter shows, and to none when it hides every span', () => {
+    const hideRoot = { verb: 'hide', criterion: { shape: 'text', text: trace.spans[0].spanID } };
+    mockZustandState.spanFilter = { clauses: [hideRoot], treeMode: 'lift' };
+    const { container, unmount } = render(<SpanDetailSidePanelImpl {...baseProps} />);
+    expect(screen.getByTestId('span-detail-mock').dataset.spanId).toBe(trace.spans[1].spanID);
+    unmount();
+    // In remove mode a hidden root takes the whole trace with it.
+    mockZustandState.spanFilter = { clauses: [hideRoot], treeMode: 'remove' };
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    expect(container.firstChild).toBeNull();
+    expect(screen.queryByTestId('span-detail-mock')).toBeNull();
   });
 
   it('returns null when trace has no spans', () => {

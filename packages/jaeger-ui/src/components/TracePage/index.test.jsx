@@ -5,13 +5,10 @@ import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 
 import {
   computeAdjustedRange,
   makeShortcutCallbacks,
-  mapStateToProps,
   shortcutConfig,
   TracePageImpl as TracePage,
   TracePageRoute,
@@ -26,6 +23,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER, GENAI_VIEW_FILTER, withHiddenServices } from './spanFilter';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import { queryClient } from '../../query/app-query-client';
@@ -34,11 +32,18 @@ import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
 
 let capturedHeaderProps = {};
+// The view type of every header render, in order, so that a test can assert what the first render
+// with the trace showed and not only where the page settled.
+let renderedViewTypes = [];
 let capturedArchiveNotifierProps = {};
 let capturedGraphProps = {};
 
+let capturedSpanPillActions = null;
+
 vi.mock('./TraceTimelineViewer', async () => {
+  const { SpanPillActionsContext } = await import('./TraceTimelineViewer/spanPillActions');
   return mockDefault(function MockTraceTimelineViewer() {
+    capturedSpanPillActions = React.useContext(SpanPillActionsContext);
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
   });
 });
@@ -125,7 +130,7 @@ const {
   mockSubmitTraceToArchive,
   mockAcknowledge,
   mockSetDetailPanelMode,
-  mockLayoutPrefsStore,
+  mockDisplayedLayoutStore,
   mockTraceTimelineStore,
   useEmbeddedStateMock,
   useTraceMock,
@@ -134,14 +139,17 @@ const {
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
   mockSetDetailPanelMode: jest.fn(),
-  mockLayoutPrefsStore: {
+  mockDisplayedLayoutStore: {
     detailPanelMode: 'inline',
     timelineBarsVisible: true,
     setTimelineBarsVisible: jest.fn(),
   },
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
-    prunedServices: new Set(),
+    clearTrace: jest.fn(),
+    setSpanFilter: jest.fn(),
+    detailStates: new Map(),
+    spanFilter: { clauses: [], treeMode: 'lift' },
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
@@ -169,8 +177,9 @@ vi.mock('./TraceTimelineViewer/store', () => {
   const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
   useTraceTimelineStore.getState = () => mockTraceTimelineStore;
   return {
-    useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+    useDisplayedLayoutStore: jest.fn(selector => selector(mockDisplayedLayoutStore)),
     useTraceTimelineStore,
+    getSelectedSpanID: () => null,
     setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
     SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
     SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
@@ -185,6 +194,7 @@ vi.mock('./TracePageHeader', async () => {
   return {
     default: forwardRef(function MockTracePageHeader(props, ref) {
       capturedHeaderProps = { ...props, ref };
+      renderedViewTypes.push(props.viewType);
       return (
         <div className="TracePageHeader">
           {!props.hideSummary && <div className="TracePageHeader--overviewItems" />}
@@ -196,10 +206,14 @@ vi.mock('./TracePageHeader', async () => {
 });
 
 const mockNavigate = jest.fn();
+// The span filter hook reads the URL through useLocation; the tests render TracePage with a
+// location prop and mostly without a Router, so the hook sees this fixed location.
+const mockLocation = { pathname: '/trace/abc', search: '', state: null };
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
+    useLocation: () => mockLocation,
     useNavigate: () => mockNavigate,
   };
 });
@@ -253,6 +267,7 @@ describe('<TracePage>', () => {
     useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
     ScrollManager.mockClear();
     capturedHeaderProps = {};
+    renderedViewTypes = [];
     capturedArchiveNotifierProps = {};
     capturedGraphProps = {};
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
@@ -266,18 +281,15 @@ describe('<TracePage>', () => {
         .mockReturnValue({ archiveEnabled: true, traceTimeline: { enableSidePanel: true } });
       const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
       queryClient.setQueryData(['uploadedSummaries'], []);
-      const store = createStore(() => ({ traceTimeline: {} }));
       const location = {
         pathname: `/trace/${trace.traceID}`,
         search: '?uiFind=error',
         state: { fromSearch: '/search?service=frontend' },
       };
       const { rerender } = render(
-        <Provider store={store}>
-          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
-            <TracePageRoute params={{ id: trace.traceID }} location={location} />
-          </MemoryRouter>
-        </Provider>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
       );
       expect(screen.getByTestId('archive-notifier')).toBeInTheDocument();
       expect(capturedHeaderProps.enableSidePanel).toBe(true);
@@ -300,11 +312,9 @@ describe('<TracePage>', () => {
         error: null,
       });
       rerender(
-        <Provider store={store}>
-          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
-            <TracePageRoute params={{ id: trace.traceID }} location={location} />
-          </MemoryRouter>
-        </Provider>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
       );
       expect(capturedHeaderProps.reloadingTrace).toBe(true);
       expect(scrollPageMod.cancel).not.toHaveBeenCalled();
@@ -320,11 +330,9 @@ describe('<TracePage>', () => {
       });
       useTraceMock.mockReturnValue({ data: refreshedTrace, isPending: false, isError: false, error: null });
       rerender(
-        <Provider store={store}>
-          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
-            <TracePageRoute params={{ id: trace.traceID }} location={location} />
-          </MemoryRouter>
-        </Provider>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
       );
       expect(capturedHeaderProps.trace).toBe(refreshedTrace);
       expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
@@ -336,15 +344,12 @@ describe('<TracePage>', () => {
 
   it('hides the reload action for an uploaded trace', () => {
     const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
-    const store = createStore(() => ({ traceTimeline: {} }));
     queryClient.setQueryData(['uploadedSummaries'], [{ traceID: trace.traceID }]);
     const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
     render(
-      <Provider store={store}>
-        <MemoryRouter initialEntries={[location.pathname]}>
-          <TracePageRoute params={{ id: trace.traceID }} location={location} />
-        </MemoryRouter>
-      </Provider>
+      <MemoryRouter initialEntries={[location.pathname]}>
+        <TracePageRoute params={{ id: trace.traceID }} location={location} />
+      </MemoryRouter>
     );
 
     expect(capturedHeaderProps.onReloadTrace).toBeUndefined();
@@ -354,15 +359,12 @@ describe('<TracePage>', () => {
 
   it('ignores a reload issued after the trace was uploaded', () => {
     const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
-    const store = createStore(() => ({ traceTimeline: {} }));
     queryClient.setQueryData(['uploadedSummaries'], []);
     const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
     render(
-      <Provider store={store}>
-        <MemoryRouter initialEntries={[location.pathname]}>
-          <TracePageRoute params={{ id: trace.traceID }} location={location} />
-        </MemoryRouter>
-      </Provider>
+      <MemoryRouter initialEntries={[location.pathname]}>
+        <TracePageRoute params={{ id: trace.traceID }} location={location} />
+      </MemoryRouter>
     );
 
     const { onReloadTrace } = capturedHeaderProps;
@@ -418,12 +420,18 @@ describe('<TracePage>', () => {
         trackFocusSpy.mockReset();
       });
 
-      it('updates Zustand when props.trace.data is present', () => {
+      it('updates Zustand with the highlighted span set when props.trace.data is present', () => {
         const uiFind = 'test ui find';
-        render(<TracePage {...defaultProps} uiFind={uiFind} />);
-        capturedHeaderProps.focusUiFindMatches();
-        expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(trace, uiFind);
-        expect(trackFocusSpy).toHaveBeenCalledTimes(1);
+        const matched = new Set([trace.spans[0].spanID]);
+        filterSpansSpy.mockReturnValue(matched);
+        try {
+          render(<TracePage {...defaultProps} uiFind={uiFind} />);
+          capturedHeaderProps.focusUiFindMatches();
+          expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(trace, matched);
+          expect(trackFocusSpy).toHaveBeenCalledTimes(1);
+        } finally {
+          filterSpansSpy.mockImplementation(() => new Set());
+        }
       });
 
       it('handles when trace data is absent', () => {
@@ -495,6 +503,208 @@ describe('<TracePage>', () => {
     rerender(<TracePage {...defaultProps} params={{ id: 'different-trace-id' }} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, otherTrace.spans);
+  });
+
+  it('excludes the spans of a pruned service and their descendants from the search matches', async () => {
+    const { default: realFilterSpans } = await vi.importActual('../../utils/filter-spans');
+    filterSpansSpy.mockImplementation(realFilterSpans);
+    const raw = traceGenerator.trace({ numberOfSpans: 3 });
+    // Every span matches the search; the second span's service is pruned, and the third span is
+    // its child, so only the first span stays in the count.
+    // The three spans get distinct services, so the chain root -> pruned -> grandchild is the same
+    // on every run.
+    raw.processes = {
+      p0: { processID: 'p0', serviceName: 'svc-root', tags: [] },
+      p1: { processID: 'p1', serviceName: 'svc-pruned', tags: [] },
+      p2: { processID: 'p2', serviceName: 'svc-grandchild', tags: [] },
+    };
+    raw.spans.forEach((span, i) => {
+      span.operationName = 'everywhere';
+      span.processID = `p${i}`;
+    });
+    raw.spans[1].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[0].spanID }];
+    raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
+    const localTrace = transformTraceData(raw).asOtelTrace();
+    useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
+    mockTraceTimelineStore.spanFilter = withHiddenServices(
+      { ...EMPTY_SPAN_FILTER, treeMode: 'remove' },
+      new Set(['svc-pruned'])
+    );
+
+    render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="everywhere" />);
+
+    // Span 1 and its descendant are hidden, so only the root span stays in the count.
+    expect(capturedHeaderProps.resultCount).toBe(1);
+    mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    filterSpansSpy.mockImplementation(() => new Set());
+  });
+
+  it('hands the header the funnel and disables the keep entry in remove mode', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
+    try {
+      render(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.keepDisabledReason).toMatch(/Lift to its parent/);
+      expect(capturedHeaderProps.spanFilterNode).toBeTruthy();
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    }
+  });
+
+  it('enables the keep entry in lift mode while the text matches a span', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'lift' };
+    filterSpansSpy.mockImplementation(() => new Set([trace.spans[1].spanID]));
+    try {
+      render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.keepDisabledReason).toBeNull();
+      expect(capturedHeaderProps.hideDisabledReason).toBeNull();
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('disables the keep entry when the text matches no span, and the hide entry when it matches every span', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'lift' };
+    try {
+      const { unmount } = render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.keepDisabledReason).toMatch(/leave no span/);
+      expect(capturedHeaderProps.hideDisabledReason).toBeNull();
+      unmount();
+      filterSpansSpy.mockImplementation(() => new Set(trace.spans.map(s => s.spanID)));
+      render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.hideDisabledReason).toMatch(/leave no span/);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('counts a root the filter already hides as covered by the hide entry guard', () => {
+    // Two roots: the first is hidden by its kind, and the text matches only the second.
+    const raw = traceGenerator.trace({ numberOfSpans: 3 });
+    raw.spans[1].references = [];
+    raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
+    raw.spans.forEach((span, i) => {
+      span.tags = span.tags.filter(t => t.key !== 'span.kind');
+      span.tags.push({ key: 'span.kind', type: 'string', value: i === 0 ? 'producer' : 'server' });
+    });
+    const localTrace = transformTraceData(raw).asOtelTrace();
+    expect(localTrace.rootSpans).toHaveLength(2);
+    useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
+    mockTraceTimelineStore.spanFilter = {
+      treeMode: 'remove',
+      clauses: [{ verb: 'hide', criterion: { shape: 'set', property: 'kind', values: ['producer'] } }],
+    };
+    filterSpansSpy.mockImplementation(() => new Set([raw.spans[1].spanID]));
+    try {
+      render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="x" />);
+      expect(capturedHeaderProps.hideDisabledReason).toMatch(/leave no span/);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('disables the hide entry in remove mode when the text matches every root span', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
+    filterSpansSpy.mockImplementation(() => new Set(trace.rootSpans.map(s => s.spanID)));
+    try {
+      render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.hideDisabledReason).toMatch(/leave no span/);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('counts every text match in the statistics view, which draws the whole trace', () => {
+    const [root] = trace.spans;
+    mockTraceTimelineStore.spanFilter = {
+      clauses: [
+        {
+          verb: 'hide',
+          criterion: { shape: 'set', property: 'service', values: [root.resource.serviceName] },
+        },
+      ],
+      treeMode: 'lift',
+    };
+    // The text matches the root, which the filter hides in the timeline.
+    const textMatches = trace.spans.slice(0, 3);
+    filterSpansSpy.mockReturnValue(new Set(textMatches.map(s => s.spanID)));
+    try {
+      render(<TracePage {...defaultProps} uiFind="text" />);
+      const shown = textMatches.filter(s => s.resource.serviceName !== root.resource.serviceName);
+      expect(capturedHeaderProps.resultCount).toBe(shown.length);
+      expect(capturedHeaderProps.hiddenResultCount).toBe(textMatches.length - shown.length);
+      act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics));
+      expect(capturedHeaderProps.resultCount).toBe(textMatches.length);
+      expect(capturedHeaderProps.hiddenResultCount).toBe(0);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    }
+  });
+
+  it('hands the header no funnel in the graph view, which draws the whole trace', () => {
+    render(<TracePage {...defaultProps} />);
+    expect(capturedHeaderProps.spanFilterNode).toBeTruthy();
+    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph));
+    expect(capturedHeaderProps.spanFilterNode).toBeNull();
+  });
+
+  it('provides the timeline with pill actions that write the search text and the filter', () => {
+    const pill = {
+      label: 'http.status_code',
+      attrKey: 'http.status_code',
+      attrMatchText: '200',
+      value: '200',
+    };
+    // The page draws the timeline only once the header has a height.
+    const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+    render(<TracePage {...defaultProps} />);
+    clientHeightSpy.mockRestore();
+    capturedSpanPillActions.applyVerb('find', pill);
+    expect(updateUiFindSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ uiFind: 'http.status_code=200' })
+    );
+    capturedSpanPillActions.applyVerb('hide', pill);
+    expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith({
+      clauses: [{ verb: 'hide', criterion: { shape: 'attr', text: 'http.status_code:200' } }],
+      treeMode: 'lift',
+    });
+  });
+
+  it('does not add a second copy of a chip the filter already has', () => {
+    mockTraceTimelineStore.spanFilter = {
+      clauses: [{ verb: 'hide', criterion: { shape: 'text', text: 'auth' } }],
+      treeMode: 'remove',
+    };
+    try {
+      render(<TracePage {...defaultProps} uiFind="auth" />);
+      capturedHeaderProps.onConvertSearch('hide');
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith(
+        mockTraceTimelineStore.spanFilter
+      );
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    }
+  });
+
+  it('turns the search text into a hide chip and drops the text in one navigation', () => {
+    mockLocation.search = '?uiFind=auth';
+    try {
+      render(<TracePage {...defaultProps} uiFind="auth" />);
+      capturedHeaderProps.onConvertSearch('hide');
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith({
+        clauses: [{ verb: 'hide', criterion: { shape: 'text', text: 'auth' } }],
+        treeMode: 'lift',
+      });
+      expect(mockNavigate).toHaveBeenLastCalledWith(
+        expect.objectContaining({ pathname: '/trace/abc', search: '?f=h%3Atext%3Aauth' }),
+        expect.anything()
+      );
+    } finally {
+      mockLocation.search = '';
+    }
   });
 
   it('updates search matches when a same-ID reload adds a matching span', async () => {
@@ -689,6 +899,24 @@ describe('<TracePage>', () => {
     expect(destroyMock).toHaveBeenCalled();
   });
 
+  it('clears the trace from the timeline store on unmount, so reopening it is an open', () => {
+    const { unmount } = render(<TracePage {...defaultProps} />);
+    expect(mockTraceTimelineStore.clearTrace).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(mockTraceTimelineStore.clearTrace).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the trace in the timeline store when the user switches views and back', () => {
+    render(<TracePage {...defaultProps} />);
+
+    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics));
+    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer));
+
+    expect(mockTraceTimelineStore.clearTrace).not.toHaveBeenCalled();
+  });
+
   it('sets up keyboard shortcuts including adjViewRange in componentDidMount', () => {
     mergeShortcuts.mockClear();
     track.trackRange.mockClear();
@@ -788,7 +1016,7 @@ describe('<TracePage>', () => {
 
     describe('calculates hideMap correctly', () => {
       afterEach(() => {
-        mockLayoutPrefsStore.timelineBarsVisible = true;
+        mockDisplayedLayoutStore.timelineBarsVisible = true;
       });
 
       it('is false on the timeline view', () => {
@@ -822,7 +1050,7 @@ describe('<TracePage>', () => {
       });
 
       it('is true if timeline bars are hidden', () => {
-        mockLayoutPrefsStore.timelineBarsVisible = false;
+        mockDisplayedLayoutStore.timelineBarsVisible = false;
         renderWithRouter(<TracePage {...defaultProps} />);
 
         const spanGraph = screen.queryByTestId('span-graph');
@@ -1038,11 +1266,11 @@ describe('<TracePage>', () => {
   describe('layout toggle handlers', () => {
     beforeEach(() => {
       mockSetDetailPanelMode.mockClear();
-      mockLayoutPrefsStore.setTimelineBarsVisible.mockClear();
+      mockDisplayedLayoutStore.setTimelineBarsVisible.mockClear();
     });
 
     it('calls setDetailPanelMode (Zustand + tracking) with sidepanel when detailPanelMode is inline', () => {
-      mockLayoutPrefsStore.detailPanelMode = 'inline';
+      mockDisplayedLayoutStore.detailPanelMode = 'inline';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
@@ -1050,7 +1278,7 @@ describe('<TracePage>', () => {
     });
 
     it('calls setDetailPanelMode (Zustand + tracking) with inline when detailPanelMode is sidepanel', () => {
-      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
@@ -1058,18 +1286,18 @@ describe('<TracePage>', () => {
     });
 
     it('calls setTimelineBarsVisible (Zustand + tracking) with false when timelineBarsVisible is true', () => {
-      mockLayoutPrefsStore.timelineBarsVisible = true;
+      mockDisplayedLayoutStore.timelineBarsVisible = true;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
+      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
     it('calls setTimelineBarsVisible (Zustand + tracking) with true when timelineBarsVisible is false', () => {
-      mockLayoutPrefsStore.timelineBarsVisible = false;
+      mockDisplayedLayoutStore.timelineBarsVisible = false;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
+      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
@@ -1274,6 +1502,24 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
 
+    it('is in the GenAI view from the first render with the trace, with no provisional timeline render', () => {
+      // A timeline render before the switch would resolve the filter without the view default, and a
+      // span hidden by that filter would lose the focus the URL asked for.
+      render(<TracePage {...genAiProps} />);
+      expect(renderedViewTypes.length).toBeGreaterThan(0);
+      expect(new Set(renderedViewTypes)).toEqual(new Set([ETraceViewType.GenAITimelineViewer]));
+    });
+
+    it('applies the GenAI view default filter while the URL is silent', () => {
+      render(<TracePage {...genAiProps} />);
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith(GENAI_VIEW_FILTER);
+      // The store mock does not hold writes, so the switch back starts with the default in the store.
+      mockTraceTimelineStore.spanFilter = GENAI_VIEW_FILTER;
+      act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer));
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith(EMPTY_SPAN_FILTER);
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    });
+
     it('selects the GenAI view when the initial trace fetch completes', () => {
       useTraceMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
       const { rerender } = render(<TracePage {...genAiProps} />);
@@ -1337,6 +1583,20 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
     });
 
+    it('applies no GenAI view default to a trace without GenAI spans', () => {
+      const otelTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
+      otelTrace.isGenAITrace = false;
+      useTraceMock.mockReturnValue({ data: otelTrace, isPending: false, isError: false, error: null });
+
+      render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
+      act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.GenAITimelineViewer));
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+      // The store mock holds the empty filter, which is what a silent URL resolves to without a
+      // default, so the hook has nothing to write.
+      expect(mockTraceTimelineStore.spanFilter).toEqual(EMPTY_SPAN_FILTER);
+      expect(mockTraceTimelineStore.setSpanFilter).not.toHaveBeenCalled();
+    });
+
     it('auto-switches when isGenAITrace is true, despite no gen_ai.* attribute', () => {
       const raw = traceGenerator.trace({});
       raw.spans[0].tags.push({ key: 'db.system', type: 'string', value: 'vector' });
@@ -1395,25 +1655,33 @@ describe('<TracePage>', () => {
   });
 });
 
-describe('mapStateToProps()', () => {
-  let state;
-  beforeEach(() => {
-    state = {
-      trace: {
-        search: { results: [], state: undefined },
-      },
-      router: {
-        location: {
-          search: '',
-          state: null,
-        },
-      },
-      traceTimeline: {},
-    };
-  });
+describe('TracePageRoute URL search', () => {
+  it('updates uiFind when the location prop search changes without a Redux provider', () => {
+    const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
+    const trace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
+    useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+    const params = { id: trace.traceID };
+    const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
+    const { rerender } = render(
+      <MemoryRouter>
+        <TracePageRoute params={params} location={location} />
+      </MemoryRouter>
+    );
+    expect(capturedHeaderProps.textFilter).toBeUndefined();
 
-  it('returns uiFind derived from the URL search string in ownProps', () => {
-    expect(mapStateToProps(state, { search: '' })).toEqual({ uiFind: undefined });
-    expect(mapStateToProps(state, { search: '?uiFind=my-service' })).toEqual({ uiFind: 'my-service' });
+    rerender(
+      <MemoryRouter>
+        <TracePageRoute params={params} location={{ ...location, search: '?uiFind=my-service' }} />
+      </MemoryRouter>
+    );
+    expect(capturedHeaderProps.textFilter).toBe('my-service');
+
+    rerender(
+      <MemoryRouter>
+        <TracePageRoute params={params} location={location} />
+      </MemoryRouter>
+    );
+    expect(capturedHeaderProps.textFilter).toBeUndefined();
+    configSpy.mockRestore();
   });
 });

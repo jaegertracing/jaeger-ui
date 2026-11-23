@@ -6,9 +6,9 @@ import { cleanup, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import queryString from 'query-string';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Routes, Route } from 'react-router-dom';
 
-import { mapStateToProps, TraceDiffImpl } from './TraceDiff';
+import TraceDiff, { getTraceDiffProps, TraceDiffImpl } from './TraceDiff';
 import * as TraceDiffUrl from './url';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { fetchedState } from '../../constants';
@@ -16,9 +16,9 @@ import { fetchedState } from '../../constants';
 const mockNavigate = jest.fn();
 
 vi.mock('react-router-dom', async () => {
-  const { BrowserRouter: ActualBrowserRouter } = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual('react-router-dom');
   return {
-    BrowserRouter: ActualBrowserRouter,
+    ...actual,
     useNavigate: () => mockNavigate,
   };
 });
@@ -96,6 +96,22 @@ describe('TraceDiff', () => {
 
   afterEach(() => {
     cleanup();
+  });
+
+  it('derives split trace IDs and a deduplicated cohort from the route without a Redux provider', () => {
+    render(
+      <MemoryRouter initialEntries={['/trace/first...second?cohort=first&cohort=third&cohort=third']}>
+        <Routes>
+          <Route path="/trace/:id" element={<TraceDiff />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(useTracesMock).toHaveBeenLastCalledWith(['first', 'second', 'third']);
+    expect(useTraceDiffStore.getState()).toMatchObject({
+      a: 'first',
+      b: 'second',
+      cohort: ['first', 'second', 'third'],
+    });
   });
 
   describe('syncStates', () => {
@@ -284,15 +300,14 @@ describe('TraceDiff', () => {
     });
   });
 
-  describe('mapStateToProps', () => {
-    const emptyState = {};
+  describe('getTraceDiffProps', () => {
     const getOwnProps = ({ a = defaultA, b = defaultB, cohortIds = defaultCohortIds } = {}) => ({
       params: { a, b },
       search: queryString.stringify({ cohort: cohortIds }),
     });
 
     it('gets a and b from ownProps', () => {
-      expect(mapStateToProps(emptyState, getOwnProps())).toEqual(
+      expect(getTraceDiffProps(getOwnProps())).toEqual(
         expect.objectContaining({
           a: defaultA,
           b: defaultB,
@@ -301,32 +316,20 @@ describe('TraceDiff', () => {
     });
 
     it('defaults cohort to empty array if a, b, and cohort are not available', () => {
-      expect(mapStateToProps(emptyState, getOwnProps({ a: null, b: null, cohortIds: [] })).cohort).toEqual(
-        []
-      );
+      expect(getTraceDiffProps(getOwnProps({ a: null, b: null, cohortIds: [] })).cohort).toEqual([]);
     });
 
     it('gets cohort from ownProps.search and ownProps.params', () => {
-      expect(mapStateToProps(emptyState, getOwnProps()).cohort).toEqual([
-        defaultA,
-        defaultB,
-        ...defaultCohortIds,
-      ]);
+      expect(getTraceDiffProps(getOwnProps()).cohort).toEqual([defaultA, defaultB, ...defaultCohortIds]);
     });
 
     it('filters falsy values from cohort', () => {
-      expect(mapStateToProps(emptyState, getOwnProps({ a: null })).cohort).toEqual([
-        defaultB,
-        ...defaultCohortIds,
-      ]);
+      expect(getTraceDiffProps(getOwnProps({ a: null })).cohort).toEqual([defaultB, ...defaultCohortIds]);
 
-      expect(mapStateToProps(emptyState, getOwnProps({ b: null })).cohort).toEqual([
-        defaultA,
-        ...defaultCohortIds,
-      ]);
+      expect(getTraceDiffProps(getOwnProps({ b: null })).cohort).toEqual([defaultA, ...defaultCohortIds]);
 
       const extendedCohort = [...defaultCohortIds, '', nonDefaultCohortId];
-      expect(mapStateToProps(emptyState, getOwnProps({ cohortIds: extendedCohort })).cohort).toEqual([
+      expect(getTraceDiffProps(getOwnProps({ cohortIds: extendedCohort })).cohort).toEqual([
         defaultA,
         defaultB,
         ...defaultCohortIds,
@@ -337,15 +340,15 @@ describe('TraceDiff', () => {
     it('filters redundant values from cohort', () => {
       const cohortWithExtra = [...defaultCohortIds, nonDefaultCohortId];
       expect(
-        mapStateToProps(emptyState, getOwnProps({ a: nonDefaultCohortId, cohortIds: cohortWithExtra })).cohort
+        getTraceDiffProps(getOwnProps({ a: nonDefaultCohortId, cohortIds: cohortWithExtra })).cohort
       ).toEqual([nonDefaultCohortId, defaultB, ...defaultCohortIds]);
 
       expect(
-        mapStateToProps(emptyState, getOwnProps({ b: nonDefaultCohortId, cohortIds: cohortWithExtra })).cohort
+        getTraceDiffProps(getOwnProps({ b: nonDefaultCohortId, cohortIds: cohortWithExtra })).cohort
       ).toEqual([defaultA, nonDefaultCohortId, ...defaultCohortIds]);
 
       const cohortWithDuplicate = [...defaultCohortIds, nonDefaultCohortId, nonDefaultCohortId];
-      expect(mapStateToProps(emptyState, getOwnProps({ cohortIds: cohortWithDuplicate })).cohort).toEqual([
+      expect(getTraceDiffProps(getOwnProps({ cohortIds: cohortWithDuplicate })).cohort).toEqual([
         defaultA,
         defaultB,
         ...defaultCohortIds,
@@ -357,20 +360,20 @@ describe('TraceDiff', () => {
       const makeIdProps = id => ({ params: { id } });
 
       it('splits params.id on "..." to extract a and b, falling back to undefined for empty sides', () => {
-        const { a, b } = mapStateToProps(emptyState, makeIdProps(`${defaultA}...${defaultB}`));
+        const { a, b } = getTraceDiffProps(makeIdProps(`${defaultA}...${defaultB}`));
         expect(a).toBe(defaultA);
         expect(b).toBe(defaultB);
 
-        expect(mapStateToProps(emptyState, makeIdProps(`${defaultA}...`)).b).toBeUndefined();
-        expect(mapStateToProps(emptyState, makeIdProps(`...${defaultB}`)).a).toBeUndefined();
+        expect(getTraceDiffProps(makeIdProps(`${defaultA}...`)).b).toBeUndefined();
+        expect(getTraceDiffProps(makeIdProps(`...${defaultB}`)).a).toBeUndefined();
       });
 
       it('skips id parsing when params.a is already set or id has no "..."', () => {
-        const withA = mapStateToProps(emptyState, { params: { a: defaultA, id: `other...${defaultB}` } });
+        const withA = getTraceDiffProps({ params: { a: defaultA, id: `other...${defaultB}` } });
         expect(withA.a).toBe(defaultA);
         expect(withA.b).toBeUndefined();
 
-        const noSep = mapStateToProps(emptyState, makeIdProps(defaultA));
+        const noSep = getTraceDiffProps(makeIdProps(defaultA));
         expect(noSep.a).toBeUndefined();
         expect(noSep.b).toBeUndefined();
       });
