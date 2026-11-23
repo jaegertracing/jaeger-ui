@@ -742,13 +742,13 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const header = screen.getByText('Tool Call: get_weather').closest('[role="switch"]');
-    expect(header).toHaveAttribute('aria-checked', 'true');
+    const header = screen.getByText('Tool Call: get_weather').closest('[role="button"]');
+    expect(header).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Arguments')).toBeInTheDocument();
     expect(screen.getByText('Result')).toBeInTheDocument();
 
     fireEvent.click(header!);
-    expect(header).toHaveAttribute('aria-checked', 'false');
+    expect(header).toHaveAttribute('aria-expanded', 'false');
     expect(container.querySelector('.KeyValueTable')).not.toBeInTheDocument();
   });
 

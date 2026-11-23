@@ -587,7 +587,7 @@ describe('<SpanBarRow>', () => {
     it('visually hides the service name when showServiceName is false', () => {
       render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
       expect(screen.getByText('service-name')).toHaveClass('SpanBarRow--visuallyHidden');
-      expect(screen.getByRole('switch', { name: /service-name\s*op-name/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /service-name\s*op-name/ })).toBeInTheDocument();
     });
 
     it('still shows the operation name when service name is hidden', () => {
