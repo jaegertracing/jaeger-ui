@@ -23,7 +23,7 @@ function consoleAnalytics(config, versionShort, versionLong) {
       log('log', 'init — version:', versionShort + ' / ' + versionLong);
     },
 
-    // Return true to activate the Redux tracking middleware.
+    // Return true to activate the analytics trackers.
     isEnabled: function () {
       return true;
     },

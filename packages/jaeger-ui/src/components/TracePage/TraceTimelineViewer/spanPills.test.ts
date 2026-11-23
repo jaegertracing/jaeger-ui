@@ -75,8 +75,18 @@ describe('spanPills', () => {
   describe('getSpanPillsForSpan', () => {
     it('maps http.status_code and http.response.status_code to pills', () => {
       const [s1, s2, s3] = httpStatusTrace.spans;
-      expect(getSpanPillsForSpan(s1)).toEqual([{ label: 'http.status_code', value: '200' }]);
-      expect(getSpanPillsForSpan(s2)).toEqual([{ label: 'http.status_code', value: '503', isError: true }]);
+      expect(getSpanPillsForSpan(s1)).toEqual([
+        { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '200', value: '200' },
+      ]);
+      expect(getSpanPillsForSpan(s2)).toEqual([
+        {
+          label: 'http.status_code',
+          attrKey: 'http.response.status_code',
+          attrMatchText: '503',
+          value: '503',
+          isError: true,
+        },
+      ]);
       expect(getSpanPillsForSpan(s3)).toEqual([]);
     });
 
@@ -85,7 +95,9 @@ describe('spanPills', () => {
         { key: 'http.status_code', value: '200' },
         { key: 'http.response.status_code', value: '500' },
       ]);
-      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'http.status_code', value: '200' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '200', value: '200' },
+      ]);
     });
 
     it('falls back to http.response.status_code when http.status_code is empty', () => {
@@ -93,27 +105,46 @@ describe('spanPills', () => {
         { key: 'http.status_code', value: '' },
         { key: 'http.response.status_code', value: '503' },
       ]);
-      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'http.status_code', value: '503', isError: true }]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        {
+          label: 'http.status_code',
+          attrKey: 'http.response.status_code',
+          attrMatchText: '503',
+          value: '503',
+          isError: true,
+        },
+      ]);
     });
 
     it('sets isError for 5xx status codes only', () => {
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: '500' }]))).toEqual([
-        { label: 'http.status_code', value: '500', isError: true },
+        {
+          label: 'http.status_code',
+          attrKey: 'http.status_code',
+          attrMatchText: '500',
+          value: '500',
+          isError: true,
+        },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: '404' }]))).toEqual([
-        { label: 'http.status_code', value: '404' },
+        { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '404', value: '404' },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 'not-a-number' }]))).toEqual([
-        { label: 'http.status_code', value: 'not-a-number' },
+        {
+          label: 'http.status_code',
+          attrKey: 'http.status_code',
+          attrMatchText: 'not-a-number',
+          value: 'not-a-number',
+        },
       ]);
     });
 
     it('maps db.system.name and db.system to pills', () => {
       expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system.name', value: 'postgresql' }]))).toEqual([
-        { label: 'db.system', value: 'postgresql' },
+        { label: 'db.system', attrKey: 'db.system.name', attrMatchText: 'postgresql', value: 'postgresql' },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: 'mysql' }]))).toEqual([
-        { label: 'db.system', value: 'mysql' },
+        { label: 'db.system', attrKey: 'db.system', attrMatchText: 'mysql', value: 'mysql' },
       ]);
     });
 
@@ -122,21 +153,30 @@ describe('spanPills', () => {
         { key: 'db.system.name', value: 'postgresql' },
         { key: 'db.system', value: 'mysql' },
       ]);
-      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'db.system', value: 'postgresql' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'db.system', attrKey: 'db.system.name', attrMatchText: 'postgresql', value: 'postgresql' },
+      ]);
     });
 
     it('maps rpc.system.name and rpc.system to pills', () => {
       expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system.name', value: 'grpc' }]))).toEqual([
-        { label: 'rpc.system', value: 'grpc' },
+        { label: 'rpc.system', attrKey: 'rpc.system.name', attrMatchText: 'grpc', value: 'grpc' },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: 'grpc' }]))).toEqual([
-        { label: 'rpc.system', value: 'grpc' },
+        { label: 'rpc.system', attrKey: 'rpc.system', attrMatchText: 'grpc', value: 'grpc' },
       ]);
     });
 
     it('maps gen_ai.request.model to a pill', () => {
       const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]);
-      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        {
+          label: 'gen_ai.request.model',
+          attrKey: 'gen_ai.request.model',
+          attrMatchText: 'gpt-4o',
+          value: 'gpt-4o',
+        },
+      ]);
     });
 
     it('returns no pill when gen_ai.request.model is absent', () => {
@@ -151,12 +191,21 @@ describe('spanPills', () => {
 
     it('trims surrounding whitespace from gen_ai.request.model', () => {
       const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: '  gpt-4o  ' }]);
-      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        {
+          label: 'gen_ai.request.model',
+          attrKey: 'gen_ai.request.model',
+          attrMatchText: '  gpt-4o  ',
+          value: 'gpt-4o',
+        },
+      ]);
     });
 
     it('maps a non-string gen_ai.request.model value', () => {
       const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 42 }]);
-      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: '42' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'gen_ai.request.model', attrKey: 'gen_ai.request.model', attrMatchText: '42', value: '42' },
+      ]);
     });
 
     it('returns both pills when http status and gen_ai.request.model are both present', () => {
@@ -165,8 +214,19 @@ describe('spanPills', () => {
         { key: GEN_AI_REQUEST_MODEL, value: 'claude-3-haiku' },
       ]);
       expect(getSpanPillsForSpan(span)).toEqual([
-        { label: 'http.status_code', value: '500', isError: true },
-        { label: 'gen_ai.request.model', value: 'claude-3-haiku' },
+        {
+          label: 'http.status_code',
+          attrKey: 'http.status_code',
+          attrMatchText: '500',
+          value: '500',
+          isError: true,
+        },
+        {
+          label: 'gen_ai.request.model',
+          attrKey: 'gen_ai.request.model',
+          attrMatchText: 'claude-3-haiku',
+          value: 'claude-3-haiku',
+        },
       ]);
     });
 
@@ -177,18 +237,18 @@ describe('spanPills', () => {
         { key: 'db.system', value: 'mysql' },
       ]);
       expect(getSpanPillsForSpan(span)).toEqual([
-        { label: 'db.system', value: 'mysql' },
-        { label: 'http.status_code', value: '200' },
-        { label: 'http.method', value: 'GET' },
+        { label: 'db.system', attrKey: 'db.system', attrMatchText: 'mysql', value: 'mysql' },
+        { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '200', value: '200' },
+        { label: 'http.method', attrKey: 'http.method', attrMatchText: 'GET', value: 'GET' },
       ]);
     });
 
     it('maps http.method and falls back to http.request.method', () => {
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.method', value: 'POST' }]))).toEqual([
-        { label: 'http.method', value: 'POST' },
+        { label: 'http.method', attrKey: 'http.method', attrMatchText: 'POST', value: 'POST' },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.request.method', value: 'PUT' }]))).toEqual([
-        { label: 'http.method', value: 'PUT' },
+        { label: 'http.method', attrKey: 'http.request.method', attrMatchText: 'PUT', value: 'PUT' },
       ]);
       expect(
         getSpanPillsForSpan(
@@ -197,33 +257,49 @@ describe('spanPills', () => {
             { key: 'http.request.method', value: 'PUT' },
           ])
         )
-      ).toEqual([{ label: 'http.method', value: 'GET' }]);
+      ).toEqual([{ label: 'http.method', attrKey: 'http.method', attrMatchText: 'GET', value: 'GET' }]);
     });
 
     it('maps db.system and rpc.system pills', () => {
       expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: 'redis' }]))).toEqual([
-        { label: 'db.system', value: 'redis' },
+        { label: 'db.system', attrKey: 'db.system', attrMatchText: 'redis', value: 'redis' },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: 'grpc' }]))).toEqual([
-        { label: 'rpc.system', value: 'grpc' },
+        { label: 'rpc.system', attrKey: 'rpc.system', attrMatchText: 'grpc', value: 'grpc' },
       ]);
     });
 
     it('formats non-string attribute values', () => {
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 404 }]))).toEqual([
-        { label: 'http.status_code', value: '404' },
+        { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '404', value: '404' },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 503 }]))).toEqual([
-        { label: 'http.status_code', value: '503', isError: true },
+        {
+          label: 'http.status_code',
+          attrKey: 'http.status_code',
+          attrMatchText: '503',
+          value: '503',
+          isError: true,
+        },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: ['mysql', 'postgres'] }]))).toEqual([
-        { label: 'db.system', value: '["mysql","postgres"]' },
+        {
+          label: 'db.system',
+          attrKey: 'db.system',
+          attrMatchText: '["mysql","postgres"]',
+          value: '["mysql","postgres"]',
+        },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: { name: 'grpc' } }]))).toEqual([
-        { label: 'rpc.system', value: '{"name":"grpc"}' },
+        {
+          label: 'rpc.system',
+          attrKey: 'rpc.system',
+          attrMatchText: '{"name":"grpc"}',
+          value: '{"name":"grpc"}',
+        },
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: new Uint8Array([1, 2, 3]) }]))).toEqual(
-        [{ label: 'db.system', value: '[1,2,3]' }]
+        [{ label: 'db.system', attrKey: 'db.system', attrMatchText: '1,2,3', value: '[1,2,3]' }]
       );
     });
   });

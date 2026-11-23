@@ -29,24 +29,24 @@ Rewriting the UI against OTLP in one step was not viable: the trace data model i
 
 The legacy reference types carried two meanings at once: `CHILD_OF` versus `FOLLOWS_FROM` expressed both parentage and whether the child blocked its parent. OTEL represents parentage explicitly as `parentSpanID` and does not encode blocking at all, so blocking is inferred from span kind instead — a `PRODUCER`/`CONSUMER` pair is non-blocking and stays off the critical path, while `INTERNAL`, `CLIENT`, and `SERVER` are treated as blocking. Any code reasoning about critical path or causality must use this rule rather than looking for reference types.
 
-### The facade is applied where a trace enters the Query cache
+### Traces enter the Query cache through the parser or legacy-upload facade
 
-Rather than wrapping spans at each read site, the conversion happens once at the boundary. `transformTraceData` (`src/model/transform-trace-data.ts`) returns a legacy trace carrying an `asOtelTrace()` method, backed by the `OtelTraceFacade` and `OtelSpanFacade` classes in `src/model/`. Exactly two production call sites invoke it — `hooks/useTraceLoading.ts` for traces fetched from the API, and `SearchTracePage/FileLoader.tsx` for uploaded files — and both hand the result to TanStack Query.
+API trace loading uses `JaegerClient.fetchTrace()` and `parseOtelTrace()` through `hooks/useTraceLoading.ts` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605)). Native OTLP uploads also use `parseOtelTrace()` in `SearchTracePage/FileLoader.tsx` ([#4634](https://github.com/jaegertracing/jaeger-ui/pull/4634)). Only the legacy-upload branch still calls `transformTraceData(...).asOtelTrace()`, backed by `OtelTraceFacade` and `OtelSpanFacade`. All three paths hand `IOtelTrace` to TanStack Query.
 
 Components therefore receive `IOtelTrace` / `IOtelSpan` as plain data and never construct a facade. There are no Redux selectors or hooks in this path and no `src/selectors/` directory; trace state lives in the Query cache ([ADR-0004](./0004-state-management-strategy.md)), which is what made a selector layer unnecessary.
 
 ### `/api/v3/` responses are validated against generated schemas
 
-`src/api/v3/client.ts` (`JaegerClient`) is the client for the OTLP endpoints. `src/api/v3/generated-client.ts` holds Zod schemas generated from Jaeger's OpenAPI spec via `pnpm run generate:api-types`, post-processed by `scripts/postprocess-schemas.cjs` to strip the optionality that Proto3-derived OpenAPI puts on every field; `schemas.ts` re-exports them. Every response the client parses is validated at runtime, so a backend contract change surfaces at the network boundary rather than as a downstream rendering bug.
+`src/api/v3/client.ts` (`JaegerClient`) is the client for the OTLP endpoints. `src/api/v3/generated-client.ts` holds Zod schemas generated from Jaeger's OpenAPI spec via `pnpm run generate:api-types`, post-processed by `scripts/postprocess-schemas.cjs`; `schemas.ts` adds wire-format refinements for hex IDs, quoted int64 timestamps, and the grpc-gateway envelope. Every response the client parses is validated at runtime, so a backend contract change surfaces at the network boundary rather than as a downstream rendering bug.
 
-The consequence for contributors: schemas are not hand-written. When the spec changes, regenerate — do not patch `generated-client.ts`.
+When the spec changes, regenerate rather than patching `generated-client.ts`. Hand-written wire constraints belong in `schemas.ts` and its contract tests.
 
 ## Consequences
 
-- New components are written in OTEL vocabulary regardless of which transport served the trace, so the eventual switch to `/api/v3/traces/{trace_id}` is invisible to them. That is the property the facade was bought for.
-- Two data paths coexist. Service and span-name discovery and trace search run on `/api/v3/`; single trace loading still goes through the legacy `/api/traces/:id` route and `transformTraceData`. The facade is what makes them look the same to components.
-- The facade allocates a wrapper per span, which is measurable on large traces (`src/model/OtelFacade.bench.test.ts` guards this). It is a transitional cost: once a native OTLP parser produces `IOtelTrace` directly, the classes and their six call sites all go away — [RFC 0002](../rfc/0002-otel-native-jaeger-ui.md) Phase 4.
-- Not every endpoint has a v3 counterpart. Trace archival, SPM metrics, DDG, and OTLP file transform have no equivalent in the api_v3 service and legitimately stay on their current routes, so `src/api/jaeger.ts` will not disappear simply by finishing the v3 migration.
+- New components are written in OTEL vocabulary regardless of which transport served the trace, so the switch to `/api/v3/traces/{trace_id}` was invisible to them. That is the property the facade was bought for.
+- API loading and native OTLP uploads use the native parser. Legacy uploads and test fixtures still use the facade; [#4761](https://github.com/jaegertracing/jaeger-ui/issues/4761) tracks the remaining migration.
+- The facade still allocates a wrapper per span for legacy uploads. It remains transitional during the legacy-upload support window in [RFC 0002](../rfc/0002-otel-native-jaeger-ui.md#phase-4-cleanup--optimization).
+- `JaegerClient` owns archival, dependencies, DDG, metrics, and decoration requests while preserving their existing routes. Native uploads parse in the browser instead of calling `/api/transform`. The legacy `src/api/jaeger.ts` client was deleted in [#4684](https://github.com/jaegertracing/jaeger-ui/pull/4684).
 
 ## References
 

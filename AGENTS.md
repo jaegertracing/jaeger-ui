@@ -22,12 +22,10 @@ jaeger-ui/
 ├── packages/
 │   ├── jaeger-ui/          # Main React application (Vite + React 19)
 │   │   ├── src/
-│   │   │   ├── actions/    # Redux actions (residual, being removed)
 │   │   │   ├── api/        # API layer (v3/ is the OTLP client)
 │   │   │   ├── components/ # React components
 │   │   │   ├── hooks/      # TanStack Query hooks
 │   │   │   ├── query/      # Shared QueryClient + provider
-│   │   │   ├── reducers/   # Redux reducers (residual, being removed)
 │   │   │   ├── stores/     # Zustand stores
 │   │   │   ├── types/      # TypeScript types
 │   │   │   └── utils/      # Utility functions
@@ -153,14 +151,14 @@ The Codecov project check fails a pull request whose project coverage is lower t
 
 ### State management
 
-New state does **not** go into Redux. See [ADR-0004](./docs/adr/0004-state-management-strategy.md) for the decision, [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired today, and [RFC 0004](./docs/rfc/0004-state-management-strategy.md) for what is left to migrate.
+See [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired.
 
 - Server data → TanStack Query hooks in `src/hooks/`, clients in `src/api/v3/`
 - Shared client UI state → Zustand stores in `src/stores/`, or `store.<slice>.ts` colocated with the owning feature
 - Deep-linkable view state → the page's `url.ts` helpers
 - User preferences → `localStorage`
 
-Redux remains in the timeline duck and tracking middleware as the analytics parity reference, plus the app store and `<Provider>`. `src/reducers/index.ts` is an empty map. Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`; there is no `src/selectors/`.
+Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`.
 
 ### Component Structure
 
@@ -184,7 +182,7 @@ ComponentName/
 ## Dependencies
 
 - **React 19** with React DOM
-- **Redux** for state management
+- **TanStack Query** and **Zustand** for state management
 - **React Router v5** for routing
 - **Ant Design v6** for UI components
 - **Vite** for build tooling

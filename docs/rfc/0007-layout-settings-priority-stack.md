@@ -1,14 +1,14 @@
 # RFC 0007: Layout Settings Priority Stack
 
-* **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759); PRs 2–5 remain outstanding.
+* **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759), and PR 2's persistence controls in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777); PRs 3–5 remain outstanding.
 * **Created**: 2026-05-10
-* **Last Updated**: 2026-11-12
+* **Last Updated**: 2026-11-17
 
 > Originally filed as ADR-0010. It is a proposal, and an unimplemented one, so it now lives here; [ADR-0010](../adr/0010-layout-settings-priority-stack.md) is a pointer at this document.
 
-**Where this stands.** [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759) implements PR 1's layout URL utilities, adapting closed, unmerged [#3852](https://github.com/jaegertracing/jaeger-ui/pull/3852). The helpers parse and serialize layout settings, remove all overrides or only one, and include settings in trace links. They do not yet apply URL settings to the view. [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112) has migrated `useLayoutPrefsStore` to Zustand's `persist` middleware with the `jaeger.layout` storage key. PR 2's persistence control remains outstanding; its earlier PR [#3853](https://github.com/jaegertracing/jaeger-ui/pull/3853) closed without merging. There is no `useLayoutSettings` or heuristic layer, and `TraceViewSettings` remains an antd `Dropdown`. The remaining work must prevent URL-driven updates from overwriting saved preferences.
+**Where this stands.** [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759) implements PR 1's layout URL utilities, adapting closed, unmerged [#3852](https://github.com/jaegertracing/jaeger-ui/pull/3852). The helpers parse and serialize layout settings, remove all overrides or only one, and include settings in trace links. They do not yet apply URL settings to the view. [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112) has migrated the layout preferences to Zustand's `persist` middleware with the `jaeger.layout` storage key. PR 2's `persist` flag is implemented by keeping the saved preferences in their own persisted store, `useSavedLayoutPrefsStore`, apart from the displayed layout in `useDisplayedLayoutStore`. The flag adapts closed, unmerged [#3853](https://github.com/jaegertracing/jaeger-ui/pull/3853). Nothing passes `persist: false` yet. There is no `useLayoutSettings` or heuristic layer, and `TraceViewSettings` remains an antd `Dropdown`. The remaining work must apply URL settings through `persist: false` so they do not overwrite saved preferences.
 
-PR 2 overlaps with [#3981](https://github.com/jaegertracing/jaeger-ui/issues/3981) / [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112), which move `store.layout.ts` onto Zustand's `persist` middleware. Sequence the middleware migration first: the `persist` flag PR 2 needs is a property of whatever persistence mechanism the store ends up with, and adding it to the manual `localStorage.setItem` calls only to move them again is wasted work — so #3853 should be rebased on top of #4112 rather than the reverse.
+PR 2 overlaps with [#3981](https://github.com/jaegertracing/jaeger-ui/issues/3981) / [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112), which move `store.layout.ts` onto Zustand's `persist` middleware. Sequence the middleware migration first: the `persist` flag PR 2 needs is a property of whatever persistence mechanism the store ends up with, and adding it to the manual `localStorage.setItem` calls only to move them again is wasted work — so the flag belonged on top of #4112 rather than the reverse. That order held: #4112 merged first, and #3853's flag was adapted onto it.
 
 ## Context
 
@@ -51,15 +51,11 @@ If a higher-priority source provides a value, lower-priority sources are ignored
 - **Heuristics** override localStorage but not URLs. They represent automatic optimizations based on trace characteristics.
 - **localStorage** is the baseline. It represents the user's deliberate saved preferences.
 
-### Session toggles are ephemeral
+### A toggle writes its value to the URL
 
-When a user flips a toggle while a URL or heuristic override is active, the new value takes effect immediately in the current session but is not written to localStorage and not added to the URL. On page refresh, the setting reverts to the localStorage default. This is intentional: a session toggle is an ephemeral adjustment, not a preference change.
+When a user flips a toggle, the new value takes effect immediately and is written to the URL as that setting's parameter (`?timeline=off`), whether or not the URL carried the parameter before. It is not written to localStorage. A refresh or a copied link therefore keeps the value.
 
 To make a value permanent, the user must explicitly click "Set as my default", which writes to localStorage.
-
-### URL parameters are stripped on toggle
-
-When the user toggles a setting that was set by a URL parameter, the URL param is stripped. Ownership of that setting transfers from the URL to the in-memory store. This prevents the URL from continuing to override the user's intent after they have acted.
 
 ### UX: source transparency
 
@@ -84,11 +80,15 @@ Pure functions with no React dependency:
 
 - `parseSettingsFromUrl(search)` — parses `?timeline=on|off` and `?sidebar=inline|sidepanel` into typed values, returning `null` for absent or unrecognized params.
 - `stringifySettings(settings)` — converts typed settings back into query params.
-- `rebaseSettings(search)` — strips layout params from a URL while preserving others (e.g. `uiFind`). Called when the user toggles a setting to clear the URL override.
+- `rebaseSettings(search)` — strips layout params from a URL while preserving others (e.g. `uiFind`).
 
-### PR 2 — `persist` flag on Zustand setters (`store.layout.ts`, `store.ts`)
+### PR 2 ✅ — `persist` flag on Zustand setters (`store.layout.ts`, `store.ts`)
 
-The Zustand setters (`setTimelineBarsVisible`, `applyDetailPanelModeToLayout`) gain an optional `persist?: boolean` flag (default `true`). When `persist=false`, the store state is updated but localStorage is not written. This is the mechanism that allows URL-driven updates to take effect in the UI without corrupting stored defaults. URL-driven and toggle-driven updates pass `persist=false`; only explicit "Set as my default" actions pass `persist=true`.
+Implemented in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777) and [#4798](https://github.com/jaegertracing/jaeger-ui/pull/4798) on top of #4112's `persist` middleware. The Zustand setters (`setTimelineBarsVisible`, `applyDetailPanelModeToLayout`) accept an optional options object with `persist?: boolean`, defaulting to `true`. The `setDetailPanelMode` coordinator in `store.ts` forwards the options. With `{ persist: false }`, a setter changes the displayed layout in `useDisplayedLayoutStore` and leaves the saved preferences in `useSavedLayoutPrefsStore` alone. Nothing is written to `localStorage`, so a temporary change does not overwrite defaults saved by another tab.
+
+Existing callers omit the options and still save their changes. No caller passes `{ persist: false }` yet; URL-driven updates will use it when `useLayoutSettings` lands. Moving toggles to temporary updates waits for "Set as my default".
+
+Switching to the side panel narrows the span name column to fit, and switching back to inline does not restore the width until the next load. The saved width stays unchanged.
 
 ### PR 3 — `TraceViewSettings` UI redesign
 
@@ -110,11 +110,11 @@ Resolution order per setting:
 
 1. If a URL param is present and valid → `source: 'url'`, `isOverridden: urlValue !== lsDefault`.
 2. Else if a heuristic override is present → `source: 'heuristic'`, `isOverridden: heuristicValue !== lsDefault`.
-3. Else → `source: 'localstorage'`, `isOverridden: storeValue !== lsDefault` (detects session-only changes).
+3. Else → `source: 'localstorage'`, `isOverridden: storeValue !== lsDefault`.
 
 The hook also keeps the Zustand store in sync with URL values via a `useEffect` so that components reading Zustand directly (e.g. `TraceTimelineViewer`) see the correct values without going through the hook.
 
-When a URL param disappears, the store is reverted to the localStorage default — but only if the store value still matches what the URL had set. This "revert guard" preserves any manual change the user made during the session.
+When a trace page opens, the hook sets the store from that page's URL: a setting with a parameter takes the parameter's value, and a setting without one takes the heuristic value, or else the localStorage default. A value shown on a trace that was open before does not carry over.
 
 `TracePage` calls `useLayoutSettings(location.search)` and uses `resolvedSetting.value` for rendering instead of raw Zustand store values. This is the single resolution point; all child components receive the effective value via props.
 
@@ -132,7 +132,7 @@ Adds the override indicator UI to `TraceViewSettings`: a source badge (*Set by s
 
 ### Negative
 
-- Session toggles are ephemeral. Users who want permanence must use "Set as my default" — this is a new interaction pattern that may not be immediately obvious.
+- A toggled value lives in the URL and is not saved as a default. Users who want permanence must use "Set as my default" — this is a new interaction pattern that may not be immediately obvious.
 - Components deep in the tree continue to read from Zustand directly; the hook keeps the store in sync so this remains correct, but the indirection is non-obvious.
 
 ### Future work

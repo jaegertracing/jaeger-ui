@@ -62,7 +62,7 @@ export const GENAI_VIEW_FILTER: ISpanFilter = {
 
 /** The tooltip of every control that would create a keep clause while the tree mode is remove. */
 export const KEEP_NEEDS_LIFT = 'Keep filters need "Lift to its parent" as the tree mode';
-/** The tooltip of a search-input menu entry whose conversion would leave no span shown. */
+/** The tooltip of a menu entry whose clause would leave no span shown. */
 export const LEAVES_NO_SPAN = 'This filter would leave no span shown';
 /** The tooltip of the attribute input's eyes while the typed text matches no span of the trace. */
 export const NO_SPAN_MATCHES = 'No span has this attribute';
@@ -256,6 +256,31 @@ export function withoutHiddenSpans(
     if (!hiddenIDs.has(id)) visible.add(id);
   }
   return visible;
+}
+
+/**
+ * The reason a menu must not add a clause with this verb, or null when it may: a keep clause
+ * needs lift mode, and a clause must leave a span shown. `visibleMatches` holds the spans that
+ * the criterion of the clause matches and the filter does not hide. The popover warns about
+ * such an edit; a menu has no place for the warning, so it disables the entry.
+ */
+export function clauseDisabledReason(
+  verb: Verb,
+  visibleMatches: ReadonlySet<string>,
+  trace: { spans: ReadonlyArray<IOtelSpan>; rootSpans: ReadonlyArray<IOtelSpan> },
+  hiddenIDs: ReadonlySet<string>,
+  treeMode: TreeMode
+): string | null {
+  if (verb === 'keep') {
+    if (treeMode !== 'lift') return KEEP_NEEDS_LIFT;
+    return visibleMatches.size === 0 ? LEAVES_NO_SPAN : null;
+  }
+  if (visibleMatches.size >= trace.spans.length - hiddenIDs.size) return LEAVES_NO_SPAN;
+  // A root the filter already hides has no subtree on screen, so it counts as covered.
+  const matchesEveryVisibleRoot = trace.rootSpans.every(
+    span => hiddenIDs.has(span.spanID) || visibleMatches.has(span.spanID)
+  );
+  return treeMode === 'remove' && matchesEveryVisibleRoot ? LEAVES_NO_SPAN : null;
 }
 
 type SetClause = IClause & { criterion: Extract<Criterion, { shape: 'set' }> };

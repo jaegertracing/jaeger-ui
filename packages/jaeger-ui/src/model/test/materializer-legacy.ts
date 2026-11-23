@@ -17,13 +17,13 @@ export function toLegacyTrace({
     spans: spans.map(span => {
       const {
         spanID,
-        operationName,
+        name: operationName,
         kind,
         parentSpanID,
-        references = [],
+        links: references = [],
         startTime,
         duration,
-        tags,
+        attributes: tags,
         events = [],
         scope,
         warnings,

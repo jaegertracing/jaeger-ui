@@ -56,6 +56,20 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary);
 }
 
+/*
+The button shares the baseline of the span ID so that it reads as part of that line.
+The transparent border reserves the space of the border that antd draws on hover.
+*/
+.SpanDetail--copyDeepLink.CopyIcon {
+  align-items: baseline;
+  border: 1px solid transparent;
+  vertical-align: baseline;
+}
+
+.SpanDetail--copyDeepLink.CopyIcon:hover {
+  color: var(--interactive-primary);
+}
+
 .AccordianWarnings {
   background: var(--surface-tertiary);
   border: 1px solid var(--border-default);

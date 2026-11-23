@@ -33,7 +33,7 @@ import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import { heatmapColor } from '../../../utils/span-latency-stats';
 import TTraceTimeline from '../../../types/TTraceTimeline';
-import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import { getSelectedSpanID, useDisplayedLayoutStore, useTraceTimelineStore } from './store';
 import {
   trackChildrenToggle,
   trackDetailLogItemToggle,
@@ -478,6 +478,14 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         };
       }
 
+      // Hide the service name label when the span belongs to the same service as its visible parent,
+      // to reduce visual clutter in traces with many same-service spans.
+      // Keep the service name visible on roots and across visible service boundaries.
+      // SpanBarRow handles exceptions for RPC, peer services, and empty operation names.
+      const visibleParent = tree.parentOf(span);
+      const parentServiceName = visibleParent?.resource.serviceName;
+      const showServiceName = span.resource.serviceName !== parentServiceName;
+
       return (
         <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
           <SpanBarRow
@@ -503,6 +511,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             focusSpan={focusSpan}
             traceDuration={trace.duration}
             spanPillsEnabled={spanPillsEnabled}
+            showServiceName={showServiceName}
             useOtelTerms={useOtelTerms}
             tree={tree}
           />
@@ -662,10 +671,10 @@ function VirtualizedTraceViewWrapper(
 ) {
   const uiFind = parseUiFind(ownProps.search ?? ownProps.location.search ?? '');
 
-  const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
-  const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const spanNameColumnWidth = useDisplayedLayoutStore(s => s.spanNameColumnWidth);
+  const sidePanelWidth = useDisplayedLayoutStore(s => s.sidePanelWidth);
+  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
   const traceID = useTraceTimelineStore(s => s.traceID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
