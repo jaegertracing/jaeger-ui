@@ -56,6 +56,10 @@ describe('<SpanGraph>', () => {
       };
       rerender(<ViewingLayer ref={ref} {...props} />);
 
+      fireEvent.mouseMove(window, { button: 0, clientX: 35 });
+      expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({
+        reframe: { anchor: 0.5, shift: 0.25 },
+      });
       fireEvent.mouseMove(window, { button: 0, clientX: -10 });
       expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({
         reframe: { anchor: 0.5, shift: 0 },
@@ -70,6 +74,8 @@ describe('<SpanGraph>', () => {
 
     it('returns the correct bounds for shiftStart', () => {
       fireEvent.mouseDown(getScrubbers()[0], { button: 0, clientX: 20 });
+      fireEvent.mouseMove(window, { button: 0, clientX: 35 });
+      expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ shiftStart: 0.25 });
       fireEvent.mouseMove(window, { button: 0, clientX: -10 });
       expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ shiftStart: 0 });
       fireEvent.mouseMove(window, { button: 0, clientX: 120 });
@@ -80,6 +86,8 @@ describe('<SpanGraph>', () => {
 
     it('returns the correct bounds for shiftEnd', () => {
       fireEvent.mouseDown(getScrubbers()[1], { button: 0, clientX: 100 });
+      fireEvent.mouseMove(window, { button: 0, clientX: 85 });
+      expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ shiftEnd: 0.75 });
       fireEvent.mouseMove(window, { button: 0, clientX: -10 });
       expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ shiftEnd: 0.1 });
       fireEvent.mouseMove(window, { button: 0, clientX: 120 });
@@ -168,11 +176,12 @@ describe('<SpanGraph>', () => {
           expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({
             reframe: { anchor: 0.5, shift: 0.5 },
           });
+          fireEvent.mouseUp(window, { button: 0, clientX: 60 });
         });
 
         it('handles the existing anchor', () => {
           props.viewRange = {
-            time: { ...props.viewRange.time, reframe: { anchor: 0.1, shift: 0.1 } },
+            time: { ...props.viewRange.time, reframe: { anchor: 0.1, shift: 0.2 } },
           };
           rerender(<ViewingLayer ref={ref} {...props} />);
           fireEvent.mouseDown(getGraph(), { button: 0, clientX: 20 });
@@ -180,6 +189,7 @@ describe('<SpanGraph>', () => {
           expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({
             reframe: { anchor: 0.1, shift: 0.5 },
           });
+          fireEvent.mouseUp(window, { button: 0, clientX: 60 });
         });
       });
 
@@ -196,7 +206,7 @@ describe('<SpanGraph>', () => {
 
         it('handles dragged left (anchor is greater)', () => {
           props.viewRange = {
-            time: { ...props.viewRange.time, reframe: { anchor: 0.6, shift: 0.6 } },
+            time: { ...props.viewRange.time, reframe: { anchor: 0.6, shift: 0.7 } },
           };
           rerender(<ViewingLayer ref={ref} {...props} />);
           fireEvent.mouseDown(getGraph(), { button: 0, clientX: 70 });
@@ -206,7 +216,7 @@ describe('<SpanGraph>', () => {
 
         it('handles dragged right (anchor is less)', () => {
           props.viewRange = {
-            time: { ...props.viewRange.time, reframe: { anchor: 0.4, shift: 0.4 } },
+            time: { ...props.viewRange.time, reframe: { anchor: 0.4, shift: 0.3 } },
           };
           rerender(<ViewingLayer ref={ref} {...props} />);
           fireEvent.mouseDown(getGraph(), { button: 0, clientX: 50 });
@@ -222,7 +232,7 @@ describe('<SpanGraph>', () => {
         rerender(<ViewingLayer ref={ref} {...props} />);
 
         expect(container.querySelector('.ViewingLayer--cursorGuide')).toHaveAttribute('x1', '50%');
-        fireEvent.mouseEnter(container.querySelectorAll('[data-testid="scrubber"]')[0]);
+        fireEvent.mouseEnter(getScrubbers()[0]);
         expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
       });
 
@@ -230,8 +240,10 @@ describe('<SpanGraph>', () => {
         props.viewRange = { time: { ...props.viewRange.time, cursor: 0.5 } };
         rerender(<ViewingLayer ref={ref} {...props} />);
 
-        fireEvent.mouseEnter(container.querySelectorAll('[data-testid="scrubber"]')[0]);
-        fireEvent.mouseLeave(container.querySelectorAll('[data-testid="scrubber"]')[0]);
+        const scrubber = getScrubbers()[0];
+        fireEvent.mouseEnter(scrubber);
+        expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
+        fireEvent.mouseLeave(scrubber);
         expect(container.querySelector('.ViewingLayer--cursorGuide')).toHaveAttribute('x1', '50%');
       });
 
@@ -239,8 +251,10 @@ describe('<SpanGraph>', () => {
         it('stops propagation on drag start', () => {
           fireEvent.mouseDown(getScrubbers()[0], { button: 0, clientX: 10 });
 
+          // A bubbled svg mousedown would add a reframe update.
           expect(props.updateNextViewRangeTime).toHaveBeenCalledTimes(1);
           expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ shiftStart: 0 });
+          fireEvent.mouseUp(window, { button: 0, clientX: 10 });
         });
 
         it('updates the viewRange for shiftStart and shiftEnd', () => {
@@ -285,6 +299,7 @@ describe('<SpanGraph>', () => {
           expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
           fireEvent.mouseDown(scrubber, { button: 0, clientX: startClientX });
           fireEvent.mouseMove(window, { button: 0, clientX: 60 });
+          // Mouseleave is ignored mid-drag, so mouseup must restore the guide.
           fireEvent.mouseLeave(scrubber, { clientX: 60 });
           fireEvent.mouseUp(window, { button: 0, clientX: 60 });
 
