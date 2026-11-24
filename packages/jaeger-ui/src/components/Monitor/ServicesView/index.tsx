@@ -314,8 +314,26 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   const serviceErrorRate = serviceMetrics ? serviceMetrics.service_error_rate : null;
   const controlsInitialLoading = serviceMetricsInitialLoading || operationMetricsInitialLoading;
   const refreshLoading = refreshRequested && (serviceMetricsFetching || operationMetricsFetching);
+  const latencyErrors = [
+    serviceError.service_latencies_50,
+    serviceError.service_latencies_75,
+    serviceError.service_latencies_95,
+  ];
+  // The latency graph shows a fetch error only when every quantile request failed.
+  const latencyError = latencyErrors.every(Boolean) ? latencyErrors[0] : null;
+  const latencyRequestFailed = latencyErrors.some(Boolean);
   const showNoMetricsAlert =
-    !serviceMetricsFetching && !serviceMetricsInitialLoading && _isEmpty(serviceMetrics?.service_latencies);
+    !serviceMetricsFetching &&
+    !serviceMetricsInitialLoading &&
+    _isEmpty(serviceMetrics?.service_latencies) &&
+    !latencyError;
+  // Call rates without latencies, when every latency request succeeded, can mean that the
+  // latency histogram name Jaeger queries does not match the one exported by the span
+  // metrics pipeline.
+  // A call-rate series can exist with no usable points; zero is still a valid rate.
+  const callRatePoints = serviceMetrics?.service_call_rate?.metricPoints ?? [];
+  const hasCallRates = callRatePoints.some(point => point.y !== null);
+  const showNoLatencyAlert = showNoMetricsAlert && !latencyRequestFailed && hasCallRates;
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered label="Loading services" />;
@@ -326,13 +344,25 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
       {showNoMetricsAlert && (
         <Alert
           message={
-            <>
-              No data yet! Please see these
-              <Link to={{ pathname: docsLink }} target="_blank">
-                &nbsp;instructions&nbsp;
-              </Link>
-              on how to set up your span metrics.
-            </>
+            showNoLatencyAlert ? (
+              <>
+                Call rates were found but no latency data was returned. One possible cause is that the
+                duration histogram name or unit configured in the metrics storage does not match what your
+                span metrics pipeline exports. See these
+                <Link to={{ pathname: docsLink }} target="_blank">
+                  &nbsp;instructions&nbsp;
+                </Link>
+                for details.
+              </>
+            ) : (
+              <>
+                No data yet! Please see these
+                <Link to={{ pathname: docsLink }} target="_blank">
+                  &nbsp;instructions&nbsp;
+                </Link>
+                on how to set up your span metrics.
+              </>
+            )
           }
           type="warning"
           showIcon
@@ -426,11 +456,7 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
             <div ref={graphDivWrapper} />
             <ServiceGraph
               key="latency"
-              error={
-                serviceError.service_latencies_50 &&
-                serviceError.service_latencies_75 &&
-                serviceError.service_latencies_95
-              }
+              error={latencyError}
               loading={serviceMetricsFetching}
               name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
               width={graphWidth}
