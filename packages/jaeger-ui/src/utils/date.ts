@@ -176,7 +176,16 @@ export function formatDuration(duration: Microseconds): string {
   const [primaryUnit, secondaryUnit] = selectUnits(duration);
 
   if (primaryUnit.ofPrevious === 1000) {
-    return `${_round(duration / primaryUnit.microseconds, 2)}${primaryUnit.unit}`;
+    const roundedValue = _round(duration / primaryUnit.microseconds, 2);
+    // Rounding can reach the base of the next unit up, e.g. 59.9995s rounds to 60,
+    // which is a minute and not "60s". nextUnit.ofPrevious is how many primary
+    // units fit in that unit, so equality is exactly the carry, and the carried
+    // value is always 1 because the rounded value cannot exceed the base.
+    const nextUnit = UNIT_STEPS[UNIT_STEPS.indexOf(primaryUnit) - 1];
+    if (nextUnit && roundedValue === nextUnit.ofPrevious) {
+      return `1${nextUnit.unit}`;
+    }
+    return `${roundedValue}${primaryUnit.unit}`;
   }
 
   const roundedDuration = Math.round(duration / secondaryUnit.microseconds) * secondaryUnit.microseconds;
@@ -261,24 +270,27 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string):
  * formatDurationCompact(1835200) // => "1.84s"
  */
 export function formatDurationCompact(microseconds: Microseconds): string {
-  if (microseconds < 1000) {
-    return `${Math.round(microseconds)}μs`;
+  // Format to 3 significant digits.
+  const render = (value: number) =>
+    value < 10 ? value.toPrecision(2) : value < 100 ? value.toPrecision(3) : String(Math.round(value));
+
+  // Each branch rounds before it renders, so the range check belongs on the
+  // rendered value and not on the raw one: 999.5ms renders as "1000ms", which is
+  // the base of the next unit and a fourth significant digit.
+  const us = Math.round(microseconds);
+  if (us < 1000) {
+    return `${us}μs`;
   }
 
-  const ms = microseconds / 1000;
-  if (ms < 1000) {
-    // Format to 3 significant digits
-    const formatted = ms < 10 ? ms.toPrecision(2) : ms < 100 ? ms.toPrecision(3) : Math.round(ms);
-    return `${formatted}ms`;
+  const ms = render(microseconds / ONE_MILLISECOND);
+  if (Number(ms) < 1000) {
+    return `${ms}ms`;
   }
 
-  const s = ms / 1000;
-  if (s < 60) {
-    const formatted = s < 10 ? s.toPrecision(2) : s < 100 ? s.toPrecision(3) : Math.round(s);
-    return `${formatted}s`;
+  const s = render(microseconds / ONE_SECOND);
+  if (Number(s) < 60) {
+    return `${s}s`;
   }
 
-  const m = s / 60;
-  const formatted = m < 10 ? m.toPrecision(2) : m < 100 ? m.toPrecision(3) : Math.round(m);
-  return `${formatted}m`;
+  return `${render(microseconds / ONE_MINUTE)}m`;
 }
