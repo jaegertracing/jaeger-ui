@@ -18,7 +18,7 @@ export function runTraceContractSuite(pipeline) {
       const input = pipeline.materialize({
         traceID,
         serviceName: 'svc',
-        spans: [{ spanID: 'd4dcb46e95b781f5', operationName: 'op', startTime: 1, duration: 1, tags }],
+        spans: [{ spanID: 'd4dcb46e95b781f5', name: 'op', startTime: 1, duration: 1, attributes: tags }],
       });
       return pipeline.parse(input).spans[0];
     } finally {
@@ -147,7 +147,7 @@ export function runTraceContractSuite(pipeline) {
     const id = pipeline.spanID;
 
     it('uses UNSPECIFIED for a missing span kind', () => {
-      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName }));
+      const result = pipeline.parse(trace({ spanID: rootSpanID, name: rootOperationName }));
       expect(result.spans[0].kind).toBe(SpanKind.UNSPECIFIED);
     });
 
@@ -160,12 +160,12 @@ export function runTraceContractSuite(pipeline) {
       [5, SpanKind.CONSUMER],
       [99, SpanKind.UNSPECIFIED],
     ])('maps span kind %s to %s', (kind, expected) => {
-      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName, kind }));
+      const result = pipeline.parse(trace({ spanID: rootSpanID, name: rootOperationName, kind }));
       expect(result.spans[0].kind).toBe(expected);
     });
 
     it.each([undefined, {}, { name: '' }])('uses unknown for a missing scope name in %s', scope => {
-      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName, scope }));
+      const result = pipeline.parse(trace({ spanID: rootSpanID, name: rootOperationName, scope }));
       expect(result.spans[0].instrumentationScope.name).toBe('unknown');
     });
 
@@ -173,7 +173,7 @@ export function runTraceContractSuite(pipeline) {
       const result = pipeline.parse(
         trace({
           spanID: rootSpanID,
-          operationName: rootOperationName,
+          name: rootOperationName,
           events: [{ name, timestamp: startTime }],
         })
       );
@@ -184,7 +184,7 @@ export function runTraceContractSuite(pipeline) {
       const result = pipeline.parse(
         trace({
           spanID: rootSpanID,
-          operationName: rootOperationName,
+          name: rootOperationName,
           scope: { name: 'instrumentation', version: '1.2.3' },
           events: [{ name: 'message', timestamp: startTime, attributes: [{ key: 'answer', value: 0 }] }],
         })
@@ -198,7 +198,7 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it('uses an empty warnings array for a span without warnings', () => {
-      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName }));
+      const result = pipeline.parse(trace({ spanID: rootSpanID, name: rootOperationName }));
       expect(result.spans[0].warnings).toEqual([]);
     });
 
@@ -206,8 +206,8 @@ export function runTraceContractSuite(pipeline) {
       const result = pipeline.parse(
         trace({
           spanID: rootSpanID,
-          operationName: rootOperationName,
-          tags: [
+          name: rootOperationName,
+          attributes: [
             { key: 'duplicate', value: 'value' },
             { key: 'duplicate', value: 'value' },
           ],
@@ -225,14 +225,14 @@ export function runTraceContractSuite(pipeline) {
     const spans = [
       {
         spanID: '41f71485ed2593e4',
-        operationName: 'someOperationName',
+        name: 'someOperationName',
         parentSpanID: rootSpanID,
         startTime,
         duration,
       },
       {
         spanID: '4f623fd33c213cba',
-        operationName: 'anotherOperationName',
+        name: 'anotherOperationName',
         parentSpanID: rootSpanID,
         startTime: startTime + 100,
         duration,
@@ -241,7 +241,7 @@ export function runTraceContractSuite(pipeline) {
 
     const rootSpanWithMissingRef = {
       spanID: rootSpanID,
-      operationName: rootOperationName,
+      name: rootOperationName,
       parentSpanID: 'missingSpanId',
       startTime: startTime + 50,
       duration,
@@ -249,7 +249,7 @@ export function runTraceContractSuite(pipeline) {
 
     const rootSpanWithoutRefs = {
       spanID: rootSpanID,
-      operationName: rootOperationName,
+      name: rootOperationName,
       startTime: startTime + 50,
       duration,
     };
@@ -269,20 +269,20 @@ export function runTraceContractSuite(pipeline) {
     it('should render the whole tree when every span reports startTime 0', () => {
       const zeroRoot = {
         spanID: rootSpanID,
-        operationName: rootOperationName,
+        name: rootOperationName,
         startTime: 0,
         duration: 100,
       };
       const zeroChild = {
         spanID: 'zeroChild',
-        operationName: 'childOp',
+        name: 'childOp',
         parentSpanID: rootSpanID,
         startTime: 0,
         duration: 50,
       };
       const noStartTimeChild = {
         spanID: 'missingStartTime',
-        operationName: 'missingStartOp',
+        name: 'missingStartOp',
         parentSpanID: rootSpanID,
         startTime: undefined,
         duration: 10,
@@ -309,20 +309,20 @@ export function runTraceContractSuite(pipeline) {
       const realStart = 1784570820629325;
       const realRoot = {
         spanID: rootSpanID,
-        operationName: rootOperationName,
+        name: rootOperationName,
         startTime: realStart,
         duration: 1000,
       };
       const zeroChild = {
         spanID: 'zeroChild',
-        operationName: 'childOp',
+        name: 'childOp',
         parentSpanID: rootSpanID,
         startTime: 0,
         duration: 200,
       };
       const missingChild = {
         spanID: 'missingChild',
-        operationName: 'missingOp',
+        name: 'missingOp',
         parentSpanID: rootSpanID,
         startTime: undefined,
         duration: 300,
@@ -348,20 +348,20 @@ export function runTraceContractSuite(pipeline) {
       const realStart = 1784570820629325;
       const realRoot = {
         spanID: rootSpanID,
-        operationName: rootOperationName,
+        name: rootOperationName,
         startTime: realStart,
         duration: 1000,
       };
       const brokenMiddle = {
         spanID: 'brokenMiddle',
-        operationName: 'middleOp',
+        name: 'middleOp',
         parentSpanID: rootSpanID,
         startTime: 0,
         duration: 400,
       };
       const brokenLeaf = {
         spanID: 'brokenLeaf',
-        operationName: 'leafOp',
+        name: 'leafOp',
         parentSpanID: 'brokenMiddle',
         startTime: undefined,
         duration: 100,
@@ -386,27 +386,27 @@ export function runTraceContractSuite(pipeline) {
       const realStart = 1784570820629325;
       const realRoot = {
         spanID: rootSpanID,
-        operationName: rootOperationName,
+        name: rootOperationName,
         startTime: realStart,
         duration: 1000,
       };
       const missingSibling1 = {
         spanID: 'missing1',
-        operationName: 'missing1',
+        name: 'missing1',
         parentSpanID: rootSpanID,
         startTime: undefined,
         duration: 10,
       };
       const nanSibling = {
         spanID: 'nan',
-        operationName: 'nan',
+        name: 'nan',
         parentSpanID: rootSpanID,
         startTime: NaN,
         duration: 20,
       };
       const realSibling = {
         spanID: 'real',
-        operationName: 'real',
+        name: 'real',
         parentSpanID: rootSpanID,
         startTime: realStart + 500,
         duration: 30,
@@ -426,13 +426,13 @@ export function runTraceContractSuite(pipeline) {
     it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
       const brokenRoot = {
         spanID: rootSpanID,
-        operationName: rootOperationName,
+        name: rootOperationName,
         startTime: undefined,
         duration: 500,
       };
       const child = {
         spanID: 'child',
-        operationName: 'childOp',
+        name: 'childOp',
         parentSpanID: rootSpanID,
         startTime: 0,
         duration: 100,
@@ -459,14 +459,14 @@ export function runTraceContractSuite(pipeline) {
     it('should detect multiple orphan spans', () => {
       const orphanSpan1 = {
         spanID: 'orphan1',
-        operationName: 'orphanOp1',
+        name: 'orphanOp1',
         parentSpanID: 'nonexistent1',
         startTime: startTime,
         duration,
       };
       const orphanSpan2 = {
         spanID: 'orphan2',
-        operationName: 'orphanOp2',
+        name: 'orphanOp2',
         parentSpanID: 'nonexistent2',
         startTime: startTime + 200,
         duration,
@@ -488,7 +488,7 @@ export function runTraceContractSuite(pipeline) {
     it('should detect an orphan with an explicit missing parent', () => {
       const followsFromOrphan = {
         spanID: 'followsOrphan',
-        operationName: 'followsOrphanOp',
+        name: 'followsOrphanOp',
         parentSpanID: 'nonexistent',
         startTime: startTime,
         duration,
@@ -564,7 +564,7 @@ export function runTraceContractSuite(pipeline) {
       it('should handle multiple root spans', () => {
         const secondRoot = {
           spanID: 'secondRoot',
-          operationName: 'secondRootOp',
+          name: 'secondRootOp',
           startTime: startTime + 100,
           duration,
         };
@@ -652,7 +652,7 @@ export function runTraceContractSuite(pipeline) {
         for (let i = 0; i < depth; i++) {
           deepSpans.push({
             spanID: `span-${i}`,
-            operationName: `op-${i}`,
+            name: `op-${i}`,
             ...(i > 0 ? { parentSpanID: `span-${i - 1}` } : {}),
             startTime: startTime + i,
             duration,
@@ -680,14 +680,14 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it('exposes parent and secondary references as links on spans with multiple references', () => {
-      const root = { spanID: 'root', operationName: 'root' };
-      const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root' };
-      const other = { spanID: 'other', operationName: 'other', parentSpanID: 'root' };
+      const root = { spanID: 'root', name: 'root' };
+      const parent = { spanID: 'parent', name: 'parent', parentSpanID: 'root' };
+      const other = { spanID: 'other', name: 'other', parentSpanID: 'root' };
       const willGainRef = {
         spanID: 'linked',
-        operationName: 'linked',
+        name: 'linked',
         parentSpanID: 'parent',
-        references: [{ refType: 'CHILD_OF', spanID: 'other' }],
+        links: [{ refType: 'CHILD_OF', spanID: 'other' }],
       };
       const existingRefID = id('parent');
       const willBeReferencedID = id('other');
