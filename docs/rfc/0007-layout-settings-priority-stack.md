@@ -118,7 +118,7 @@ The hook also keeps the displayed Zustand store in sync with URL values via a `u
 
 When a trace page opens, the hook sets the store from that page's URL: a setting with a parameter takes the parameter's value, and a setting without one takes the heuristic value, or else the localStorage default. A value shown on a trace that was open before does not carry over.
 
-`TracePage` calls `useLayoutSettings(location, enableSidePanel)` and uses `resolvedSetting.value` for rendering instead of raw Zustand store values. The hook accepts optional per-setting heuristic inputs; no trace detector supplies them yet. It ignores URL and heuristic requests for a disabled side panel. Its setters apply the value without persistence and replace that setting's URL parameter, preserving other parameters, the hash, and router state.
+`TracePage` calls `useLayoutSettings(location, enableSidePanel)` and uses `resolvedSetting.value` for rendering instead of raw Zustand store values. The hook accepts optional per-setting heuristic inputs; no trace detector supplies them yet. It ignores URL and heuristic requests for a disabled side panel. Its setters replace only that setting's URL parameter, preserving other parameters, the hash, and router state. The layout effect then applies the value without persistence.
 
 This is the single resolution point. Child components receive the effective value via props, and components that read Zustand directly see the same values after synchronization.
 
