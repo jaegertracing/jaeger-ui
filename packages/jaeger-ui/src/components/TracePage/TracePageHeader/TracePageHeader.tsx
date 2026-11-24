@@ -34,6 +34,8 @@ import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
 import GenAIExecutionSummary from './GenAIExecutionSummary';
+import ConversationLink from './ConversationLink';
+import { findConversationRef } from '../../ConversationPage/conversation';
 import { isErrorSpan } from '../TraceTimelineViewer/utils';
 
 type TracePageHeaderEmbedProps = {
@@ -80,6 +82,7 @@ type TracePageHeaderEmbedProps = {
 
 // The header re-renders on every search keystroke, so the count is computed once per span list.
 const countErrors = memoizeOne((spans: ReadonlyArray<IOtelSpan>) => spans.filter(isErrorSpan).length);
+const findConversation = memoizeOne(findConversationRef);
 
 export const HEADER_ITEMS = [
   {
@@ -128,6 +131,16 @@ export const HEADER_ITEMS = [
     label: null,
     renderer: (trace: IOtelTrace) =>
       trace.isGenAITrace ? <GenAIExecutionSummary spans={trace.spans} /> : null,
+  },
+  {
+    key: 'conversation',
+    label: null,
+    renderer: (trace: IOtelTrace) => {
+      const conversation = trace.isGenAITrace ? findConversation(trace.spans) : undefined;
+      return conversation ? (
+        <ConversationLink conversation={conversation} traceStart={trace.startTime} />
+      ) : null;
+    },
   },
 ];
 

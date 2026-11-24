@@ -218,3 +218,7 @@ SPDX-License-Identifier: Apache-2.0
   margin-top: 0.5rem;
   padding-top: 0.5rem;
 }
+
+.TracePageHeader--conversationLink {
+  white-space: nowrap;
+}

@@ -15,6 +15,8 @@ import { getTraceName } from '../../../model/trace-display-helpers';
 import transformTraceData from '../../../model/transform-trace-data';
 import { ETraceViewType } from '../types';
 import * as getConfigModule from '../../../utils/config/get-config';
+import { makeAttributes } from '../../../model/attributes';
+import { makeOtelSpan } from '../../../utils/test/makeOtelSpan';
 
 vi.mock('./AltViewOptions', () => {
   return mockDefault(function MockAltViewOptions(props) {
@@ -297,6 +299,34 @@ describe('<TracePageHeader>', () => {
 
   it('does not render the GenAI calls item when the trace has no GenAI spans', () => {
     expect(screen.queryByTestId('header-item-genai-calls')).not.toBeInTheDocument();
+  });
+
+  it('links a GenAI trace that records a conversation to that conversation', () => {
+    const conversationTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(conversationTrace, 'isGenAITrace', { value: true });
+    Object.defineProperty(conversationTrace, 'spans', {
+      value: [
+        ...defaultProps.trace.spans,
+        makeOtelSpan({
+          attributes: makeAttributes([{ key: 'gen_ai.conversation.id', value: 'conv-1' }]),
+          resource: { attributes: makeAttributes(), serviceName: 'agent' },
+        }),
+      ],
+    });
+    renderWithRouter(<TracePageHeader {...defaultProps} trace={conversationTrace} />);
+
+    expect(screen.getByRole('link', { name: 'View conversation' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/conversation\/conv-1\?lookback=\w+&service=agent$/)
+    );
+  });
+
+  it('does not link a GenAI trace that records no conversation', () => {
+    const genAITrace = Object.create(defaultProps.trace);
+    Object.defineProperty(genAITrace, 'isGenAITrace', { value: true });
+    renderWithRouter(<TracePageHeader {...defaultProps} trace={genAITrace} />);
+
+    expect(screen.queryByTestId('header-item-conversation')).not.toBeInTheDocument();
   });
 
   it('renders a <SpanGraph>', () => {
