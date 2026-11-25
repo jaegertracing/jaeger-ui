@@ -10,3 +10,7 @@ export function getTargetEmptyOrBlank() {
 export function getTargetBlankOrTop() {
   return getConfig().forbidNewPage ? '_top' : '_blank';
 }
+
+export function getNewWindowSuffix(target: string) {
+  return target === '_blank' ? ' in a new window' : '';
+}
