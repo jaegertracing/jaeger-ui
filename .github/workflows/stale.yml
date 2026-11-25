@@ -6,17 +6,18 @@ on:
     - cron: '30 1 * * *'
   workflow_dispatch:
 
-permissions:
-  # The stale action deletes its saved progress through the caches API. Without
-  # this permission a saved entry stays forever, and the items in it are
-  # skipped on every run.
-  actions: write
-  issues: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   stale:
     runs-on: ubuntu-latest
+    permissions:
+      # The stale action deletes its saved progress through the caches API. Without
+      # this permission a saved entry stays forever, and the items in it are
+      # skipped on every run.
+      actions: write
+      issues: write
+      pull-requests: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911
