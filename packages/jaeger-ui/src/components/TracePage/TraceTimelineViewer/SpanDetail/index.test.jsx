@@ -10,9 +10,10 @@ import '@testing-library/jest-dom';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration, formatDurationCompact, isErrorSpan } from '../utils';
-import traceGenerator from '../../../../demo/trace-generators';
-import transformTraceData from '../../../../model/transform-trace-data';
+import { parseOtelTrace } from '../../../../api/v3/parser';
+import { refinedTracesData } from '../../../../api/v3/schemas';
 import { makeAttributes } from '../../../../model/attributes';
+import { toOtlpTrace } from '../../../../model/test/materializer-otlp';
 
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
@@ -88,9 +89,24 @@ vi.mock('../../../../utils/genai', () => ({
   isGenAISpan: isGenAISpanMock,
 }));
 
+const traceSpec = {
+  traceID: 'abcdef0123456789abcdef0123456789',
+  serviceName: 'frontend',
+  spans: [
+    {
+      spanID: 'request',
+      name: 'GET /orders',
+      startTime: 5,
+      duration: 1000,
+      events: [{ name: 'request started', timestamp: 10 }],
+      warnings: ['Warning 1'],
+      links: [{ spanID: 'linked-span', traceID: '0123456789abcdef0123456789abcdef' }],
+    },
+  ],
+};
+
 describe('<SpanDetail>', () => {
   let props;
-  let spanData;
   let span;
   let detailState;
 
@@ -101,83 +117,17 @@ describe('<SpanDetail>', () => {
     formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
     isErrorSpan.mockReset();
 
-    const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
-    spanData = rawTrace.spans[0];
-
-    spanData.logs = [
-      {
-        timestamp: 10,
-        fields: [
-          { key: 'message', value: 'oh the log message' },
-          { key: 'something', value: 'else' },
-        ],
-      },
-      {
-        timestamp: 20,
-        fields: [
-          { key: 'message', value: 'oh the next log message' },
-          { key: 'more', value: 'stuff' },
-        ],
-      },
-    ];
-
-    spanData.warnings = ['Warning 1', 'Warning 2'];
-
-    spanData.references = [
-      {
-        refType: 'CHILD_OF',
-        span: {
-          spanID: 'span2',
-          traceID: 'trace1',
-          operationName: 'op1',
-          process: {
-            serviceName: 'service1',
-          },
-        },
-        spanID: 'span1',
-        traceID: 'trace1',
-      },
-      {
-        refType: 'CHILD_OF',
-        span: {
-          spanID: 'span3',
-          traceID: 'trace1',
-          operationName: 'op2',
-          process: {
-            serviceName: 'service2',
-          },
-        },
-        spanID: 'span4',
-        traceID: 'trace1',
-      },
-      {
-        refType: 'CHILD_OF',
-        span: {
-          spanID: 'span6',
-          traceID: 'trace2',
-          operationName: 'op2',
-          process: {
-            serviceName: 'service2',
-          },
-        },
-        spanID: 'span5',
-        traceID: 'trace2',
-      },
-    ];
-
-    // Transform the span data and then convert to OTEL span
-    const transformedTrace = transformTraceData({ ...rawTrace, spans: [spanData] });
-    span = transformedTrace.asOtelTrace().spans[0];
+    const trace = parseOtelTrace(refinedTracesData.parse(toOtlpTrace(traceSpec)));
+    [span] = trace.spans;
 
     detailState = new DetailState().toggleEvents().toggleResource().toggleLinks().toggleAttributes();
-    const traceStartTime = 5;
 
     props = {
       detailState,
       span,
-      traceStartTime,
+      traceStartTime: trace.startTime,
       currentViewRangeTime: [0, 100],
-      traceDuration: 1000,
+      traceDuration: trace.duration,
       eventItemToggle: jest.fn(),
       eventsToggle: jest.fn(),
       resourceToggle: jest.fn(),
