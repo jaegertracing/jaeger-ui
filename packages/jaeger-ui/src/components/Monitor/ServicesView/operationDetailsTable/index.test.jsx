@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import OperationTableDetails from '.';
-import { originInitialState, serviceOpsMetrics } from '../../../../reducers/metrics.mock';
+import { originInitialState, serviceOpsMetrics } from '../../metrics.mock';
 import * as track from './index.track';
 
 vi.mock('../../../../utils/prefix-url', () => mockDefault(jest.fn(url => url)));

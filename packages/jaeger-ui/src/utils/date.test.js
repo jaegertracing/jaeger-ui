@@ -79,6 +79,39 @@ describe('formatDuration', () => {
   it('carries across the day boundary', () => {
     expect(formatDuration(ONE_DAY - 20 * ONE_SECOND)).toBe('1d');
   });
+
+  // A single decimal unit must not render its own base. Each pair below is one
+  // microsecond either side of a carry boundary, so the carry shows as a change
+  // of unit rather than as "60s" or "1000ms", the malformation #4246 described
+  // for the two-unit case.
+  it.each([
+    { input: 59994999, expected: '59.99s' },
+    { input: 59995000, expected: '1m' },
+    { input: 999994, expected: '999.99ms' },
+    { input: 999995, expected: '1s' },
+  ])('carries at the boundary: $input μs is $expected', ({ input, expected }) => {
+    expect(formatDuration(input)).toBe(expected);
+  });
+
+  // The whole microsecond below each unit's base, and the base itself.
+  it.each([
+    { input: 59999999, expected: '1m' },
+    { input: 60000000, expected: '1m' },
+    { input: 999999, expected: '1s' },
+    { input: 1000000, expected: '1s' },
+  ])('carries up to the base: $input μs is $expected', ({ input, expected }) => {
+    expect(formatDuration(input)).toBe(expected);
+  });
+
+  // Values that need no rounding at all, and the microsecond unit, which has no
+  // whole-microsecond input that rounds up to its base.
+  it.each([
+    { input: 59500000, expected: '59.5s' },
+    { input: 999, expected: '999μs' },
+    { input: 1000, expected: '1ms' },
+  ])('renders without a carry: $input μs is $expected', ({ input, expected }) => {
+    expect(formatDuration(input)).toBe(expected);
+  });
 });
 
 describe('getSuitableTimeUnit', () => {
@@ -274,7 +307,7 @@ describe('formatDurationCompact', () => {
     it('formats values 10-60s with 3 significant digits', () => {
       expect(formatDurationCompact(15000000)).toBe('15.0s');
       expect(formatDurationCompact(45678000)).toBe('45.7s');
-      expect(formatDurationCompact(59999000)).toBe('60.0s');
+      expect(formatDurationCompact(59900000)).toBe('59.9s');
     });
   });
 
@@ -295,8 +328,19 @@ describe('formatDurationCompact', () => {
     it('handles unit boundaries correctly', () => {
       expect(formatDurationCompact(999)).toBe('999μs');
       expect(formatDurationCompact(1000)).toBe('1.0ms');
-      expect(formatDurationCompact(999999)).toBe('1000ms');
+      expect(formatDurationCompact(999999)).toBe('1.0s');
       expect(formatDurationCompact(1000000)).toBe('1.0s');
+    });
+
+    // Rounding to three significant digits can reach the base of the next unit.
+    // Each pair is one microsecond either side of the boundary.
+    it.each([
+      { input: 999499, expected: '999ms' },
+      { input: 999500, expected: '1.0s' },
+      { input: 59949999, expected: '59.9s' },
+      { input: 59950000, expected: '1.0m' },
+    ])('carries at the boundary: $input μs is $expected', ({ input, expected }) => {
+      expect(formatDurationCompact(input)).toBe(expected);
     });
   });
 });

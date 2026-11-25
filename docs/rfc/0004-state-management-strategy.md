@@ -1,8 +1,8 @@
 # RFC 0004: State Management Strategy for Jaeger UI
 
-* **Status**: Partially Implemented — the decision has graduated into [ADR-0004](../adr/0004-state-management-strategy.md); Phases 0–2e delivered, see [Migration Path](#migration-path)
+* **Status**: Partially Implemented — the decision has graduated into [ADR-0004](../adr/0004-state-management-strategy.md); Phases 0–2g, 3a and 4 delivered, see [Migration Path](#migration-path)
 * **Created**: 2026-01-06
-* **Last Updated**: 2026-07-28
+* **Last Updated**: 2026-11-20
 
 > Originally filed as ADR-0004. It weighs three options and recommends one, and carries the phased migration checklist, so it now lives here and remains the plan of record for the remaining phases; [ADR-0004](../adr/0004-state-management-strategy.md) records the decision itself.
 
@@ -951,13 +951,13 @@ type IArchiveState = {
 
 **Components to rewire**: `ArchiveNotifier.tsx`, `TracePage` - stop dispatching Redux archive actions.
 
-#### 🚧 1c. Trace timeline UI (`traceTimeline` duck)
+#### ✅ 1c. Trace timeline UI (`traceTimeline` duck)
 
-**Redux to remove**: `src/components/TracePage/TraceTimelineViewer/duck.ts` — still registered in `src/utils/configure-store.ts` and still dispatched on every timeline interaction.
+**Redux removed**: `src/components/TracePage/TraceTimelineViewer/duck.ts`, its tracker `duck.track.ts`, and `src/middlewares/track.ts`.
 
 This is the **largest and most performance-sensitive** slice. Split across multiple PRs.
 
-**New Zustand store** — delivered as *two* stores rather than the single one sketched below, split by lifetime and both re-exported from `TraceTimelineViewer/store.ts`: `useLayoutPrefsStore` (`store.layout.ts`) holds the persisted layout fields, `useTraceTimelineStore` (`store.timeline.ts`) holds the per-trace interaction fields, so a trace change can reset the latter without touching the former. `prunedServices` was added to the timeline store later by [ADR-0009](../adr/0009-service-filter-trace-timeline.md). The single-store shape as originally proposed:
+**New Zustand store** — delivered as *two* stores rather than the single one sketched below, split by lifetime and both re-exported from `TraceTimelineViewer/store.ts`: `useDisplayedLayoutStore` (`store.layout.ts`) holds the displayed layout fields, which `useSavedLayoutPrefsStore` in the same file persists, `useTraceTimelineStore` (`store.timeline.ts`) holds the per-trace interaction fields, so a trace change can reset the latter without touching the former. `prunedServices` was added to the timeline store later by [ADR-0009](../adr/0009-service-filter-trace-timeline.md) and replaced by `spanFilter` in [RFC 0009](0009-trace-span-search-and-filter.md). The single-store shape as originally proposed:
 
 | Field | Type | Description | Persisted to |
 | :--- | :--- | :--- | :--- |
@@ -979,9 +979,9 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 1. ✅ Layout prefs: `spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`.
 2. ✅ Collapse/expand + detail: `childrenHiddenIDs`, `detailStates`, `shouldScrollToFirstUiFindMatch`.
 3. ✅ Hover: resolved by deletion rather than migration. `hoverIndentGuideIds` was dead state — the indent-guide highlight that consumed it (the `is-active` class and its CSS) was removed in [#3302](https://github.com/jaegertracing/jaeger-ui/pull/3302), leaving the Redux field, its two actions, the `SpanTreeOffset` mouse-enter/leave writers, and the `VirtualizedTraceView` `useSelector` read as orphaned code that fed nothing. All removed in [#4352](https://github.com/jaegertracing/jaeger-ui/pull/4352); `SpanTreeOffset` is now a plain (unconnected) functional component. Hover is not tracked by the analytics middleware, so no dual-write was involved.
-4. ✅ Timeline analytics: the handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so every event still reads pre-update state. `store.track.test.ts` replays a scripted session through the old middleware and through the trackers and asserts identical events.
+4. ✅ Timeline analytics: the handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so every event still reads pre-update state. `store.track.test.ts` replays a scripted session through the trackers and asserts the events the old middleware emitted for it.
 
-**Why the duck is still alive**: after step 3, no UI component reads or writes `traceTimeline`. `duck.track.ts` and `src/middlewares/track.ts` are still installed through `configure-store.ts` but no longer receive any action with a tracking hook. The parity test uses them as the reference, and they go with the duck in a follow-up deletion PR.
+5. ✅ Duck deletion, delivered in [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742): with no reader or writer left, the duck, its tracker, and the tracking middleware are deleted. The parity test keeps the middleware's recorded events as its expected output, and `store.test.ts` took over the duck's reducer cases that the Zustand tests lacked.
 
 **Components rewired off the dual write**: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`. `SpanTreeOffset` no longer touches Redux.
 
@@ -1212,37 +1212,38 @@ Only promote to a Zustand store if profiling proves the `useMemo` pattern causes
 
 ### Phase 4 - Remove Redux
 
-#### ⬜ 4a. Audit
+#### ✅ 4a. Audit
 
 Grep for `useSelector`, `useDispatch`, `connect(`, `configureStore`, and all imports from `redux-actions` / `redux-promise-middleware`. Every hit must have a migration plan before proceeding.
 
-The residual surface is now small enough to enumerate:
+The audit found these artefacts:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
-| `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | no UI consumers; `store.track.test.ts` (parity reference) | Phase 4 follow-up (Phase 1c steps 3–4 done) |
-| `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
+| ✅ `utils/configure-store.ts`, the promise middleware in `middlewares/index.ts`, and `<Provider>` in `components/App/index.tsx` | app shell; store mocks in the two App tests; `<Provider>` wrappers in the SearchTracePage and DeepDependencies tests | Delivered in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812) |
+| `types/TTraceTimeline.ts` | `VirtualizedTraceView` props | Not Redux: a plain prop type with no Redux import, kept as is |
 | ✅ Vestigial `connect()` wrappers whose `mapStateToProps` ignored state entirely (`SearchForm`, `TraceDiff`, `TracePage`) and the unused `MetricsReduxState` type | none | Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) |
+| ✅ `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts`, the `ReduxState` type, `utils/guardReducer.ts`, and the `redux-actions` package | none | Delivered in [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) |
 
-Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c steps 3–4 are done; the duck remains only for parity tests until Phase 4 follow-up.
+Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c is complete, and the duck is deleted.
 
-#### ⬜ 4b. Remove packages
+#### ✅ 4b. Remove packages
 
 ```bash
-npm uninstall redux react-redux redux-actions redux-promise-middleware
+pnpm remove redux react-redux redux-promise-middleware
 ```
 
-Delete:
-- `src/reducers/` (all files migrated in Phases 1–2)
-- `src/actions/` (replaced by Zustand actions or Query mutation calls)
-- Duck files (`duck.ts` in component directories)
-- `src/configure-store.ts`
+Delivered in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812), which also deleted the store in `src/utils/configure-store.ts` and the promise middleware in `src/middlewares/`. Earlier phases had already deleted `src/actions/` and the duck files. `src/reducers/` is gone too: the one file left in it, the `metrics.mock.ts` test fixture, moved next to the Monitor tests that use it.
 
-#### ⬜ 4c. Tests and documentation
+`redux` and `react-redux` stay in the lockfile, because `recharts` depends on `@reduxjs/toolkit`. No Jaeger UI code imports them.
 
-- Replace Redux `<Provider>` test wrappers with `AppQueryClientProvider` + Zustand test patterns.
-- Supersede [ADR-0005](../adr/0005-current-state-management-architecture.md) once Redux is no longer part of the runtime.
-- Update contributor documentation.
+#### ✅ 4c. Tests and documentation
+
+Delivered in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812).
+
+- The SearchTracePage and DeepDependencies tests render without a Redux `<Provider>` and keep their Query client and router setup. The App tests have no store mocks.
+- [ADR-0005](../adr/0005-current-state-management-architecture.md) is updated in place to describe the app without Redux, as [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) and [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) did for earlier removals.
+- `AGENTS.md` and the package README describe no Redux store.
 
 ---
 
@@ -1433,7 +1434,7 @@ const trace = {
 ---
 
 **Status**: Partially Implemented  
-**Next Steps**: Complete Phase 1c step 3, then Phases 2f–2g and 4
+**Next Steps**: Phase 3b, if profiling shows a need
 
 ---
 

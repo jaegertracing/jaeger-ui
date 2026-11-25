@@ -17,7 +17,7 @@ import ServiceGraph, {
   renderLines,
   COLORS,
 } from './serviceGraph';
-import { serviceMetrics } from '../../../reducers/metrics.mock';
+import { serviceMetrics } from '../metrics.mock';
 
 const ServiceGraphImpl = ServiceGraph;
 
@@ -72,6 +72,11 @@ describe('<ServiceGraph>', () => {
     expect(loadingIndicator).toBeInTheDocument();
     expect(loadingIndicator).toHaveClass('is-centered');
     expect(screen.getByRole('heading', { name: 'Hello Graph' })).toBeInTheDocument();
+  });
+
+  it('does not announce a loading status for the per-graph placeholder', () => {
+    render(<ServiceGraph {...defaultProps} />);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('renders loading indicator when xDomain is empty or undefined', () => {

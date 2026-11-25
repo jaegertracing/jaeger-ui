@@ -188,7 +188,7 @@ export function UnconnectedSearchResults({
     return (
       <React.Fragment key="loading">
         {diffCohort.length > 0 && diffSelection}
-        <LoadingIndicator className="u-mt-vast" centered />
+        <LoadingIndicator className="u-mt-vast" centered label="Loading search results" />
       </React.Fragment>
     );
   }

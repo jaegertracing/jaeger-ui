@@ -150,6 +150,12 @@ If you are adding a new file it should have a header like below.
 // SPDX-License-Identifier: Apache-2.0
 ```
 
+## Code Review
+
+[REVIEW.md](./REVIEW.md) states what a review reports, including how the operational risk of a change is assessed. It applies to a human reviewer and to an AI agent alike.
+
+When a change matches an item under [Operational risk](./REVIEW.md#operational-risk), its description says what fails when the new code misbehaves and for whom, how the change is turned off or rolled back, and whether state stored by the new version survives the rollback.
+
 ## Cutting a Jaeger UI release
 
 Please see [RELEASE.md](./RELEASE.md).

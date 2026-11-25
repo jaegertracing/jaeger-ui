@@ -175,6 +175,11 @@ describe('OtelSpanFacade', () => {
     expect(facade.kind).toBe(SpanKind.SERVER);
   });
 
+  it('maps an unrecognized span kind tag to UNSPECIFIED', () => {
+    const span = { ...mockLegacySpan, tags: [{ key: 'span.kind', value: 'bogus' }] };
+    expect(new OtelSpanFacade(span).kind).toBe(SpanKind.UNSPECIFIED);
+  });
+
   describe('genAIKind classification', () => {
     it('classifies a span with no gen_ai.* attributes as undefined', () => {
       expect(facade.genAIKind).toBeUndefined();

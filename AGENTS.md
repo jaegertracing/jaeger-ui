@@ -22,12 +22,10 @@ jaeger-ui/
 ├── packages/
 │   ├── jaeger-ui/          # Main React application (Vite + React 19)
 │   │   ├── src/
-│   │   │   ├── actions/    # Redux actions (residual, being removed)
 │   │   │   ├── api/        # API layer (v3/ is the OTLP client)
 │   │   │   ├── components/ # React components
 │   │   │   ├── hooks/      # TanStack Query hooks
 │   │   │   ├── query/      # Shared QueryClient + provider
-│   │   │   ├── reducers/   # Redux reducers (residual, being removed)
 │   │   │   ├── stores/     # Zustand stores
 │   │   │   ├── types/      # TypeScript types
 │   │   │   └── utils/      # Utility functions
@@ -147,18 +145,20 @@ pnpm test -- --coverage
 pnpm --filter @jaegertracing/jaeger-ui test --coverage --coverage.include="src/path/to/file.tsx"
 ```
 
+The Codecov project check fails a pull request whose project coverage is lower than that of its base commit (`.codecov.yml`). A refactoring that deletes code covered above the project average lowers project coverage even when every changed line is tested, because the uncovered lines that remain become a larger share of the total. Such a pull request adds tests for existing uncovered code, whether or not that code is related to the refactoring, until project coverage is back at the base level. Adding those tests is the recommended fix and is not scope creep. The pull request description states that those tests offset the coverage drop, so that a reviewer can tell them apart from the tests of the change itself.
+
 ## Common Patterns
 
 ### State management
 
-New state does **not** go into Redux. See [ADR-0004](./docs/adr/0004-state-management-strategy.md) for the decision, [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired today, and [RFC 0004](./docs/rfc/0004-state-management-strategy.md) for what is left to migrate.
+See [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired.
 
 - Server data → TanStack Query hooks in `src/hooks/`, clients in `src/api/v3/`
 - Shared client UI state → Zustand stores in `src/stores/`, or `store.<slice>.ts` colocated with the owning feature
 - Deep-linkable view state → the page's `url.ts` helpers
 - User preferences → `localStorage`
 
-Redux remains in the timeline duck and tracking middleware as the analytics parity reference, plus the app store and `<Provider>`. `src/reducers/index.ts` is an empty map. Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`; there is no `src/selectors/`.
+Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`.
 
 ### Component Structure
 
@@ -182,7 +182,7 @@ ComponentName/
 ## Dependencies
 
 - **React 19** with React DOM
-- **Redux** for state management
+- **TanStack Query** and **Zustand** for state management
 - **React Router v5** for routing
 - **Ant Design v6** for UI components
 - **Vite** for build tooling
@@ -201,6 +201,10 @@ When a relocation is unavoidable, structure the pull requests so that each diff 
 - State in the pull request description how the reviewer can verify that nothing was lost, for example by reviewing with whitespace changes hidden, or by naming the git rename similarity.
 
 A pull request that deletes more test lines than it adds, or that shows a test file as deleted and a new file as added, is not merged without a maintainer confirming the correspondence by hand.
+
+## Pull Requests
+
+When a change matches an item under [Operational risk](./REVIEW.md#operational-risk), the PR description says what fails when the new code misbehaves and for whom, how the change is turned off or rolled back, and whether state stored by the new version survives the rollback.
 
 ## Commits
 

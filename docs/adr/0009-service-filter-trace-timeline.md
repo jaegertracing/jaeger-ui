@@ -1,6 +1,6 @@
 # ADR-0009: Service Filter for Trace Timeline View
 
-* **Status**: Implemented
+* **Status**: Superseded by [ADR-0012](./0012-span-search-and-filter.md), which keeps the service filter as the hide clause on service of a wider span filter
 * **Date**: 2026-04-20
 
 ## Context
@@ -33,7 +33,7 @@ See `src/components/TracePage/url/svcFilter.ts` for the implementation.
 
 ### State Management
 
-- **Zustand** (`store.timeline.ts`): `prunedServices: Set<string>` — services currently pruned (empty = no filter). Using "pruned" (not "visible") means the empty set is the natural default. Reset on trace change.
+- **Zustand** (`store.timeline.ts`): `prunedServices: Set<string>` — services currently pruned (empty = no filter). Using "pruned" (not "visible") means the empty set is the natural default. Reset on trace change. [RFC 0009](../rfc/0009-trace-span-search-and-filter.md) keeps this set in the store's `spanFilter` as a hide clause on service; `hiddenServices()` in `TracePage/spanFilter.ts` reads it back.
 - **localStorage** (`svcFilter.defaults`): cross-trace user preference for services to always prune (e.g., infrastructure services). Applied when no `svcFilter` URL param is present.
 - **URL**: source of truth for shared state. Updated on filter change via `navigate({ search }, { replace: true })`.
 
@@ -85,7 +85,7 @@ When a selected span's service is pruned (in side panel mode), `detailStates` is
 ### ✅ Phase 1: Core Infrastructure
 
 - URL encoding utilities (`url/svcFilter.ts`) — `svcChecksum`, `encodeSvcFilter`, `decodeSvcFilter`, `getSortedServiceNames`
-- Zustand store changes (`store.timeline.ts`) — `prunedServices`, `setPrunedServices`, `clearServiceFilter`
+- Zustand store changes (`store.timeline.ts`) — `prunedServices`, `setPrunedServices`, `clearServiceFilter`, which RFC 0009 replaces with `spanFilter` and `setSpanFilter`
 - localStorage integration — read/write `svcFilter.defaults` on trace load
 
 ### ✅ Phase 2: Pruning Logic
