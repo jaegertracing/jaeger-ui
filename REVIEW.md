@@ -38,7 +38,7 @@ The first line of the review rates the risk, with the reason in one sentence. Th
 - **Medium:** the change takes effect on upgrade and can be undone, or it takes effect only when enabled and cannot be undone.
 - **High:** the change takes effect on upgrade, in every deployment that it applies to, and it cannot be undone.
 
-A change to what goes into the bundle is rated by what the next release would do if the change were wrong. A change to a CI workflow or to release tooling takes effect when the workflow next runs, before any release, so it is rated by what the workflow can reach (secrets, write access to the repository, release artifacts) and by whether its effects can be reversed. A High rating asks for a review by a maintainer who knows the affected area, whatever the size of the diff.
+The two questions do not fit a change to the build, to CI or to release tooling. Rate such a change by the damage that a mistake in it does before it is reverted. It is High when a revert does not undo the damage, such as a leaked secret or a published artifact. A High rating asks for a review by a maintainer who knows the affected area, whatever the size of the diff.
 
 When no item applies, the review says nothing about risk.
 
