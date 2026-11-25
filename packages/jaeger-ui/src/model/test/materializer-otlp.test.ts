@@ -25,7 +25,7 @@ describe('OTLP trace contract materializer', () => {
         {
           spanID: 'named',
           name: 'named',
-          kind: 2,
+          kind: 'server',
           scope: { name: 'library', version: '1' },
           events: [{ name: 'event', timestamp: 3, attributes: [{ key: 'value', value: false }] }],
         },
@@ -87,8 +87,12 @@ describe('OTLP trace contract materializer', () => {
           spanID: 'linked',
           name: 'linked',
           links: [
-            { refType: 'CHILD_OF', spanID: 'child' },
-            { refType: 'CHILD_OF', spanID: 'other' },
+            { spanID: 'child' },
+            {
+              spanID: 'other',
+              traceID: '0123456789abcdef0123456789abcdef',
+              attributes: [{ key: 'link.attr', value: 'value' }],
+            },
           ],
           attributes: [
             { key: 'string', value: 'value' },
@@ -100,7 +104,7 @@ describe('OTLP trace contract materializer', () => {
         {
           spanID: 'follower',
           name: 'follower',
-          links: [{ refType: 'FOLLOWS_FROM', spanID: 'other' }],
+          links: [{ spanID: 'other' }],
         },
       ],
     });
@@ -118,12 +122,12 @@ describe('OTLP trace contract materializer', () => {
       {
         traceId: spec.traceID,
         spanId: spanIDForWire('child'),
-        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
+        attributes: [],
       },
       {
-        traceId: spec.traceID,
+        traceId: '0123456789abcdef0123456789abcdef',
         spanId: spanIDForWire('other'),
-        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
+        attributes: [{ key: 'link.attr', value: { stringValue: 'value' } }],
       },
     ]);
     expect(spans[1]).not.toHaveProperty('parentSpanId');
@@ -131,7 +135,7 @@ describe('OTLP trace contract materializer', () => {
       {
         traceId: spec.traceID,
         spanId: spanIDForWire('other'),
-        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'follows_from' } }],
+        attributes: [],
       },
     ]);
   });
@@ -144,11 +148,7 @@ describe('OTLP trace contract materializer', () => {
           spanID: 'linked',
           name: 'linked',
           parentSpanID,
-          links: [
-            { refType: 'FOLLOWS_FROM', spanID: 'follower-target' },
-            { refType: 'CHILD_OF', spanID: 'parent-target' },
-            { refType: 'CHILD_OF', spanID: 'other-target' },
-          ],
+          links: [{ spanID: 'follower-target' }, { spanID: 'parent-target' }, { spanID: 'other-target' }],
         },
       ],
     });
@@ -163,19 +163,66 @@ describe('OTLP trace contract materializer', () => {
       {
         traceId: spec.traceID,
         spanId: spanIDForWire('follower-target'),
-        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'follows_from' } }],
+        attributes: [],
       },
       {
         traceId: spec.traceID,
         spanId: spanIDForWire('parent-target'),
-        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
+        attributes: [],
       },
       {
         traceId: spec.traceID,
         spanId: spanIDForWire('other-target'),
-        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
+        attributes: [],
       },
     ]);
+  });
+
+  it('renders status codes and an empty status when none is set', () => {
+    const wire = toOtlpTrace({
+      ...spec,
+      spans: [
+        { spanID: 'unset', name: 'unset', status: { code: 'unset' } },
+        { spanID: 'ok', name: 'ok', status: { code: 'ok' } },
+        { spanID: 'error', name: 'error', status: { code: 'error', message: 'boom' } },
+        { spanID: 'none', name: 'none' },
+      ],
+    });
+    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+
+    const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
+    expect(spans[0].status).toEqual({ code: 0 });
+    expect(spans[1].status).toEqual({ code: 1 });
+    expect(spans[2].status).toEqual({ code: 2, message: 'boom' });
+    expect(spans[3].status).toEqual({});
+  });
+
+  it('groups spans into one resource per service and appends trace resource attributes', () => {
+    const wire = toOtlpTrace({
+      ...spec,
+      resourceAttributes: [{ key: 'deployment.environment', value: 'test' }],
+      spans: [
+        { spanID: 'a', name: 'a' },
+        { spanID: 'b', name: 'b', serviceName: 'other' },
+        { spanID: 'c', name: 'c' },
+      ],
+    });
+    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+
+    const resources = wire.resourceSpans!;
+    expect(resources.map(group => group.resource!.attributes)).toEqual([
+      [
+        { key: 'service.name', value: { stringValue: 'serviceName' } },
+        { key: 'deployment.environment', value: { stringValue: 'test' } },
+      ],
+      [
+        { key: 'service.name', value: { stringValue: 'other' } },
+        { key: 'deployment.environment', value: { stringValue: 'test' } },
+      ],
+    ]);
+    expect(
+      resources.map(group => group.scopeSpans.flatMap(scopes => scopes.spans.map(span => span.spanId)))
+    ).toEqual([[spanIDForWire('a'), spanIDForWire('c')], [spanIDForWire('b')]]);
   });
 
   it.each([
