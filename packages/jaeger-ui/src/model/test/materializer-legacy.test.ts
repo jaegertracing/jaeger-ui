@@ -26,7 +26,7 @@ it('renders one process per service in first-appearance order', () => {
   const trace = toLegacyTrace({
     traceID: 'trace',
     serviceName: 'default-service',
-    resource: [{ key: 'deployment.environment', value: 'test' }],
+    resourceAttributes: [{ key: 'deployment.environment', value: 'test' }],
     spans: [
       { spanID: 'root', name: 'root' },
       { spanID: 'child', name: 'child', parentSpanID: 'root', serviceName: 'other-service' },
@@ -56,7 +56,7 @@ it('renders an error status as the legacy error tag', () => {
   ]);
 });
 
-it('keeps the parent CHILD_OF reference before the link references', () => {
+it('renders the parent as a CHILD_OF reference and links as FOLLOWS_FROM references', () => {
   const trace = toLegacyTrace({
     traceID: 'trace',
     serviceName: 'service',

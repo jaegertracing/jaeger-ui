@@ -8,19 +8,22 @@ import { ITraceSpec } from './trace-contract-spec';
 export function toLegacyTrace({
   traceID,
   serviceName,
-  resource,
+  resourceAttributes = [],
   spans,
 }: ITraceSpec): TraceData & { spans: SpanData[] } {
   // One process per service, in order of first appearance.
   const processes: Record<string, Process> = {};
   const processIDByService = new Map<string, string>();
   for (const span of spans) {
-    const name = span.serviceName ?? serviceName;
-    if (processIDByService.has(name)) continue;
+    const spanServiceName = span.serviceName ?? serviceName;
+    if (processIDByService.has(spanServiceName)) continue;
     const processID = `p${processIDByService.size + 1}`;
-    processIDByService.set(name, processID);
+    processIDByService.set(spanServiceName, processID);
     // Legacy process tags are typed as string values, but the facade reads them as-is.
-    processes[processID] = { serviceName: name, tags: [...(resource ?? [])] as Process['tags'] };
+    processes[processID] = {
+      serviceName: spanServiceName,
+      tags: [...resourceAttributes] as Process['tags'],
+    };
   }
 
   return {
@@ -45,12 +48,13 @@ export function toLegacyTrace({
         duration: 1,
         ...span,
       };
-      // The transformer takes the first same-trace CHILD_OF as the parent, so links
-      // stay FOLLOWS_FROM and come after the parent reference.
+      // The v1 format lists the parent and the links together as references. The parent is written
+      // as CHILD_OF and each link as FOLLOWS_FROM, because the transformer prefers CHILD_OF when it
+      // picks the parent.
       const references: SpanReference[] = [
-        ...(parentSpanID === undefined
-          ? []
-          : [{ refType: 'CHILD_OF' as const, traceID, spanID: parentSpanID, span: undefined }]),
+        ...(parentSpanID
+          ? [{ refType: 'CHILD_OF' as const, traceID, spanID: parentSpanID, span: undefined }]
+          : []),
         ...links.map(link => ({
           refType: 'FOLLOWS_FROM' as const,
           traceID: link.traceID ?? traceID,

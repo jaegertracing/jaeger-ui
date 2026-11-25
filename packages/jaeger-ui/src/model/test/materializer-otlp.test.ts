@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { refinedTracesData } from '../../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
-import { spanIDForWire, toOtelTrace, toOtlpTrace } from './materializer-otlp';
+import { spanIDForWire, toOtlpTrace } from './materializer-otlp';
 
 const spec: ITraceSpec = {
   traceID: 'f77950feed55c1ce91dd8e87896623a6',
@@ -200,7 +200,7 @@ describe('OTLP trace contract materializer', () => {
   it('groups spans into one resource per service and appends trace resource attributes', () => {
     const wire = toOtlpTrace({
       ...spec,
-      resource: [{ key: 'deployment.environment', value: 'test' }],
+      resourceAttributes: [{ key: 'deployment.environment', value: 'test' }],
       spans: [
         { spanID: 'a', name: 'a' },
         { spanID: 'b', name: 'b', serviceName: 'other' },
@@ -234,18 +234,5 @@ describe('OTLP trace contract materializer', () => {
     expect(() => toOtlpTrace({ ...spec, spans: [{ ...spec.spans[0], ...timing }] })).toThrow(
       `Invalid OTLP ${field}`
     );
-  });
-});
-
-describe('toOtelTrace()', () => {
-  it('parses a spec the way the contract suite wires the OTLP pipeline', () => {
-    const trace = toOtelTrace(spec);
-
-    expect(trace.traceID).toBe(spec.traceID);
-    expect(trace.spans.map(span => span.spanID)).toEqual([spec.spans[0].spanID, spanIDForWire('child')]);
-  });
-
-  it('throws when the spec materializes no spans', () => {
-    expect(() => toOtelTrace({ ...spec, spans: [] })).toThrow('parsed to no spans');
   });
 });

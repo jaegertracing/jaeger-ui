@@ -171,7 +171,7 @@ export function runTraceContractSuite(pipeline) {
           status: { code: 'error', message: 'boom' },
         })
       );
-      // The legacy facade derives status from the error tag and drops the message.
+      // The message is not compared, because the legacy facade reports 'error' in place of it.
       expect(result.spans[0].status.code).toBe(StatusCode.ERROR);
     });
 
@@ -198,13 +198,13 @@ export function runTraceContractSuite(pipeline) {
       ]);
     });
 
-    it('materializes one process per service and the trace-level resource attributes', () => {
-      const resource = [{ key: 'deployment.environment', value: 'test' }];
+    it("reports each span's service and the resource attributes", () => {
+      const resourceAttributes = [{ key: 'deployment.environment', value: 'test' }];
       const result = pipeline.parse(
         pipeline.materialize({
           traceID,
           serviceName,
-          resource,
+          resourceAttributes,
           spans: [
             { spanID: rootSpanID, name: rootOperationName },
             {

@@ -1,10 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { parseOtelTrace } from '../../api/v3/parser';
-import { refinedTracesData, type TracesDataWire } from '../../api/v3/schemas';
-import type { IOtelTrace } from '../../types/otel';
-import type { ITraceSpec } from './trace-contract-spec';
+import type { TracesDataWire } from '../../api/v3/schemas';
+import type { ISpecAttribute, ITraceSpec } from './trace-contract-spec';
 
 const spanKindWire = {
   unspecified: 0,
@@ -33,28 +31,31 @@ export function spanIDForWire(spanID: string): string {
 }
 
 /** Render contract test span specs as OTLP TracesData for parseOtelTrace(). */
-export function toOtlpTrace({ traceID, serviceName, resource, spans }: ITraceSpec): TracesDataWire {
+export function toOtlpTrace({ traceID, serviceName, resourceAttributes, spans }: ITraceSpec): TracesDataWire {
   const attributeValue = (value: string | number | boolean) => {
     if (typeof value === 'string') return { stringValue: value };
     if (typeof value === 'boolean') return { boolValue: value };
     return Number.isSafeInteger(value) ? { intValue: String(value) } : { doubleValue: value };
   };
-  const wireAttributes = (attributes: ITraceSpec['resource']) =>
-    (attributes ?? []).map(attribute => ({ key: attribute.key, value: attributeValue(attribute.value) }));
+  const wireAttributes = (attributes: ISpecAttribute[] = []) =>
+    attributes.map(attribute => ({ key: attribute.key, value: attributeValue(attribute.value) }));
 
   // One resource per service, in order of first appearance.
   const spansByService = new Map<string, ITraceSpec['spans']>();
   for (const span of spans) {
-    const name = span.serviceName ?? serviceName;
-    const serviceSpans = spansByService.get(name);
+    const spanServiceName = span.serviceName ?? serviceName;
+    const serviceSpans = spansByService.get(spanServiceName);
     if (serviceSpans) serviceSpans.push(span);
-    else spansByService.set(name, [span]);
+    else spansByService.set(spanServiceName, [span]);
   }
 
   return {
-    resourceSpans: [...spansByService].map(([name, serviceSpans]) => ({
+    resourceSpans: [...spansByService].map(([spanServiceName, serviceSpans]) => ({
       resource: {
-        attributes: [{ key: 'service.name', value: { stringValue: name } }, ...wireAttributes(resource)],
+        attributes: [
+          { key: 'service.name', value: { stringValue: spanServiceName } },
+          ...wireAttributes(resourceAttributes),
+        ],
       },
       // Each span gets its own scopeSpans entry so that the wire keeps the spec's span order within each service.
       scopeSpans: serviceSpans.map(span => {
@@ -101,17 +102,14 @@ export function toOtlpTrace({ traceID, serviceName, resource, spans }: ITraceSpe
           events: events.map(event => ({
             ...(event.name === undefined ? {} : { name: event.name }),
             timeUnixNano: (BigInt(event.timestamp) * 1000n).toString(),
-            attributes: (event.attributes ?? []).map(attribute => ({
-              key: attribute.key,
-              value: attributeValue(attribute.value),
-            })),
+            attributes: wireAttributes(event.attributes),
           })),
           ...(wireStartTime === undefined || start === 0n
             ? {}
             : { startTimeUnixNano: (start * 1000n).toString() }),
           ...(end === undefined || end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
           attributes: [
-            ...tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
+            ...wireAttributes(tags),
             // The v3 API sends backend diagnostics in this reserved attribute.
             ...(warnings === undefined
               ? []
@@ -136,13 +134,4 @@ export function toOtlpTrace({ traceID, serviceName, resource, spans }: ITraceSpe
       }),
     })),
   };
-}
-
-/** Parse a spec through the OTLP materializer, as parser.test.ts wires the contract suite. */
-export function toOtelTrace(spec: ITraceSpec): IOtelTrace {
-  const trace = parseOtelTrace(refinedTracesData.parse(toOtlpTrace(spec)));
-  if (!trace) {
-    throw new Error(`OTLP trace for spec ${spec.traceID} parsed to no spans`);
-  }
-  return trace;
 }
