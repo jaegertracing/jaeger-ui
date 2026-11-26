@@ -62,10 +62,10 @@ const SERVICES = {
 
 const SPAN_KINDS = { unspecified: 0, internal: 1, server: 2, client: 3, producer: 4, consumer: 5 };
 
-// The OTLP JSON encoding names the value type in the key, so the tag type field the
-// legacy encoding carried is gone.
+// The OTLP JSON encoding names the value type in the key.
 const anyValue = value => {
-  if (typeof value === 'number') return { intValue: String(value) };
+  if (Number.isInteger(value)) return { intValue: String(value) };
+  if (typeof value === 'number') return { doubleValue: value };
   if (typeof value === 'boolean') return { boolValue: value };
   return { stringValue: value };
 };
@@ -228,7 +228,17 @@ function createBuilder() {
   const spans = [];
   let seq = 0;
 
-  function span({ name, proc, parent, kind = 'internal', genAIOp, model, error = false, duration, attrs }) {
+  function span({
+    name,
+    serviceKey,
+    parent,
+    kind = 'internal',
+    genAIOp,
+    model,
+    error = false,
+    duration,
+    attrs,
+  }) {
     const spanID = (++seq).toString(16).padStart(16, '0');
     const attributes = [];
     if (genAIOp) attributes.push({ key: 'gen_ai.operation.name', value: anyValue(genAIOp) });
@@ -246,7 +256,7 @@ function createBuilder() {
       duration,
       attributes,
       status: error ? { code: 2 } : {},
-      serviceKey: proc,
+      serviceKey,
     });
     return spanID;
   }
@@ -309,22 +319,22 @@ function buildTrace(turns) {
   // agent last as long as the turns below them take, so they carry no duration here.
   const edge = span({
     name: 'POST /api/graphql',
-    proc: 'p1',
+    serviceKey: 'p1',
     kind: 'server',
     attrs: httpServer('POST', '/api/graphql', 200),
   });
   const gateway = span({
     name: 'Query.assistantReply',
-    proc: 'p2',
+    serviceKey: 'p2',
     parent: edge,
     kind: 'server',
   });
   // The resolver that calls the agent runs inside the execution span.
-  const execution = span({ name: 'graphql.execution', proc: 'p2', parent: gateway });
+  const execution = span({ name: 'graphql.execution', serviceKey: 'p2', parent: gateway });
 
   const agent = span({
     name: 'invoke_agent triage-agent',
-    proc: 'p3',
+    serviceKey: 'p3',
     parent: execution,
     kind: 'server',
     genAIOp: 'invoke_agent',
@@ -335,7 +345,7 @@ function buildTrace(turns) {
   function llmCall(parent, model) {
     const llm = span({
       name: `chat ${model}`,
-      proc: 'p3',
+      serviceKey: 'p3',
       parent,
       kind: 'client',
       genAIOp: 'chat',
@@ -351,7 +361,7 @@ function buildTrace(turns) {
     });
     span({
       name: 'POST /v1/messages',
-      proc: 'p3',
+      serviceKey: 'p3',
       parent: llm,
       kind: 'client',
       duration: 1750000,
@@ -364,7 +374,7 @@ function buildTrace(turns) {
   function toolCall(parent, toolName, fanOut) {
     const tool = span({
       name: `execute_tool ${toolName}`,
-      proc: 'p3',
+      serviceKey: 'p3',
       parent,
       genAIOp: 'execute_tool',
       duration: 900000,
@@ -372,7 +382,7 @@ function buildTrace(turns) {
     });
     const mcp = span({
       name: 'POST /mcp/tools/call',
-      proc: 'p4',
+      serviceKey: 'p4',
       parent: tool,
       kind: 'server',
       duration: 850000,
@@ -380,7 +390,7 @@ function buildTrace(turns) {
     });
     span({
       name: 'GET /validate',
-      proc: 'p5',
+      serviceKey: 'p5',
       parent: mcp,
       kind: 'server',
       duration: 40000,
@@ -396,7 +406,7 @@ function buildTrace(turns) {
     toolCall(agent, 'list_dashboards', (mcp, emit) => {
       const query = emit({
         name: 'GET /api/v1/query',
-        proc: 'p6',
+        serviceKey: 'p6',
         parent: mcp,
         kind: 'server',
         duration: 300000,
@@ -404,7 +414,7 @@ function buildTrace(turns) {
       });
       emit({
         name: 'SELECT series',
-        proc: 'p6',
+        serviceKey: 'p6',
         parent: query,
         kind: 'client',
         duration: 120000,
@@ -415,7 +425,7 @@ function buildTrace(turns) {
     toolCall(agent, 'search_traces', (mcp, emit) => {
       const query = emit({
         name: 'GET /api/traces',
-        proc: 'p7',
+        serviceKey: 'p7',
         parent: mcp,
         kind: 'server',
         duration: 500000,
@@ -423,7 +433,7 @@ function buildTrace(turns) {
       });
       emit({
         name: 'search',
-        proc: 'p7',
+        serviceKey: 'p7',
         parent: query,
         kind: 'client',
         duration: 200000,
@@ -432,7 +442,7 @@ function buildTrace(turns) {
       // The only error in the trace, inside a subtree the filter prunes.
       emit({
         name: 'GET /api/v1/pods',
-        proc: 'p8',
+        serviceKey: 'p8',
         parent: query,
         kind: 'server',
         error: turn === 0,
@@ -443,7 +453,7 @@ function buildTrace(turns) {
 
     const retrieval = span({
       name: 'retrieval vector-search',
-      proc: 'p3',
+      serviceKey: 'p3',
       parent: agent,
       kind: 'client',
       genAIOp: 'retrieval',
@@ -451,7 +461,7 @@ function buildTrace(turns) {
     });
     span({
       name: 'SEARCH docs',
-      proc: 'p9',
+      serviceKey: 'p9',
       parent: retrieval,
       kind: 'server',
       duration: 200000,
@@ -462,14 +472,14 @@ function buildTrace(turns) {
   // A nested agent below the plain MCP server.
   const nestedTool = span({
     name: 'execute_tool summarize_findings',
-    proc: 'p3',
+    serviceKey: 'p3',
     parent: agent,
     genAIOp: 'execute_tool',
     duration: 4000000,
   });
   const nestedMcp = span({
     name: 'POST /mcp/tools/call',
-    proc: 'p4',
+    serviceKey: 'p4',
     parent: nestedTool,
     kind: 'server',
     duration: 3900000,
@@ -477,7 +487,7 @@ function buildTrace(turns) {
   });
   span({
     name: 'GET /validate',
-    proc: 'p5',
+    serviceKey: 'p5',
     parent: nestedMcp,
     kind: 'server',
     duration: 40000,
@@ -485,7 +495,7 @@ function buildTrace(turns) {
   });
   const nestedAgent = span({
     name: 'invoke_agent summarizer',
-    proc: 'p10',
+    serviceKey: 'p10',
     parent: nestedMcp,
     kind: 'server',
     genAIOp: 'invoke_agent',
@@ -499,7 +509,7 @@ function buildTrace(turns) {
   // A multimodal turn, so the tab's media views have something to render.
   const mediaLlm = span({
     name: 'chat model-multimodal',
-    proc: 'p3',
+    serviceKey: 'p3',
     parent: agent,
     kind: 'client',
     genAIOp: 'chat',
@@ -509,7 +519,7 @@ function buildTrace(turns) {
   });
   span({
     name: 'POST /v1/messages',
-    proc: 'p3',
+    serviceKey: 'p3',
     parent: mediaLlm,
     kind: 'client',
     duration: 2050000,
@@ -524,7 +534,7 @@ function buildTrace(turns) {
 function llmCallIn(span, parent) {
   const llm = span({
     name: 'chat model-b',
-    proc: 'p10',
+    serviceKey: 'p10',
     parent,
     kind: 'client',
     genAIOp: 'chat',
@@ -540,7 +550,7 @@ function llmCallIn(span, parent) {
   });
   span({
     name: 'POST /v1/messages',
-    proc: 'p10',
+    serviceKey: 'p10',
     parent: llm,
     kind: 'client',
     duration: 3450000,
