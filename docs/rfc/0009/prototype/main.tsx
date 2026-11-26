@@ -691,7 +691,7 @@ function App() {
       <div className="url">{window.location.pathname}{urlSearch || '(no parameters)'}</div>
       <div className="header">
         <span className="title">
-          Trace {fixture.traceID.slice(0, 7)} <small>{trace.spans.length} spans · {trace.services.length} services · <span className={totalErrors ? 'caption-err' : ''}>{totalErrors} error{totalErrors === 1 ? '' : 's'}</span> · {fmtDuration(trace.duration)}</small>
+          Trace {trace.traceId.slice(0, 7)} <small>{trace.spans.length} spans · {trace.services.length} services · <span className={totalErrors ? 'caption-err' : ''}>{totalErrors} error{totalErrors === 1 ? '' : 's'}</span> · {fmtDuration(trace.duration)}</small>
         </span>
         <div className="cluster">
           <Input
