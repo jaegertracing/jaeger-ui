@@ -192,26 +192,26 @@ export const refinedAnyValue: z.ZodType<AnyValueWire> = z.lazy(() =>
 );
 
 // `values` stays optional: the backend drops it entirely for empty arrays (`arrayValue: {}` on the wire).
-export const refinedArrayValue: z.ZodType<{ values?: AnyValueWire[] }> = z.lazy(() =>
+const refinedArrayValue: z.ZodType<{ values?: AnyValueWire[] }> = z.lazy(() =>
   z.object({ values: z.array(refinedAnyValue).optional() }).passthrough()
 );
 
-export const refinedKeyValue: z.ZodType<{ key: string; value: AnyValueWire }> = z.lazy(() =>
+const refinedKeyValue: z.ZodType<{ key: string; value: AnyValueWire }> = z.lazy(() =>
   z.object({ key: z.string(), value: refinedAnyValue }).passthrough()
 );
 
-export const refinedKeyValueList: z.ZodType<{ values?: { key: string; value: AnyValueWire }[] }> = z.lazy(
-  () => z.object({ values: z.array(refinedKeyValue).optional() }).passthrough()
+const refinedKeyValueList: z.ZodType<{ values?: { key: string; value: AnyValueWire }[] }> = z.lazy(() =>
+  z.object({ values: z.array(refinedKeyValue).optional() }).passthrough()
 );
 
-export const refinedResource = z
+const refinedResource = z
   .object({
     attributes: z.array(refinedKeyValue).optional(),
     droppedAttributesCount: z.number().int().min(0).optional(),
   })
   .passthrough();
 
-export const refinedScope = z
+const refinedScope = z
   .object({
     name: z.string().optional(),
     version: z.string().optional(),
@@ -220,7 +220,7 @@ export const refinedScope = z
   })
   .passthrough();
 
-export const refinedSpanEvent = z
+const refinedSpanEvent = z
   .object({
     timeUnixNano: decimalNanoString.optional(),
     name: z.string().optional(),
@@ -229,7 +229,7 @@ export const refinedSpanEvent = z
   })
   .passthrough();
 
-export const refinedSpanLink = z
+const refinedSpanLink = z
   .object({
     traceId: traceIdHex,
     spanId: spanIdHex,
@@ -240,7 +240,7 @@ export const refinedSpanLink = z
   })
   .passthrough();
 
-export const refinedStatus = z
+const refinedStatus = z
   .object({ message: z.string().optional(), code: statusCodeEnum.optional() })
   .passthrough();
 
@@ -268,7 +268,7 @@ export const refinedSpan = z
 
 // ProtoJSON omits empty repeated fields. Restore their empty-array defaults
 // before the parser walks resources and scopes.
-export const refinedScopeSpans = z
+const refinedScopeSpans = z
   .object({
     scope: refinedScope.optional(),
     spans: z.array(refinedSpan).default([]),
@@ -276,7 +276,7 @@ export const refinedScopeSpans = z
   })
   .passthrough();
 
-export const refinedResourceSpans = z
+const refinedResourceSpans = z
   .object({
     resource: refinedResource.optional(),
     scopeSpans: z.array(refinedScopeSpans).default([]),
@@ -284,9 +284,20 @@ export const refinedResourceSpans = z
   })
   .passthrough();
 
-export const refinedTracesData = z
-  .object({ resourceSpans: z.array(refinedResourceSpans).optional() })
-  .passthrough();
+const refinedTracesData = z.object({ resourceSpans: z.array(refinedResourceSpans).optional() }).passthrough();
+
+/**
+ * validateTracesData exists so that code outside this module can validate OTLP `TracesData`
+ * that has no GetTrace envelope, such as an uploaded file or a test fixture, without importing
+ * a schema object. A caller uses the returned value and not the input, because validation
+ * restores the empty arrays that ProtoJSON omits. Invalid data throws a ZodError.
+ */
+export function validateTracesData(
+  input: unknown,
+  context?: Parameters<typeof refinedTracesData.parse>[1]
+): TracesDataWire {
+  return refinedTracesData.parse(input, context);
+}
 
 // grpc-gateway envelope: jaeger-query wraps GetTrace in {"result": TracesData}
 // (see docs/rfc/0002-otel-native-jaeger-ui.md Backend response shape).
