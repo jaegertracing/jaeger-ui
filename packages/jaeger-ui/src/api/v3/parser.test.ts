@@ -6,14 +6,14 @@ import { spanIDForWire, toOtlpTrace } from '../../model/test/materializer-otlp';
 import { runTraceContractSuite } from '../../model/test/trace-contract-suite';
 import { SpanKind, StatusCode } from '../../types/otel';
 import { GetTraceResponseSchema, refinedTracesData, type SpanWire, type TracesDataWire } from './schemas';
-import { parseOtelTrace } from './parser';
+import { transformOtelTrace } from './parser';
 import capture from './v3-trace-output.json';
 
 runTraceContractSuite({
   name: 'OTLP parser',
   materialize: toOtlpTrace,
   spanID: spanIDForWire,
-  parse: (wire: TracesDataWire) => parseOtelTrace(refinedTracesData.parse(wire))!,
+  parse: (wire: TracesDataWire) => transformOtelTrace(refinedTracesData.parse(wire))!,
 });
 
 const TRACE_ID = 'abcdef0123456789abcdef0123456789';
@@ -47,12 +47,12 @@ function traces(spans: SpanWire[], serviceName = 'svc-a'): TracesDataWire {
   };
 }
 
-describe('parseOtelTrace', () => {
+describe('transformOtelTrace', () => {
   // /api/traces returns this span with warnings: [message], because the backend's
   // jptrace.GetWarnings reads a non-slice value as one warning. ClickHouse can
   // store the attribute as a plain string, which legacy JSON has no form for.
   it('reads a string backend diagnostic as one warning', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({
           attributes: [
@@ -66,19 +66,19 @@ describe('parseOtelTrace', () => {
   });
 
   it('treats an empty parentSpanId as a root span', () => {
-    const trace = parseOtelTrace(refinedTracesData.parse(traces([makeSpan({ parentSpanId: '' })])))!;
+    const trace = transformOtelTrace(refinedTracesData.parse(traces([makeSpan({ parentSpanId: '' })])))!;
     expect(trace.spans[0].parentSpanID).toBeUndefined();
     expect(trace.rootSpans).toHaveLength(1);
     expect(trace.orphanSpanCount).toBe(0);
   });
 
   it('returns null when the payload has no spans', () => {
-    expect(parseOtelTrace({})).toBeNull();
-    expect(parseOtelTrace(traces([]))).toBeNull();
+    expect(transformOtelTrace({})).toBeNull();
+    expect(transformOtelTrace(traces([]))).toBeNull();
   });
 
   it('keeps spans without start times and repairs them from their parent', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({ spanId: ROOT_ID, startTimeUnixNano: '1000000', endTimeUnixNano: '9000000' }),
         makeSpan({
@@ -122,7 +122,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('keeps a root with no timestamps at all and starts the trace at zero', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([makeSpan({ startTimeUnixNano: undefined, endTimeUnixNano: undefined })])
     )!;
     expect(trace.spans).toHaveLength(1);
@@ -130,7 +130,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('keeps the absolute end of a root that has only an end time', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([makeSpan({ startTimeUnixNano: undefined, endTimeUnixNano: '3000000' })])
     )!;
     expect(trace.startTime).toBe(0);
@@ -139,7 +139,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('repairs an explicit zero start time from its parent', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({
           spanId: ROOT_ID,
@@ -168,7 +168,7 @@ describe('parseOtelTrace', () => {
   it.each([undefined, '0', '1', '999'])(
     'preserves an absolute end when repairing start %s',
     startTimeUnixNano => {
-      const trace = parseOtelTrace(
+      const trace = transformOtelTrace(
         traces([
           makeSpan({
             spanId: ROOT_ID,
@@ -193,7 +193,7 @@ describe('parseOtelTrace', () => {
   );
 
   it.each(['1', '999'])('repairs submicrosecond event timestamp %s', timeUnixNano => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({
           spanId: ROOT_ID,
@@ -214,7 +214,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('clamps a duration to zero when the wire end precedes a usable start', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([makeSpan({ startTimeUnixNano: '2000000', endTimeUnixNano: '1000000' })])
     )!;
     expect(trace.spans[0].duration).toBe(0);
@@ -225,7 +225,7 @@ describe('parseOtelTrace', () => {
   it.each([undefined, '0'])(
     'clamps ends at or before the inherited start for start %s',
     startTimeUnixNano => {
-      const trace = parseOtelTrace(
+      const trace = transformOtelTrace(
         traces([
           makeSpan({
             spanId: ROOT_ID,
@@ -273,7 +273,7 @@ describe('parseOtelTrace', () => {
         events: [{ timeUnixNano: '0', name: 'child event', attributes: [] }],
       }),
     ]);
-    const trace = parseOtelTrace(refinedTracesData.parse(data))!;
+    const trace = transformOtelTrace(refinedTracesData.parse(data))!;
     const root = trace.spanMap.get(ROOT_ID)!;
     const child = trace.spanMap.get(CHILD_ID)!;
 
@@ -283,7 +283,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('sorts events by timestamp even when the wire order is by name', () => {
-    const span = parseOtelTrace(
+    const span = transformOtelTrace(
       traces([
         makeSpan({
           events: [
@@ -306,7 +306,7 @@ describe('parseOtelTrace', () => {
 
   it('parses the captured API v3 payload into an enriched trace', () => {
     const parsed = GetTraceResponseSchema.parse(capture);
-    const trace = parseOtelTrace(parsed.result)!;
+    const trace = transformOtelTrace(parsed.result)!;
 
     expect(trace.traceID).toBe('0123456789abcdef0123456789abcdef');
     expect(trace.spans).toHaveLength(3);
@@ -328,7 +328,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('maps OTLP fields, duration, attributes, events, status, and GenAI classification', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({
           name: 'GET /api',
@@ -401,7 +401,7 @@ describe('parseOtelTrace', () => {
     ]);
     data.resourceSpans![0].scopeSpans[0].scope = {};
 
-    const span = parseOtelTrace(data)!.spans[0];
+    const span = transformOtelTrace(data)!.spans[0];
     expect(span.name).toBe('no-name');
     expect(span.kind).toBe(SpanKind.UNSPECIFIED);
     expect(span.instrumentationScope.name).toBe('unknown');
@@ -426,7 +426,7 @@ describe('parseOtelTrace', () => {
         { traceId: OTHER_TRACE_ID, spanId: CHILD_ID, attributes: [] },
       ],
     });
-    const trace = parseOtelTrace(traces([parent, lateChild, earlyChild]))!;
+    const trace = transformOtelTrace(traces([parent, lateChild, earlyChild]))!;
 
     const root = trace.spanMap.get(ROOT_ID)!;
     expect(trace.rootSpans).toEqual([root]);
@@ -442,7 +442,7 @@ describe('parseOtelTrace', () => {
 
   it('rejects spans from different traces', () => {
     expect(() =>
-      parseOtelTrace(
+      transformOtelTrace(
         traces([
           makeSpan({ spanId: ROOT_ID }),
           makeSpan({ spanId: CHILD_ID, traceId: OTHER_TRACE_ID, parentSpanId: ROOT_ID }),
@@ -454,13 +454,13 @@ describe('parseOtelTrace', () => {
   it('rejects timestamps outside the safe microsecond range', () => {
     const timestamp = '9007199254740992000';
     expect(() =>
-      parseOtelTrace(traces([makeSpan({ startTimeUnixNano: timestamp, endTimeUnixNano: timestamp })]))
+      transformOtelTrace(traces([makeSpan({ startTimeUnixNano: timestamp, endTimeUnixNano: timestamp })]))
     ).toThrow('OTLP timestamp exceeds the safe integer range in microseconds');
   });
 
   it('assigns stable internal IDs to duplicate wire span IDs', () => {
     const duplicateID = `${ROOT_ID}_1`;
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({ spanId: ROOT_ID, name: 'first', startTimeUnixNano: '1000000' }),
         makeSpan({ spanId: ROOT_ID, name: 'duplicate', startTimeUnixNano: '3000000' }),
@@ -488,7 +488,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('keeps orphan spans and breaks parent cycles into traversable roots', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({ spanId: ROOT_ID }),
         makeSpan({ spanId: ORPHAN_ID, parentSpanId: 'deadbeefdeadbeef' }),
@@ -513,7 +513,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('breaks a self-cycle without losing the span', () => {
-    const trace = parseOtelTrace(traces([makeSpan({ parentSpanId: ROOT_ID })]))!;
+    const trace = transformOtelTrace(traces([makeSpan({ parentSpanId: ROOT_ID })]))!;
     const root = trace.spans[0];
     expect(trace.rootSpans).toEqual([root]);
     expect(root.parentSpan).toBeUndefined();
@@ -522,7 +522,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('retains all spans in a three-span cycle', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({ spanId: ROOT_ID, parentSpanId: CHILD_ID }),
         makeSpan({ spanId: CHILD_ID, parentSpanId: ORPHAN_ID }),
@@ -539,7 +539,7 @@ describe('parseOtelTrace', () => {
   });
 
   it('uses a timestamped cycle member as the root for missing-start inheritance', () => {
-    const trace = parseOtelTrace(
+    const trace = transformOtelTrace(
       traces([
         makeSpan({
           spanId: CYCLE_A_ID,
@@ -594,7 +594,7 @@ describe('parseOtelTrace', () => {
         ...traces([cycleA, cycleB], 'cycle-service').resourceSpans!,
       ],
     };
-    const trace = parseOtelTrace(data)!;
+    const trace = transformOtelTrace(data)!;
     const summary = traceToTraceSummary(trace);
 
     expect(trace.rootSpans[0].spanID).toBe(CYCLE_A_ID);
@@ -625,7 +625,7 @@ describe('parseOtelTrace', () => {
       startTimeUnixNano: '600000',
       endTimeUnixNano: '900000',
     });
-    const trace = parseOtelTrace({
+    const trace = transformOtelTrace({
       resourceSpans: [
         ...traces([orphan], 'orphan-service').resourceSpans!,
         ...traces([cycleA, cycleB], 'cycle-service').resourceSpans!,
@@ -648,7 +648,7 @@ describe('parseOtelTrace', () => {
       name: 'orphan',
       startTimeUnixNano: '1000000',
     });
-    const trace = parseOtelTrace({
+    const trace = transformOtelTrace({
       resourceSpans: [
         ...traces([root], 'root-service').resourceSpans!,
         ...traces([orphan], 'orphan-service').resourceSpans!,
@@ -676,7 +676,7 @@ describe('parseOtelTrace', () => {
       name: 'earlier orphan',
       startTimeUnixNano: '1000000',
     });
-    const trace = parseOtelTrace({
+    const trace = transformOtelTrace({
       resourceSpans: [
         ...traces([laterOrphan], 'later-service').resourceSpans!,
         ...traces([earlierOrphan], 'earlier-service').resourceSpans!,
@@ -704,7 +704,7 @@ describe('parseOtelTrace', () => {
       });
     });
 
-    const trace = parseOtelTrace(traces(spans))!;
+    const trace = transformOtelTrace(traces(spans))!;
     expect(trace.spans).toHaveLength(spanCount);
     expect(trace.spans.at(-1)?.depth).toBe(spanCount - 1);
   });

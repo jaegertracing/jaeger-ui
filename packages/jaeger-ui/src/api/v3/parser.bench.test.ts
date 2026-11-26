@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { parseOtelTrace } from './parser';
+import { transformOtelTrace } from './parser';
 import type { TracesDataWire } from './schemas';
 
 describe('OTLP parser benchmarks', () => {
@@ -39,7 +39,7 @@ describe('OTLP parser benchmarks', () => {
 
   it('benchmark: parse and enrich a trace', () => {
     const start = performance.now();
-    const trace = parseOtelTrace(data)!;
+    const trace = transformOtelTrace(data)!;
     const elapsed = performance.now() - start;
     console.log(`OTLP parse and enrichment for ${numSpans} spans: ${elapsed.toFixed(4)}ms`);
     expect(trace.spans).toHaveLength(numSpans);

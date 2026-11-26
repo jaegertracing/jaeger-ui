@@ -32,7 +32,7 @@ type MutableOtelSpan = Omit<IOtelSpan, 'childSpans' | 'parentSpan'> & {
   childSpans: MutableOtelSpan[];
 };
 
-type ParsedSpanData = {
+type ConvertedSpanData = {
   spans: MutableOtelSpan[];
   spansWithoutStartTime: Map<MutableOtelSpan, Microseconds>;
   eventsWithoutTimestamp: Map<MutableOtelSpan, IEvent[]>;
@@ -180,7 +180,7 @@ function breakParentCycles(
  * Converts validated OTLP wire spans into the UI span model. Graph-derived
  * fields are initialized here and populated later by enrichTrace.
  */
-function parseSpans(data: TracesDataWire): ParsedSpanData {
+function convertSpans(data: TracesDataWire): ConvertedSpanData {
   const spans: MutableOtelSpan[] = [];
   const spansWithoutStartTime = new Map<MutableOtelSpan, Microseconds>();
   const eventsWithoutTimestamp = new Map<MutableOtelSpan, IEvent[]>();
@@ -216,13 +216,13 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
         const events = (span.events ?? []).map(event => {
           const timestamp = nanoToMicros(event.timeUnixNano);
           const hasUsableTimestamp = timestamp > 0;
-          const parsedEvent: IEvent = {
+          const convertedEvent: IEvent = {
             timestamp: hasUsableTimestamp ? timestamp : startTime,
             name: event.name || 'log',
             attributes: toAttributes(event.attributes),
           };
-          if (!hasUsableStartTime && !hasUsableTimestamp) eventTimesToRepair.push(parsedEvent);
-          return parsedEvent;
+          if (!hasUsableStartTime && !hasUsableTimestamp) eventTimesToRepair.push(convertedEvent);
+          return convertedEvent;
         });
         if (hasUsableStartTime) events.sort((left, right) => left.timestamp - right.timestamp);
         const decodedAttributes = (span.attributes ?? []).map(attribute => ({
@@ -243,7 +243,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
         // Keep the first wire ID unchanged so parent and link references resolve
         // to it, and give later duplicates stable internal IDs for UI lookups.
         const spanID = duplicateCount === 0 ? wireSpanID : `${wireSpanID}_${duplicateCount}`;
-        const parsedSpan: MutableOtelSpan = {
+        const convertedSpan: MutableOtelSpan = {
           traceID: spanTraceID,
           spanID,
           parentSpanID: span.parentSpanId?.toLowerCase() || undefined,
@@ -281,11 +281,11 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
             ...attributesInfo.warnings,
           ],
         };
-        spans.push(parsedSpan);
+        spans.push(convertedSpan);
         if (!hasUsableStartTime) {
-          spansWithoutStartTime.set(parsedSpan, nanoToMicros(span.endTimeUnixNano));
+          spansWithoutStartTime.set(convertedSpan, nanoToMicros(span.endTimeUnixNano));
         }
-        if (eventTimesToRepair.length > 0) eventsWithoutTimestamp.set(parsedSpan, eventTimesToRepair);
+        if (eventTimesToRepair.length > 0) eventsWithoutTimestamp.set(convertedSpan, eventTimesToRepair);
       }
     }
   }
@@ -296,12 +296,12 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
 function repairMissingStartTime(
   span: MutableOtelSpan,
   parent: MutableOtelSpan | undefined,
-  parsed: ParsedSpanData
+  spanData: ConvertedSpanData
 ): void {
-  if (!parsed.spansWithoutStartTime.has(span)) return;
+  if (!spanData.spansWithoutStartTime.has(span)) return;
 
   const startTime = parent?.startTime ?? (0 as Microseconds);
-  const wireEndTime = parsed.spansWithoutStartTime.get(span)!;
+  const wireEndTime = spanData.spansWithoutStartTime.get(span)!;
   // OTLP ends are absolute. An end before the inherited start cannot provide
   // a usable duration, so clamp it instead of retaining an epoch-based interval.
   const duration = Math.max(0, wireEndTime - startTime);
@@ -309,28 +309,28 @@ function repairMissingStartTime(
   span.duration = duration as Microseconds;
   span.endTime = toSafeMicroseconds(BigInt(startTime) + BigInt(duration), 'repaired end timestamp');
 
-  for (const event of parsed.eventsWithoutTimestamp.get(span) ?? []) event.timestamp = startTime;
+  for (const event of spanData.eventsWithoutTimestamp.get(span) ?? []) event.timestamp = startTime;
   span.events.sort((left, right) => left.timestamp - right.timestamp);
 }
 
-function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
-  const { spans: parsedSpans } = parsed;
-  const traceID = parsedSpans[0].traceID;
-  const spanMap = new Map(parsedSpans.map(span => [span.spanID, span]));
+function enrichTrace(spanData: ConvertedSpanData): IOtelTrace {
+  const { spans: convertedSpans } = spanData;
+  const traceID = convertedSpans[0].traceID;
+  const spanMap = new Map(convertedSpans.map(span => [span.spanID, span]));
   const rootSpans: MutableOtelSpan[] = [];
   const serviceCounts = Object.create(null) as Record<string, number>;
 
   let orphanSpanCount = 0;
   let isGenAITrace = false;
 
-  for (const span of parsedSpans) {
+  for (const span of convertedSpans) {
     const parent = span.parentSpanID ? spanMap.get(span.parentSpanID) : undefined;
     if (!parent && span.parentSpanID) orphanSpanCount++;
     if (parent) {
       span.parentSpan = parent;
       parent.childSpans.push(span);
     } else {
-      repairMissingStartTime(span, undefined, parsed);
+      repairMissingStartTime(span, undefined, spanData);
       rootSpans.push(span);
     }
     for (const link of span.links) {
@@ -346,7 +346,7 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
     }
   }
 
-  breakParentCycles(parsedSpans, rootSpans, span => repairMissingStartTime(span, undefined, parsed));
+  breakParentCycles(convertedSpans, rootSpans, span => repairMissingStartTime(span, undefined, spanData));
   rootSpans.sort((left, right) => left.startTime - right.startTime);
   const headerSpan = rootSpans[0];
   let traceStartTime = Number.POSITIVE_INFINITY;
@@ -364,7 +364,7 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
     span.depth = depth;
     traceStartTime = Math.min(traceStartTime, span.startTime);
     traceEndTime = Math.max(traceEndTime, span.endTime);
-    for (const child of span.childSpans) repairMissingStartTime(child, span, parsed);
+    for (const child of span.childSpans) repairMissingStartTime(child, span, spanData);
     span.childSpans.sort((left, right) => left.startTime - right.startTime);
     span.hasChildren = span.childSpans.length > 0;
     spans.push(span);
@@ -401,10 +401,10 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
 }
 
 /**
- * Parses validated OTLP `TracesData` into an enriched trace. Returns null when
+ * Transforms validated OTLP `TracesData` into an enriched trace. Returns null when
  * the payload contains no spans.
  */
-export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
-  const parsed = parseSpans(data);
-  return parsed.spans.length > 0 ? enrichTrace(parsed) : null;
+export function transformOtelTrace(data: TracesDataWire): IOtelTrace | null {
+  const spanData = convertSpans(data);
+  return spanData.spans.length > 0 ? enrichTrace(spanData) : null;
 }

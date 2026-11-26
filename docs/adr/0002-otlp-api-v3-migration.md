@@ -31,7 +31,7 @@ The legacy reference types carried two meanings at once: `CHILD_OF` versus `FOLL
 
 ### Traces enter the Query cache through the parser or legacy-upload facade
 
-API trace loading uses `JaegerClient.fetchTrace()` and `parseOtelTrace()` through `hooks/useTraceLoading.ts` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605)). Native OTLP uploads also use `parseOtelTrace()` in `SearchTracePage/FileLoader.tsx` ([#4634](https://github.com/jaegertracing/jaeger-ui/pull/4634)). Only the legacy-upload branch still calls `transformTraceData(...).asOtelTrace()`, backed by `OtelTraceFacade` and `OtelSpanFacade`. All three paths hand `IOtelTrace` to TanStack Query.
+API trace loading uses `JaegerClient.fetchTrace()` and `transformOtelTrace()` through `hooks/useTraceLoading.ts` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605)). Native OTLP uploads also use `transformOtelTrace()` in `SearchTracePage/FileLoader.tsx` ([#4634](https://github.com/jaegertracing/jaeger-ui/pull/4634)). Only the legacy-upload branch still calls `transformTraceData(...).asOtelTrace()`, backed by `OtelTraceFacade` and `OtelSpanFacade`. All three paths hand `IOtelTrace` to TanStack Query.
 
 Components therefore receive `IOtelTrace` / `IOtelSpan` as plain data and never construct a facade. There are no Redux selectors or hooks in this path and no `src/selectors/` directory; trace state lives in the Query cache ([ADR-0004](./0004-state-management-strategy.md)), which is what made a selector layer unnecessary.
 
