@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
 import { transformOtelTrace } from '../../../api/v3/parser';
-import { refinedTracesData } from '../../../api/v3/schemas';
+import { validateTracesData } from '../../../api/v3/schemas';
 
 // Store callback references so tests can invoke them directly
 const callbacks = {
@@ -81,7 +81,7 @@ vi.mock('d3-selection', () => ({
   }),
 }));
 
-const otelTrace = transformOtelTrace(refinedTracesData.parse(testTrace));
+const otelTrace = transformOtelTrace(validateTracesData(testTrace));
 
 describe('<TraceFlamegraph />', () => {
   beforeEach(() => {
@@ -367,7 +367,7 @@ describe('<TraceFlamegraph />', () => {
         startTimeUnixNano: String(childStart),
         endTimeUnixNano: String(childStart + 2_000_000n),
       });
-      const refreshed = transformOtelTrace(refinedTracesData.parse(data));
+      const refreshed = transformOtelTrace(validateTracesData(data));
       expect(refreshed.traceID).toBe(otelTrace.traceID);
       rerender(<TraceFlamegraph trace={refreshed} />);
 

@@ -4,9 +4,9 @@
 import { generateTableData } from './generateTableData';
 import testTrace from './testTrace.json';
 import { transformOtelTrace } from '../../../api/v3/parser';
-import { refinedTracesData } from '../../../api/v3/schemas';
+import { validateTracesData } from '../../../api/v3/schemas';
 
-const otelTrace = transformOtelTrace(refinedTracesData.parse(testTrace))!;
+const otelTrace = transformOtelTrace(validateTracesData(testTrace))!;
 
 describe('generateTableData', () => {
   it('returns one row per unique service:operation', () => {
