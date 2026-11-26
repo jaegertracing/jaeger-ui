@@ -9,6 +9,7 @@ import { parseOtelTrace } from '../../../api/v3/parser';
 import { refinedTracesData } from '../../../api/v3/schemas';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
 import { makeAttributes } from '../../../model/attributes';
+import filterSpans from '../../../utils/filter-spans';
 import generateRowStates, { collapseTargets, RECORDED_TREE } from './generateRowStates';
 import { EMPTY_SPAN_FILTER, evaluateSpanFilter, ISpanFilter, withHiddenServices } from '../spanFilter';
 
@@ -538,6 +539,13 @@ describe('generateRowStates in lift mode', () => {
       expect(tree.depthOf(errorSpan)).toBe(0);
       expect(tree.parentOf(errorSpan)).toBeNull();
       expect(tree.liftedPast(errorSpan)).toHaveLength(errorSpan.depth);
+    });
+
+    it('finds the error span when error is typed into the search input', () => {
+      const matchedIDs = filterSpans('error', trace.spans);
+      expect(trace.spans.filter(s => matchedIDs?.has(s.spanID)).map(s => s.name)).toEqual([
+        'GET /api/v1/pods',
+      ]);
     });
   });
 });
