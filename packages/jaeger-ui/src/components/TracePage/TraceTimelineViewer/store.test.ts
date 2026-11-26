@@ -29,7 +29,8 @@ import getConfig from '../../../utils/config/get-config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 import { EMPTY_SPAN_FILTER, hiddenServices, withHiddenServices } from '../spanFilter';
-import { IOtelSpan, StatusCode } from '../../../types/otel';
+import { IOtelSpan } from '../../../types/otel';
+import { makeOtelSpan } from '../../../utils/test/makeOtelSpan';
 
 function resetLayoutStores() {
   useDisplayedLayoutStore.setState(useDisplayedLayoutStore.getInitialState(), true);
@@ -448,14 +449,7 @@ describe('useSavedLayoutPrefsStore persistence (legacy migration + corrupted val
 });
 
 const makeSpan = (overrides: Record<string, unknown> = {}) =>
-  ({
-    spanID: 'span-1',
-    depth: 0,
-    hasChildren: false,
-    childSpans: [],
-    status: { code: StatusCode.UNSET },
-    ...overrides,
-  }) as any;
+  makeOtelSpan({ spanID: 'span-1', ...overrides }) as any;
 
 const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) =>
   ({

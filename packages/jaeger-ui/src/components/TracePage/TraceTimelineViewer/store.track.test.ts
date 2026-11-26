@@ -17,25 +17,15 @@ vi.mock('../../../utils/tracking', async importOriginal => ({
 import { setDetailPanelMode, useDisplayedLayoutStore, useTraceTimelineStore } from './store';
 import { useSavedLayoutPrefsStore } from './store.layout';
 import * as track from './store.track';
-import { IEvent, IOtelSpan, IOtelTrace, StatusCode } from '../../../types/otel';
+import { IEvent, IOtelSpan, IOtelTrace } from '../../../types/otel';
+import { makeOtelSpan } from '../../../utils/test/makeOtelSpan';
 import { trackEvent } from '../../../utils/tracking';
 
 const noEntries = { entries: () => [] };
-const resource = { serviceName: 'svc', attributes: noEntries };
 const logItem = { name: 'log', attributes: noEntries } as unknown as IEvent;
 
-function makeSpan(spanID: string, depth: number, parentSpan?: object, extra: object = {}) {
-  return {
-    spanID,
-    name: spanID,
-    depth,
-    parentSpan,
-    hasChildren: false,
-    attributes: noEntries,
-    resource,
-    status: { code: StatusCode.UNSET },
-    ...extra,
-  };
+function makeSpan(spanID: string, depth: number, parentSpan?: IOtelSpan, extra: Partial<IOtelSpan> = {}) {
+  return makeOtelSpan({ spanID, name: spanID, depth, parentSpan, ...extra });
 }
 
 const root = makeSpan('root', 0, undefined, { hasChildren: true });
