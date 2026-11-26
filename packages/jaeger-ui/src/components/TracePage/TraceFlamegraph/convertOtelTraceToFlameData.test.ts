@@ -3,10 +3,10 @@
 
 import { convertOtelTraceToFlameData } from './convertOtelTraceToFlameData';
 import testTrace from './testTrace.json';
-import { parseOtelTrace } from '../../../api/v3/parser';
+import { transformOtelTrace } from '../../../api/v3/parser';
 import { refinedTracesData } from '../../../api/v3/schemas';
 
-const otelTrace = parseOtelTrace(refinedTracesData.parse(testTrace))!;
+const otelTrace = transformOtelTrace(refinedTracesData.parse(testTrace))!;
 
 describe('convertOtelTraceToFlameData', () => {
   it('returns a root node with name "total"', () => {
