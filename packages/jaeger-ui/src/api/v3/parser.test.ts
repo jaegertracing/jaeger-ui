@@ -5,7 +5,7 @@ import { traceToTraceSummary } from '../../model/trace-summary';
 import { spanIDForWire, toOtlpTrace } from '../../model/test/materializer-otlp';
 import { runTraceContractSuite } from '../../model/test/trace-contract-suite';
 import { SpanKind, StatusCode } from '../../types/otel';
-import { GetTraceResponseSchema, refinedTracesData, type SpanWire, type TracesDataWire } from './schemas';
+import { GetTraceResponseSchema, validateTracesData, type SpanWire, type TracesDataWire } from './schemas';
 import { transformOtelTrace } from './parser';
 import capture from './v3-trace-output.json';
 
@@ -13,7 +13,7 @@ runTraceContractSuite({
   name: 'OTLP parser',
   materialize: toOtlpTrace,
   spanID: spanIDForWire,
-  parse: (wire: TracesDataWire) => transformOtelTrace(refinedTracesData.parse(wire))!,
+  parse: (wire: TracesDataWire) => transformOtelTrace(validateTracesData(wire))!,
 });
 
 const TRACE_ID = 'abcdef0123456789abcdef0123456789';
@@ -66,7 +66,7 @@ describe('transformOtelTrace', () => {
   });
 
   it('treats an empty parentSpanId as a root span', () => {
-    const trace = transformOtelTrace(refinedTracesData.parse(traces([makeSpan({ parentSpanId: '' })])))!;
+    const trace = transformOtelTrace(validateTracesData(traces([makeSpan({ parentSpanId: '' })])))!;
     expect(trace.spans[0].parentSpanID).toBeUndefined();
     expect(trace.rootSpans).toHaveLength(1);
     expect(trace.orphanSpanCount).toBe(0);
@@ -273,7 +273,7 @@ describe('transformOtelTrace', () => {
         events: [{ timeUnixNano: '0', name: 'child event', attributes: [] }],
       }),
     ]);
-    const trace = transformOtelTrace(refinedTracesData.parse(data))!;
+    const trace = transformOtelTrace(validateTracesData(data))!;
     const root = trace.spanMap.get(ROOT_ID)!;
     const child = trace.spanMap.get(CHILD_ID)!;
 

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { refinedTracesData } from '../../api/v3/schemas';
+import { validateTracesData } from '../../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
 import { spanIDForWire, toOtlpTrace } from './materializer-otlp';
 
@@ -31,7 +31,7 @@ describe('OTLP trace contract materializer', () => {
         },
       ],
     });
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    expect(() => validateTracesData(wire)).not.toThrow();
     const groups = wire.resourceSpans![0].scopeSpans;
     expect(groups).toHaveLength(3);
     expect(groups[0]).not.toHaveProperty('scope');
@@ -50,7 +50,7 @@ describe('OTLP trace contract materializer', () => {
 
   it('renders valid OTLP with stable hex span IDs', () => {
     const wire = toOtlpTrace(spec);
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    expect(() => validateTracesData(wire)).not.toThrow();
 
     const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans.map(span => span.spanId)).toEqual([spec.spans[0].spanID, spanIDForWire('child')]);
@@ -70,7 +70,7 @@ describe('OTLP trace contract materializer', () => {
         { spanID: 'missing-end', name: 'missing-end', duration: undefined },
       ],
     });
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    expect(() => validateTracesData(wire)).not.toThrow();
 
     const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans[0]).toMatchObject({ startTimeUnixNano: '1000', endTimeUnixNano: '2000' });
@@ -108,7 +108,7 @@ describe('OTLP trace contract materializer', () => {
         },
       ],
     });
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    expect(() => validateTracesData(wire)).not.toThrow();
 
     const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans[0].attributes).toEqual([
@@ -188,7 +188,7 @@ describe('OTLP trace contract materializer', () => {
         { spanID: 'none', name: 'none' },
       ],
     });
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    expect(() => validateTracesData(wire)).not.toThrow();
 
     const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans[0].status).toEqual({ code: 0 });
@@ -207,7 +207,7 @@ describe('OTLP trace contract materializer', () => {
         { spanID: 'c', name: 'c' },
       ],
     });
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    expect(() => validateTracesData(wire)).not.toThrow();
 
     const resources = wire.resourceSpans!;
     expect(resources.map(group => group.resource!.attributes)).toEqual([

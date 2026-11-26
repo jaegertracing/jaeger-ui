@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { GetTraceResponseSchema, refinedTracesData } from '../api/v3/schemas';
+import { GetTraceResponseSchema, validateTracesData } from '../api/v3/schemas';
 import type { ResourceSpansWire, TracesDataWire } from '../api/v3/schemas';
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -111,7 +111,7 @@ const INT64_RANGES = new Map<unknown, readonly [number, number]>([
 // and the schemas reject them. Replace Zod's generic type error with the fix for the uploader,
 // but only when quoting would make the value valid.
 // Upload-only error map; do not copy into JaegerClient, whose wire contract is string-only.
-const uploadParseContext: Parameters<typeof refinedTracesData.parse>[1] = {
+const uploadParseContext: Parameters<typeof validateTracesData>[1] = {
   error: issue => {
     const range = INT64_RANGES.get(issue.path?.at(-1));
     const value = issue.input;
@@ -135,7 +135,7 @@ export function validateOtelUpload(input: Record<string, unknown>): TracesDataWi
         normalizeObject(input, { result: normalizeTracesData }),
         uploadParseContext
       ).result
-    : refinedTracesData.parse(normalizeTracesData(input), uploadParseContext);
+    : validateTracesData(normalizeTracesData(input), uploadParseContext);
 }
 
 /** Group all valid documents in a file before any trace is parsed or cached. */

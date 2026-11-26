@@ -5,7 +5,7 @@ import { z } from 'zod';
 import {
   GetTraceResponseSchema,
   refinedSpan,
-  refinedTracesData,
+  validateTracesData,
   refinedAnyValue,
   decimalNanoString,
   traceIdHex,
@@ -163,8 +163,8 @@ describe('GetTrace wire contract', () => {
   it('keeps envelope handling separable from TracesData', () => {
     // TracesData without envelope should also validate (for future streaming)
     const tracesData = capture.result;
-    expect(() => refinedTracesData.parse(tracesData)).not.toThrow();
-    expect(() => refinedTracesData.parse({ resourceSpans: [] })).not.toThrow();
+    expect(() => validateTracesData(tracesData)).not.toThrow();
+    expect(() => validateTracesData({ resourceSpans: [] })).not.toThrow();
   });
 
   it('silently ignores unknown fields (OTLP-JSON forward compatibility)', () => {
