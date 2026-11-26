@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2020 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,11 +11,15 @@ import {
   ONE_MILLISECOND,
   formatDate,
   formatTime,
-  formatDatetime,
+  formatDisplayTime,
+  STANDARD_DATETIME_FORMAT,
   formatMillisecondTime,
   formatSecondTime,
   formatDurationCompact,
 } from './date';
+import getConfig from './config/get-config';
+
+vi.mock('./config/get-config', () => mockDefault(vi.fn(() => ({}))));
 
 const ONE_SECOND = 1000 * ONE_MILLISECOND;
 const ONE_MINUTE = 60 * ONE_SECOND;
@@ -247,9 +252,11 @@ describe('format microseconds', () => {
     expect(formatTime(dateInMicroseconds)).toBe('10:00');
   });
 
-  it('formatDateTime formats microseconds to standard date format', () => {
+  it('formatDisplayTime formats microseconds to standard date format', () => {
     const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
-    expect(formatDatetime(dateInMicroseconds)).toBe('January 1 2000, 10:00:00.000');
+    expect(formatDisplayTime(dateInMicroseconds, STANDARD_DATETIME_FORMAT)).toBe(
+      'January 1 2000, 10:00:00.000'
+    );
   });
 
   it('formatMillisecondTime formats microseconds to milliseconds', () => {
@@ -260,6 +267,50 @@ describe('format microseconds', () => {
   it('formatSecondTime formats microseconds to seconds', () => {
     const durationInMicroseconds = 1000 * ONE_MILLISECOND;
     expect(formatSecondTime(durationInMicroseconds)).toBe('1s');
+  });
+});
+
+describe('configured display timestamps', () => {
+  afterEach(() => {
+    getConfig.mockReturnValue({});
+  });
+
+  it.each([
+    [0, '12:04:05 am', '00:04:05'],
+    [12, '12:04:05 pm', '12:04:05'],
+    [15, '3:04:05 pm', '15:04:05'],
+  ])(
+    'formats hour %s in both clock formats without changing search input values',
+    (hour, twelve, twentyFour) => {
+      const timestamp = new Date(2026, 9, 15, hour, 4, 5, 123).getTime() * ONE_MILLISECOND;
+
+      getConfig.mockReturnValue({ timeFormat: '12h' });
+      expect(formatDisplayTime(timestamp, 'h:mm:ss a')).toBe(twelve);
+      expect(formatDisplayTime(timestamp, 'HH:mm')).toBe(twelve.replace(':05', ''));
+      expect(formatDisplayTime(timestamp, STANDARD_DATETIME_FORMAT)).toBe(
+        `October 15 2026, ${twelve.replace(' ', '.123 ')}`
+      );
+
+      getConfig.mockReturnValue({ timeFormat: '24h' });
+      expect(formatDisplayTime(timestamp, 'h:mm:ss a')).toBe(twentyFour);
+      expect(formatDisplayTime(timestamp, 'HH:mm')).toBe(`${String(hour).padStart(2, '0')}:04`);
+      expect(formatDisplayTime(timestamp, STANDARD_DATETIME_FORMAT)).toBe(
+        `October 15 2026, ${twentyFour}.123`
+      );
+      expect(formatTime(timestamp)).toBe(`${String(hour).padStart(2, '0')}:04`);
+    }
+  );
+
+  it.each([undefined, null, 'invalid'])('keeps each view clock for timeFormat=%s', timeFormat => {
+    getConfig.mockReturnValue({ timeFormat });
+    const timestamp = new Date(2026, 9, 15, 15, 4, 5).getTime() * ONE_MILLISECOND;
+
+    expect(formatDisplayTime(timestamp, 'h:mm:ss a')).toBe('3:04:05 pm');
+    expect(formatDisplayTime(timestamp, 'HH:mm')).toBe('15:04');
+    expect(formatDisplayTime(timestamp, STANDARD_DATETIME_FORMAT)).toBe('October 15 2026, 15:04:05.000');
+    expect(formatDisplayTime(timestamp, 'MMMM D YYYY, h:mm:ss.SSS a')).toBe(
+      'October 15 2026, 3:04:05.000 pm'
+    );
   });
 });
 

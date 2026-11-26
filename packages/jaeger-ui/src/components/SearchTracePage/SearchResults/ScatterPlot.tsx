@@ -1,8 +1,8 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useRef, useState, useLayoutEffect } from 'react';
-import dayjs from 'dayjs';
 import {
   ScatterChart,
   Scatter,
@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
-import { ONE_MILLISECOND, formatDurationCompact } from '../../../utils/date';
+import { formatDisplayTime, formatDurationCompact } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
@@ -102,6 +102,8 @@ export default function ScatterPlot({
   It ensures that the ticks are unique by checking if the label for a given tick value has already been used.
   If it has, the tick is not added to the list of ticks.
   */
+  const formatTick = (tick: number) => formatDisplayTime(tick, 'hh:mm:ss a');
+
   const generateUniqueTicks = (min: number, max: number, count: number) => {
     const step = (max - min) / (count - 1);
     const ticks = [];
@@ -113,7 +115,7 @@ export default function ScatterPlot({
     }
 
     return ticks.filter(tick => {
-      const label = dayjs(tick / ONE_MILLISECOND).format('hh:mm:ss a');
+      const label = formatTick(tick);
       if (seenLabels.has(label)) {
         return false;
       }
@@ -140,7 +142,7 @@ export default function ScatterPlot({
               name="Time"
               domain={[xMin, xMax]}
               ticks={generateUniqueTicks(xMin, xMax, 10)}
-              tickFormatter={t => dayjs(t / ONE_MILLISECOND).format('hh:mm:ss a')}
+              tickFormatter={formatTick}
               tick={{ fontSize: 11, dy: 5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}

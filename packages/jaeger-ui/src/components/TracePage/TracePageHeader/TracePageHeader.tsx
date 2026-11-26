@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -25,7 +26,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
-import { formatDatetime, formatDurationCompact } from '../../../utils/date';
+import { formatDisplayTime, formatDurationCompact, STANDARD_DATETIME_FORMAT } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
@@ -86,12 +87,13 @@ export const HEADER_ITEMS = [
     key: 'timestamp',
     label: 'Trace Start',
     renderer: (trace: IOtelTrace) => {
-      const dateStr = formatDatetime(trace.startTime);
-      const match = dateStr.match(/^(.+)(\.\d+)$/);
+      const dateStr = formatDisplayTime(trace.startTime, STANDARD_DATETIME_FORMAT);
+      const match = dateStr.match(/^(.+)(\.\d+)( [ap]m)?$/);
       return match ? (
         <span className="TracePageHeader--overviewItem--value">
           {match[1]}
           <span className="TracePageHeader--overviewItem--valueDetail">{match[2]}</span>
+          {match[3]}
         </span>
       ) : (
         dateStr

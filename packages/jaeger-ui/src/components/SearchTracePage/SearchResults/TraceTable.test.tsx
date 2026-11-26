@@ -10,7 +10,7 @@ import * as orderBy from './order-by';
 import { toOrderBy, fromOrderBy } from './sort';
 import type { Microseconds } from '../../../types/units';
 import { useSearchResultsStore } from './store.search-results';
-import { formatDatetime } from '../../../utils/date';
+import { formatDisplayTime, STANDARD_DATETIME_FORMAT } from '../../../utils/date';
 
 const FIXED_START_TIME = 1700000000000000 as Microseconds;
 
@@ -175,7 +175,9 @@ describe('Start Time display toggle', () => {
         <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
-    expect(screen.getAllByText(formatDatetime(FIXED_START_TIME))).toHaveLength(mockTraces.length);
+    expect(screen.getAllByText(formatDisplayTime(FIXED_START_TIME, STANDARD_DATETIME_FORMAT))).toHaveLength(
+      mockTraces.length
+    );
   });
 
   it('switches to relative time when the header toggle is clicked', () => {
@@ -185,7 +187,9 @@ describe('Start Time display toggle', () => {
       </MemoryRouter>
     );
     fireEvent.click(screen.getByRole('button', { name: 'Toggle start time format' }));
-    expect(screen.queryByText(formatDatetime(FIXED_START_TIME))).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(formatDisplayTime(FIXED_START_TIME, STANDARD_DATETIME_FORMAT))
+    ).not.toBeInTheDocument();
     expect(useSearchResultsStore.getState().startTimeDisplay).toBe('relative');
   });
 

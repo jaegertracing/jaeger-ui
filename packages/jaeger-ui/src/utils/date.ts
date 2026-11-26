@@ -1,7 +1,8 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import dayjs, { ConfigType } from 'dayjs';
+import dayjs, { ConfigType, type Dayjs } from 'dayjs';
 import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
@@ -9,6 +10,8 @@ import _relativeTime from 'dayjs/plugin/relativeTime';
 
 import { toFloatPrecision } from './number';
 import { Microseconds } from '../types/units';
+import type { Config } from '../types/config';
+import getConfig from './config/get-config';
 
 dayjs.extend(_duration);
 dayjs.extend(_relativeTime);
@@ -19,6 +22,10 @@ const YESTERDAY = 'Yesterday';
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
 export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
+export function getConfiguredTimeFormat(): Config['timeFormat'] {
+  const { timeFormat } = getConfig();
+  return timeFormat === '12h' || timeFormat === '24h' ? timeFormat : undefined;
+}
 
 /** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * 1;
@@ -92,17 +99,17 @@ export function formatTime(duration: number): string {
   return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
 }
 
-/**
- * @param {number} duration - Unix Time
- * @return {string} formatted, unit-labelled string with time in milliseconds
- *
- * @example
- * ```
- * formatDatetime(0) // => January 1 1970, 00:00:00.000
- * ```
- */
-export function formatDatetime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+/** Formats a Dayjs value or a timestamp in microseconds using the view's date and time pattern. */
+export function formatDisplayTime(timestamp: number | Dayjs, viewFormat: string): string {
+  const timeFormat = getConfiguredTimeFormat();
+  let format = viewFormat;
+  if (timeFormat === '24h') {
+    format = viewFormat.replace(/hh?(?=:)/, 'HH').replace(/ [aA]$/, '');
+  } else if (timeFormat === '12h' && viewFormat.includes('HH:')) {
+    format = viewFormat.replace('HH:', 'h:') + ' a';
+  }
+  const date = typeof timestamp === 'number' ? dayjs(timestamp / ONE_MILLISECOND) : timestamp;
+  return date.format(format);
 }
 
 /**

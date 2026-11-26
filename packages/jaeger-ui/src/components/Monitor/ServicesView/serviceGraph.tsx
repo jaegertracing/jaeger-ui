@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,6 +8,12 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import { ServiceMetricsObject } from '../../../types/metrics';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
+import {
+  formatDisplayTime,
+  getConfiguredTimeFormat,
+  STANDARD_TIME_FORMAT,
+  ONE_MILLISECOND,
+} from '../../../utils/date';
 
 type TProps = {
   width: number;
@@ -28,13 +35,15 @@ type MetricDataPoint = {
   [key: string]: number | null;
 };
 
-export const tickFormat = (v: number): string => {
-  const dateObj = new Date(v);
-  const hours = dateObj.getHours().toString();
-  const minutes = dateObj.getMinutes().toString();
+export const tickFormat = (v: number): string => formatDisplayTime(v * ONE_MILLISECOND, STANDARD_TIME_FORMAT);
 
-  return `${hours.length === 1 ? `0${hours}` : hours}:${minutes.length === 1 ? `0${minutes}` : minutes}`;
-};
+function formatTooltipTime(value: string | number): string {
+  const timeFormat = getConfiguredTimeFormat();
+  const options: Intl.DateTimeFormatOptions | undefined = timeFormat
+    ? { hourCycle: timeFormat === '24h' ? 'h23' : 'h12' }
+    : undefined;
+  return new Date(Number(value)).toLocaleString(undefined, options);
+}
 
 type TPlaceholder = {
   name: string;
@@ -296,7 +305,7 @@ function ServiceGraphImpl({
 
           <Tooltip
             contentStyle={{ fontSize: '0.625rem' }}
-            labelFormatter={((value: string | number) => new Date(Number(value)).toLocaleString()) as never}
+            labelFormatter={formatTooltipTime as never}
             formatter={tooltipFormatter as never}
           />
 
