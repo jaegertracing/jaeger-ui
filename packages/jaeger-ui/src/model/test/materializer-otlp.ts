@@ -30,7 +30,7 @@ export function spanIDForWire(spanID: string): string {
   return (hash === 0n ? 1n : hash).toString(16).padStart(16, '0');
 }
 
-/** Render contract test span specs as OTLP TracesData for parseOtelTrace(). */
+/** Render contract test span specs as OTLP TracesData for transformOtelTrace(). */
 export function toOtlpTrace({ traceID, serviceName, resourceAttributes, spans }: ITraceSpec): TracesDataWire {
   const attributeValue = (value: string | number | boolean) => {
     if (typeof value === 'string') return { stringValue: value };

@@ -5,7 +5,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import { createBlob, downloadTraces } from './download-traces';
 import { validateOtelUpload } from './otel-upload';
-import { parseOtelTrace } from '../api/v3/parser';
+import { transformOtelTrace } from '../api/v3/parser';
 import { GetTraceResponseSchema } from '../api/v3/schemas';
 
 const TRACE_ID = '0123456789abcdef0123456789abcdef';
@@ -77,7 +77,7 @@ describe('createBlob', () => {
       key: 'service.name',
       value: { stringValue: 'frontend' },
     });
-    const trace = parseOtelTrace(uploaded);
+    const trace = transformOtelTrace(uploaded);
     expect(trace?.spans.map(span => span.resource.serviceName)).toEqual(['frontend', 'frontend']);
   });
 

@@ -3,6 +3,7 @@
 
 import filterSpans from './filter-spans';
 import { makeAttributes } from '../model/attributes';
+import { StatusCode } from '../types/otel';
 
 describe('filterSpans', () => {
   // span0 contains strings that end in 0 or 1
@@ -238,12 +239,24 @@ describe('filterSpans', () => {
   });
 
   describe('object and array attribute values (OTel spans)', () => {
-    const makeOtelSpan = (spanID, attrs) => ({
+    const makeOtelSpan = (spanID, attrs, statusCode = StatusCode.UNSET) => ({
       spanID,
       name: 'op',
       resource: { serviceName: 'svc', attributes: makeAttributes() },
       attributes: makeAttributes(attrs),
       events: [],
+      status: { code: statusCode },
+    });
+
+    it('matches a span with an error status as if it had the attribute error=true', () => {
+      const spans = [
+        makeOtelSpan('error-span', [], StatusCode.ERROR),
+        makeOtelSpan('ok-span', [], StatusCode.OK),
+        makeOtelSpan('unset-span', []),
+      ];
+      expect(filterSpans('error', spans)).toEqual(new Set(['error-span']));
+      expect(filterSpans('error=true', spans)).toEqual(new Set(['error-span']));
+      expect(filterSpans('error -error', spans)).toEqual(new Set([]));
     });
 
     it('matches text inside an object attribute value', () => {

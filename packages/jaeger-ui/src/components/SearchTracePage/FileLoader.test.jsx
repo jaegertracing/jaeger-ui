@@ -87,7 +87,7 @@ describe('loadTracesFromFile', () => {
     const good = makeOtlpDocument('1234567890abcdef1234567890abcdef');
     const summary = { traceID: '1234567890abcdef1234567890abcdef' };
     readJsonFile.mockResolvedValue([empty, good]);
-    vi.spyOn(otelParser, 'parseOtelTrace').mockReturnValueOnce(null);
+    vi.spyOn(otelParser, 'transformOtelTrace').mockReturnValueOnce(null);
     traceToTraceSummary.mockReturnValueOnce(summary);
 
     const result = await loadTracesFromFile(makeFile());
@@ -106,7 +106,7 @@ describe('loadTracesFromFile', () => {
     const good = makeOtlpDocument('1234567890abcdef1234567890abcdef');
     const summary = { traceID: '1234567890abcdef1234567890abcdef' };
     readJsonFile.mockResolvedValue([bad, good]);
-    vi.spyOn(otelParser, 'parseOtelTrace').mockImplementationOnce(() => {
+    vi.spyOn(otelParser, 'transformOtelTrace').mockImplementationOnce(() => {
       throw error;
     });
     traceToTraceSummary.mockReturnValueOnce(summary);

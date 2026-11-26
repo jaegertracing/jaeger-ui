@@ -34,7 +34,9 @@ describe('TraceTimelineLink', () => {
   });
 
   it('has an accessible name', () => {
-    expect(screen.getByRole('link', { name: 'Open trace in a new window' })).toBeTruthy();
+    const link = screen.getByRole('link', { name: `Open trace ${traceID.slice(0, 7)} in a new window` });
+    expect(link).toBeTruthy();
+    expect(link.getAttribute('target')).toBe('_blank');
   });
 });
 
@@ -51,7 +53,14 @@ describe('TraceTimelineLink when new pages are forbidden', () => {
   });
 
   it('does not mention a new window in the accessible name', () => {
-    const link = screen.getByRole('link', { name: 'Open trace' });
+    const link = screen.getByRole('link', { name: 'Open trace test-tr' });
     expect(link.getAttribute('target')).toBe('');
+  });
+});
+
+describe('TraceTimelineLink without traceID', () => {
+  it('falls back to generic accessible name without short trace ID', () => {
+    render(<TraceTimelineLink />);
+    expect(screen.getByRole('link', { name: 'Open trace in a new window' })).toBeTruthy();
   });
 });
