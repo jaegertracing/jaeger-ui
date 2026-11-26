@@ -4,7 +4,11 @@
 import {
   findServerChildSpan,
   createViewedBoundsFunc,
+  getCursorForClientX,
+  getViewCursorPosition,
   isErrorSpan,
+  mapFromViewSubRange,
+  mapToViewSubRange,
   spanContainsErredSpan,
   isKindClient,
   isKindProducer,
@@ -167,6 +171,51 @@ describe('TraceTimelineViewer/utils', () => {
     it('returns false when span kind is not PRODUCER', () => {
       const span = { kind: SpanKind.CLIENT };
       expect(isKindProducer(span)).toBe(false);
+    });
+  });
+
+  describe('sub-range cursor coordinate mapping', () => {
+    it('maps normalized positions to and from zoomed sub-ranges', () => {
+      expect(mapFromViewSubRange(0.25, 0.75, 0.5)).toBe(0.5);
+      expect(mapToViewSubRange(0.25, 0.75, 0.5)).toBe(0.5);
+      expect(mapFromViewSubRange(0.2, 0.8, 0.25)).toBeCloseTo(0.35);
+      expect(mapToViewSubRange(0.2, 0.8, 0.35)).toBeCloseTo(0.25);
+    });
+
+    it('returns cursor percentage when visible and hides when out of range or invalid', () => {
+      expect(getViewCursorPosition({ current: [0, 1], cursor: 0.4 })).toBe('40%');
+      expect(getViewCursorPosition({ current: [0.25, 0.75], cursor: 0.5 })).toBe('50%');
+      expect(getViewCursorPosition({ current: [0.25, 0.75], cursor: 0.1 })).toBeUndefined();
+      expect(getViewCursorPosition({ current: [0.25, 0.75], cursor: 0.9 })).toBeUndefined();
+      expect(getViewCursorPosition({ current: [0, 1], cursor: null })).toBeUndefined();
+      expect(getViewCursorPosition({ current: [0, 1], cursor: Number.NaN })).toBeUndefined();
+      expect(getViewCursorPosition({ current: [0.5, 0.5], cursor: 0.5 })).toBeUndefined();
+      expect(getViewCursorPosition({ current: [0.8, 0.2], cursor: 0.5 })).toBeUndefined();
+      expect(
+        getViewCursorPosition({
+          current: [0, 1],
+          cursor: 0.5,
+          reframe: { anchor: 0.2, shift: 0.6 },
+        })
+      ).toBeUndefined();
+    });
+
+    it('maps clientX within the timeline column and ignores out-of-bounds coordinates', () => {
+      // Container [0, 1000], nameColumnWidth=0.25 -> timeline spans [250, 1000] (width 750)
+      expect(getCursorForClientX(625, 0, 1000, 0.25, [0, 1])).toBe(0.5);
+      expect(getCursorForClientX(250, 0, 1000, 0.25, [0.2, 0.8])).toBe(0.2);
+      expect(getCursorForClientX(625, 0, 1000, 0.25, [0.2, 0.8])).toBe(0.5);
+      expect(getCursorForClientX(1000, 0, 1000, 0.25, [0.2, 0.8])).toBe(0.8);
+
+      // Inside name column or past right edge -> undefined
+      expect(getCursorForClientX(249, 0, 1000, 0.25, [0, 1])).toBeUndefined();
+      expect(getCursorForClientX(1001, 0, 1000, 0.25, [0, 1])).toBeUndefined();
+
+      // Invalid geometry / ranges -> undefined
+      expect(getCursorForClientX(500, 0, 0, 0.25, [0, 1])).toBeUndefined();
+      expect(getCursorForClientX(500, 0, 1000, 1, [0, 1])).toBeUndefined();
+      expect(getCursorForClientX(500, 0, 1000, 0.25, [0.5, 0.5])).toBeUndefined();
+      expect(getCursorForClientX(Number.NaN, 0, 1000, 0.25, [0, 1])).toBeUndefined();
     });
   });
 });

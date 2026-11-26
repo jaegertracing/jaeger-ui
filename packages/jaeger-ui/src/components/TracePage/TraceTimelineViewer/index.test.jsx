@@ -59,13 +59,17 @@ vi.mock('./store', () => ({
 }));
 
 const mockUseSpanPillsEnabled = vi.hoisted(() => vi.fn(() => true));
+const mockVirtualizedTraceViewRender = vi.hoisted(() => vi.fn());
 vi.mock('./spanPills', () => ({
   useSpanPillsEnabled: mockUseSpanPillsEnabled,
 }));
 vi.mock('./VirtualizedTraceView', () =>
-  mockDefault(props => (
-    <div data-testid="virtualized-trace-view-mock" data-list-top-offset-key={props.listTopOffsetKey} />
-  ))
+  mockDefault(props => {
+    mockVirtualizedTraceViewRender(props);
+    return (
+      <div data-testid="virtualized-trace-view-mock" data-list-top-offset-key={props.listTopOffsetKey} />
+    );
+  })
 );
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('./TimelineHeaderRow', () =>
@@ -131,6 +135,7 @@ describe('<TraceTimelineViewer>', () => {
     mockTraceTimelineStore.detailStates = new Map();
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseSpanPillsEnabled.mockClear();
+    mockVirtualizedTraceViewRender.mockClear();
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
 
@@ -426,5 +431,115 @@ describe('<TraceTimelineViewer>', () => {
 
     // Side panel cleanup when a selected span's service is pruned is tested
     // in useServiceFilter.test.ts (the page's span filter hook owns that logic now).
+  });
+
+  describe('synchronized timeline cursor guide', () => {
+    it('renders the cursor guide aligned with the timeline column for full and zoomed ranges', () => {
+      const { container, rerender } = render(
+        <TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0, 1], cursor: 0.4 } }} />
+      );
+      const layer = container.querySelector('.TraceTimelineViewer--cursorGuideLayer');
+      const guide = container.querySelector('.TraceTimelineViewer--cursorGuide');
+      expect(layer).toBeInTheDocument();
+      expect(layer.style.left).toBe('25%');
+      expect(layer.style.width).toBe('75%');
+      expect(guide).toBeInTheDocument();
+      expect(guide.style.left).toBe('40%');
+
+      rerender(
+        <TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0.25, 0.75], cursor: 0.5 } }} />
+      );
+      expect(container.querySelector('.TraceTimelineViewer--cursorGuide').style.left).toBe('50%');
+    });
+
+    it('hides the cursor guide when out of zoomed range, during drag, or when bars are hidden', () => {
+      const { container, rerender } = render(
+        <TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0.25, 0.75], cursor: 0.1 } }} />
+      );
+      expect(container.querySelector('.TraceTimelineViewer--cursorGuide')).not.toBeInTheDocument();
+
+      rerender(
+        <TraceTimelineViewerImpl
+          {...props}
+          viewRange={{ time: { current: [0.25, 0.75], cursor: 0.5, reframe: { anchor: 0.3, shift: 0.6 } } }}
+        />
+      );
+      expect(container.querySelector('.TraceTimelineViewer--cursorGuide')).not.toBeInTheDocument();
+
+      mockDisplayedLayoutStore.timelineBarsVisible = false;
+      rerender(<TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0, 1], cursor: 0.5 } }} />);
+      expect(container.querySelector('.TraceTimelineViewer--cursorGuide')).not.toBeInTheDocument();
+    });
+
+    it('aligns the cursor guide layer with scaled nameColumnWidth in side panel mode', () => {
+      mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
+      mockDisplayedLayoutStore.spanNameColumnWidth = 0.25;
+      mockDisplayedLayoutStore.sidePanelWidth = 0.5;
+      const { container } = render(
+        <TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0, 1], cursor: 0.6 } }} />
+      );
+      const layer = container.querySelector('.TraceTimelineViewer--cursorGuideLayer');
+      // nameColumnWidth inside --main = 0.25 / (1 - 0.5) = 0.5
+      expect(layer.style.left).toBe('50%');
+      expect(layer.style.width).toBe('50%');
+      expect(container.querySelector('.TraceTimelineViewer--cursorGuide').style.left).toBe('60%');
+    });
+
+    it('updates cursor on timeline mouse move, avoids redundant updates, and clears on leave or name-column hover', () => {
+      const updateNextViewRangeTime = vi.fn();
+      const rectSpy = jest
+        .spyOn(Element.prototype, 'getBoundingClientRect')
+        .mockImplementation(() => ({ left: 0, width: 1000, top: 0, right: 1000, bottom: 200, height: 200 }));
+
+      try {
+        const { container } = render(
+          <TraceTimelineViewerImpl
+            {...props}
+            updateNextViewRangeTime={updateNextViewRangeTime}
+            viewRange={{ time: { current: [0.2, 0.8] } }}
+          />
+        );
+        const timelineContainer = container.querySelector('.TraceTimelineViewer--timelineContainer');
+
+        // Moving inside the left name column when cursor is unset does not trigger updates.
+        fireEvent.mouseMove(timelineContainer, { clientX: 100 });
+        expect(updateNextViewRangeTime).not.toHaveBeenCalled();
+
+        // Moving to midpoint of timeline bars [250, 1000] maps to 0.5 of [0.2, 0.8] = 0.5.
+        fireEvent.mouseMove(timelineContainer, { clientX: 625 });
+        expect(updateNextViewRangeTime).toHaveBeenCalledTimes(1);
+        expect(updateNextViewRangeTime).toHaveBeenLastCalledWith({ cursor: 0.5 });
+
+        // Moving vertically at the same clientX does not emit a redundant update.
+        fireEvent.mouseMove(timelineContainer, { clientX: 625 });
+        expect(updateNextViewRangeTime).toHaveBeenCalledTimes(1);
+
+        // Moving back into the name column clears the cursor once.
+        fireEvent.mouseMove(timelineContainer, { clientX: 100 });
+        expect(updateNextViewRangeTime).toHaveBeenCalledTimes(2);
+        expect(updateNextViewRangeTime).toHaveBeenLastCalledWith({ cursor: undefined });
+
+        // Moving onto the timeline again and leaving clears the cursor.
+        fireEvent.mouseMove(timelineContainer, { clientX: 625 });
+        fireEvent.mouseLeave(timelineContainer);
+        expect(updateNextViewRangeTime).toHaveBeenCalledTimes(4);
+        expect(updateNextViewRangeTime).toHaveBeenLastCalledWith({ cursor: undefined });
+      } finally {
+        rectSpy.mockRestore();
+      }
+    });
+
+    it('does not re-render VirtualizedTraceView when only cursor changes', () => {
+      const { rerender } = render(
+        <TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0, 1], cursor: 0.2 } }} />
+      );
+      expect(mockVirtualizedTraceViewRender).toHaveBeenCalledTimes(1);
+
+      rerender(<TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0, 1], cursor: 0.7 } }} />);
+      rerender(
+        <TraceTimelineViewerImpl {...props} viewRange={{ time: { current: [0, 1], cursor: undefined } }} />
+      );
+      expect(mockVirtualizedTraceViewRender).toHaveBeenCalledTimes(1);
+    });
   });
 });

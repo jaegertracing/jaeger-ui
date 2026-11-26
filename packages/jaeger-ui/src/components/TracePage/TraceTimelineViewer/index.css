@@ -34,6 +34,30 @@ SPDX-License-Identifier: Apache-2.0
   border-left-color: var(--border-default);
 }
 
+.TraceTimelineViewer--timelineContainer {
+  position: relative;
+}
+
+.TraceTimelineViewer--cursorGuideLayer {
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  top: var(--timeline-header-row-height);
+  z-index: 2;
+}
+
+.TraceTimelineViewer.is-heatmapEnabled .TraceTimelineViewer--cursorGuideLayer {
+  top: calc(var(--timeline-header-row-height) + var(--heatmap-legend-height));
+}
+
+.TraceTimelineViewer--cursorGuide {
+  background-color: var(--feedback-error);
+  bottom: 0;
+  position: absolute;
+  top: 0;
+  width: 1px;
+}
+
 .json-markup {
   line-height: 17px;
   font-size: 13px;

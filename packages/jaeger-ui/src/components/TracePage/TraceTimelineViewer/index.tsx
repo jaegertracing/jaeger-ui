@@ -29,6 +29,7 @@ import VirtualizedTraceView from './VirtualizedTraceView';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
+import { getCursorForClientX, getViewCursorPosition } from './utils';
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
@@ -69,6 +70,11 @@ const EMPTY_SCORES: Map<string, number> = new Map();
 
 export const TraceTimelineViewerImpl = (props: TProps) => {
   const {
+    registerAccessors,
+    findMatchesIDs,
+    scrollToFirstVisibleSpan,
+    filterTrace,
+    criticalPath,
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
@@ -76,7 +82,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     trace,
     spanFilterNode,
     useOtelTerms,
-    ...rest
   } = props;
 
   // Layout preferences are owned by Zustand. Each handler tracks before it updates the store.
@@ -247,18 +252,123 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // move the list.
   const listTopOffsetKey = `${pageHeaderHeight}:${heatmapEnabled ? legendHeight : 'off'}`;
 
-  const virtualizedView = (
-    <VirtualizedTraceView
-      {...rest}
-      trace={trace}
-      useOtelTerms={useOtelTerms}
-      currentViewRangeTime={viewRange.time.current}
-      nameColumnWidth={nameColumnWidth}
-      heatmapEnabled={heatmapEnabled}
-      heatmapScores={heatmapScores}
-      listTopOffsetKey={listTopOffsetKey}
-      spanPillsEnabled={spanPillsEnabled}
-    />
+  const [viewStart, viewEnd] = viewRange.time.current;
+  const currentViewRangeTime = useMemo<[number, number]>(() => [viewStart, viewEnd], [viewStart, viewEnd]);
+
+  // Memoize so cursor-only updates on viewRange do not re-render VirtualizedTraceView or its rows.
+  const virtualizedView = useMemo(
+    () => (
+      <VirtualizedTraceView
+        registerAccessors={registerAccessors}
+        findMatchesIDs={findMatchesIDs}
+        scrollToFirstVisibleSpan={scrollToFirstVisibleSpan}
+        filterTrace={filterTrace}
+        criticalPath={criticalPath}
+        trace={trace}
+        useOtelTerms={useOtelTerms}
+        currentViewRangeTime={currentViewRangeTime}
+        nameColumnWidth={nameColumnWidth}
+        heatmapEnabled={heatmapEnabled}
+        heatmapScores={heatmapScores}
+        listTopOffsetKey={listTopOffsetKey}
+        spanPillsEnabled={spanPillsEnabled}
+      />
+    ),
+    [
+      registerAccessors,
+      findMatchesIDs,
+      scrollToFirstVisibleSpan,
+      filterTrace,
+      criticalPath,
+      trace,
+      useOtelTerms,
+      currentViewRangeTime,
+      nameColumnWidth,
+      heatmapEnabled,
+      heatmapScores,
+      listTopOffsetKey,
+      spanPillsEnabled,
+    ]
+  );
+
+  const timelineContainerRef = useRef<HTMLDivElement>(null);
+  const lastSetCursorRef = useRef<number | undefined>(undefined);
+  const prevPropCursorRef = useRef<number | TNil>(viewRange.time.cursor);
+  const hoverStateRef = useRef({
+    nameColumnWidth,
+    viewRange,
+    updateNextViewRangeTime,
+  });
+
+  useLayoutEffect(() => {
+    hoverStateRef.current = {
+      nameColumnWidth,
+      viewRange,
+      updateNextViewRangeTime,
+    };
+    if (viewRange.time.cursor !== prevPropCursorRef.current) {
+      lastSetCursorRef.current = viewRange.time.cursor ?? undefined;
+      prevPropCursorRef.current = viewRange.time.cursor;
+    }
+  });
+
+  const handleTimelineMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const container = timelineContainerRef.current;
+    if (!container) return;
+    const { left, width } = container.getBoundingClientRect();
+    const {
+      nameColumnWidth: colWidth,
+      viewRange: { time },
+      updateNextViewRangeTime: updateNext,
+    } = hoverStateRef.current;
+    const nextCursor = getCursorForClientX(event.clientX, left, width, colWidth, time.current);
+    if (nextCursor === undefined) {
+      if (lastSetCursorRef.current !== undefined || time.cursor != null) {
+        lastSetCursorRef.current = undefined;
+        updateNext?.({ cursor: undefined });
+      }
+      return;
+    }
+    if (nextCursor !== lastSetCursorRef.current) {
+      lastSetCursorRef.current = nextCursor;
+      updateNext?.({ cursor: nextCursor });
+    }
+  }, []);
+
+  const handleTimelineMouseLeave = useCallback(() => {
+    const {
+      viewRange: { time },
+      updateNextViewRangeTime: updateNext,
+    } = hoverStateRef.current;
+    if (lastSetCursorRef.current !== undefined || time.cursor != null) {
+      lastSetCursorRef.current = undefined;
+      updateNext?.({ cursor: undefined });
+    }
+  }, []);
+
+  const cursorPosition = timelineBarsVisible ? getViewCursorPosition(viewRange.time) : undefined;
+
+  const timelineContainer = (
+    <div
+      className="TraceTimelineViewer--timelineContainer"
+      ref={timelineContainerRef}
+      onMouseMove={timelineBarsVisible ? handleTimelineMouseMove : undefined}
+      onMouseLeave={timelineBarsVisible ? handleTimelineMouseLeave : undefined}
+    >
+      {virtualizedView}
+      {cursorPosition != null && (
+        <div
+          aria-hidden="true"
+          className="TraceTimelineViewer--cursorGuideLayer"
+          style={{
+            left: `${nameColumnWidth * 100}%`,
+            width: `${(1 - nameColumnWidth) * 100}%`,
+          }}
+        >
+          <div className="TraceTimelineViewer--cursorGuide" style={{ left: cursorPosition }} />
+        </div>
+      )}
+    </div>
   );
 
   const rootClassName = heatmapEnabled ? 'TraceTimelineViewer is-heatmapEnabled' : 'TraceTimelineViewer';
@@ -290,7 +400,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
         {legend}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
-            {virtualizedView}
+            {timelineContainer}
           </div>
           <div className="TraceTimelineViewer--sidePanel" style={sidePanelStyle}>
             <SpanDetailSidePanel
@@ -308,7 +418,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     <div className={rootClassName} style={rootStyle}>
       {headerRow}
       {legend}
-      {virtualizedView}
+      {timelineContainer}
     </div>
   );
 };

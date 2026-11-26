@@ -234,6 +234,20 @@ describe('<TimelineViewingLayer>', () => {
       });
     });
 
+    it('skips rendering the cursor when out of zoomed range or range is zero-width', () => {
+      const cases = [
+        { current: [viewStart, viewEnd], cursor: viewStart - 0.1 },
+        { current: [viewStart, viewEnd], cursor: viewEnd + 0.05 },
+        { current: [0.5, 0.5], cursor: 0.5 },
+      ];
+
+      cases.forEach(viewRangeTime => {
+        const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
+        expect(container.querySelector('.TimelineViewingLayer--cursorGuide')).not.toBeInTheDocument();
+        cleanup();
+      });
+    });
+
     it('renders the reframe dragging', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: viewEnd } };
       const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);

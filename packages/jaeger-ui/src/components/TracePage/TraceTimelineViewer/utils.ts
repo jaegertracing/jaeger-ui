@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IOtelSpan, SpanKind, StatusCode } from '../../../types/otel';
+import { IViewRangeTime } from '../types';
 
 export type ViewedBoundsFunctionType = (start: number, end: number) => { start: number; end: number };
 /**
@@ -104,5 +105,77 @@ export function findServerChildSpan(spans: ReadonlyArray<IOtelSpan>): IOtelSpan 
 export const isKindClient = (span: IOtelSpan): boolean => span.kind === SpanKind.CLIENT;
 
 export const isKindProducer = (span: IOtelSpan): boolean => span.kind === SpanKind.PRODUCER;
+
+/**
+ * Map a normalized [0, 1] position within [viewStart, viewEnd] back to [0, 1] on the full trace.
+ */
+export function mapFromViewSubRange(viewStart: number, viewEnd: number, value: number): number {
+  return viewStart + value * (viewEnd - viewStart);
+}
+
+/**
+ * Map a normalized [0, 1] position on the full trace into [0, 1] within [viewStart, viewEnd].
+ */
+export function mapToViewSubRange(viewStart: number, viewEnd: number, value: number): number {
+  return (value - viewStart) / (viewEnd - viewStart);
+}
+
+/**
+ * Returns the CSS left percentage for the synchronized timeline cursor guide when visible,
+ * or undefined when the cursor is unset, out of the zoomed range, invalid, or a drag is active.
+ */
+export function getViewCursorPosition(viewRangeTime: IViewRangeTime): string | undefined {
+  const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
+  const [viewStart, viewEnd] = current;
+  const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
+  if (
+    haveNextTimeRange ||
+    cursor == null ||
+    !Number.isFinite(cursor) ||
+    !Number.isFinite(viewStart) ||
+    !Number.isFinite(viewEnd) ||
+    viewEnd <= viewStart ||
+    cursor < viewStart ||
+    cursor > viewEnd
+  ) {
+    return undefined;
+  }
+  return `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
+}
+
+/**
+ * Maps a pointer clientX coordinate inside the timeline container to a normalized full-trace
+ * cursor position, or returns undefined if the pointer is outside the timeline bars column
+ * or the container/range dimensions are invalid.
+ */
+export function getCursorForClientX(
+  clientX: number,
+  containerLeft: number,
+  containerWidth: number,
+  nameColumnWidth: number,
+  viewRangeCurrent: [number, number]
+): number | undefined {
+  const [viewStart, viewEnd] = viewRangeCurrent;
+  if (
+    !Number.isFinite(clientX) ||
+    !Number.isFinite(containerLeft) ||
+    !Number.isFinite(containerWidth) ||
+    !Number.isFinite(nameColumnWidth) ||
+    !Number.isFinite(viewStart) ||
+    !Number.isFinite(viewEnd) ||
+    containerWidth <= 0 ||
+    nameColumnWidth >= 1 ||
+    viewEnd <= viewStart
+  ) {
+    return undefined;
+  }
+  const timelineLeft = containerLeft + containerWidth * nameColumnWidth;
+  const timelineWidth = containerWidth * (1 - nameColumnWidth);
+  if (timelineWidth <= 0 || clientX < timelineLeft || clientX > containerLeft + containerWidth) {
+    return undefined;
+  }
+  const fraction = Math.min(1, Math.max(0, (clientX - timelineLeft) / timelineWidth));
+  return mapFromViewSubRange(viewStart, viewEnd, fraction);
+}
 
 export { formatDuration, formatDurationCompact } from '../../../utils/date';

@@ -5,7 +5,7 @@ import * as React from 'react';
 import cx from 'classnames';
 
 import { TUpdateViewRangeTimeFunction, IViewRangeTime, ViewRangeTimeUpdate } from '../../types';
-import { TNil } from '../../../../types';
+import { getViewCursorPosition, mapFromViewSubRange, mapToViewSubRange } from '../utils';
 import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
 
 import './TimelineViewingLayer.css';
@@ -34,24 +34,6 @@ type TOutOfViewLayout = {
 
 function isOutOfView(layout: TDraggingLeftLayout | TOutOfViewLayout): layout is TOutOfViewLayout {
   return Reflect.has(layout, 'isOutOfView');
-}
-
-/**
- * Map from a sub range to the greater view range, e.g, when the view range is
- * the middle half ([0.25, 0.75]), a value of 0.25 befomes 3/8.
- * @returns {number}
- */
-function mapFromViewSubRange(viewStart: number, viewEnd: number, value: number) {
-  return viewStart + value * (viewEnd - viewStart);
-}
-
-/**
- * Map a value from the view ([0, 1]) to a sub-range, e.g, when the view range is
- * the middle half ([0.25, 0.75]), a value of 3/8 becomes 1/4.
- * @returns {number}
- */
-function mapToViewSubRange(viewStart: number, viewEnd: number, value: number) {
-  return (value - viewStart) / (viewEnd - viewStart);
 }
 
 /**
@@ -213,13 +195,9 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
     }
   }, [boundsInvalidator]);
 
-  const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
+  const { current, reframe, shiftEnd, shiftStart } = viewRangeTime;
   const [viewStart, viewEnd] = current;
-  const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
-  let cursorPosition: string | TNil;
-  if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
-    cursorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
-  }
+  const cursorPosition = getViewCursorPosition(viewRangeTime);
 
   return (
     <div
