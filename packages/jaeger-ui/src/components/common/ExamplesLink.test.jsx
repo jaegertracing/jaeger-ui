@@ -60,4 +60,20 @@ describe('ExamplesLink', () => {
     render(<ExamplesLink examples={traceLinks} includeText />);
     expect(screen.getByText('Examples')).toBeInTheDocument();
   });
+
+  it('provides accessible name with or without includeText', () => {
+    const { unmount } = render(<ExamplesLink examples={traceLinks} />);
+    const linkWithoutText = screen.getByRole('link', { name: 'Examples in a new window' });
+    expect(linkWithoutText).toBeInTheDocument();
+    expect(linkWithoutText).toHaveAttribute('aria-label', 'Examples in a new window');
+    expect(linkWithoutText).toHaveAttribute('target', '_blank');
+
+    unmount();
+
+    render(<ExamplesLink examples={traceLinks} includeText />);
+    const linkWithText = screen.getByRole('link', { name: 'Examples' });
+    expect(linkWithText).toBeInTheDocument();
+    expect(linkWithText).not.toHaveAttribute('aria-label');
+    expect(linkWithText).toHaveAttribute('target', '_blank');
+  });
 });

@@ -51,9 +51,14 @@ export default function ExternalLinks(props: ExternalLinksProps) {
 
   return (
     <Dropdown menu={{ items: linkValueList(links) }} placement="bottomRight" trigger={['click']}>
-      <a className="TracePageHeader--back" data-testid="dropdown">
+      <button
+        type="button"
+        aria-label="External links"
+        className="TracePageHeader--back"
+        data-testid="dropdown"
+      >
         <NewWindowIcon isLarge />
-      </a>
+      </button>
     </Dropdown>
   );
 }

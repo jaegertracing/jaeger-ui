@@ -202,6 +202,10 @@ When a relocation is unavoidable, structure the pull requests so that each diff 
 
 A pull request that deletes more test lines than it adds, or that shows a test file as deleted and a new file as added, is not merged without a maintainer confirming the correspondence by hand.
 
+## Pull Requests
+
+When a change matches an item under [Operational risk](./REVIEW.md#operational-risk), the PR description says what fails when the new code misbehaves and for whom, how the change is turned off or rolled back, and whether state stored by the new version survives the rollback.
+
 ## Commits
 
 - Sign all commits with DCO (`git commit -s`)
