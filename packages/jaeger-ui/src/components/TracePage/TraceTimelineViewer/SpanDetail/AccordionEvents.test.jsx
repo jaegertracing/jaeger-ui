@@ -121,6 +121,16 @@ describe('<AccordionEvents>', () => {
     expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
   });
 
+  it('does not toggle the accordion when the event range controls are clicked', () => {
+    render(<AccordionEvents {...defaultProps} isOpen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
+    expect(defaultProps.onToggle).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
+    expect(defaultProps.onToggle).not.toHaveBeenCalled();
+  });
+
   it('shows more events on "show more" and fewer again on "show less"', () => {
     const manyLogs = Array.from({ length: 5 }, (_, i) => ({
       timestamp: 10 + i,
