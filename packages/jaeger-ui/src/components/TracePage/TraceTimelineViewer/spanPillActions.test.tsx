@@ -6,7 +6,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { makeAttributes } from '../../../model/attributes';
-import { AttributeValue, IOtelSpan } from '../../../types/otel';
+import { AttributeValue, IOtelSpan, StatusCode } from '../../../types/otel';
 import filterSpans from '../../../utils/filter-spans';
 import {
   attributeMatchIDs,
@@ -49,6 +49,7 @@ function makeSpan(
     attributes: makeAttributes(attributes),
     events: [],
     resource: { serviceName: `service-${spanID}`, attributes: makeAttributes() },
+    status: { code: StatusCode.UNSET },
   } as unknown as IOtelSpan;
 }
 

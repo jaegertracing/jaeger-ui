@@ -2,8 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { KeyValuePair, Span } from '../types/trace';
-import { IOtelSpan, IAttribute } from '../types/otel';
+import { IOtelSpan, IAttribute, StatusCode } from '../types/otel';
 import { TNil } from '../types';
+
+// The search treats a span with an error status as if it had this attribute, because an OTLP
+// span reports an error in its status and need not carry an `error` attribute.
+const ERROR_STATUS_AS_ATTRIBUTE: ReadonlyArray<IAttribute> = [{ key: 'error', value: true }];
 
 /** The text of an attribute value as the search and the span filter match it. */
 export function stringifyAttributeValue(value: unknown): string {
@@ -78,6 +82,7 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
       isTextInFilters(includeFilters, span.name) ||
       isTextInFilters(includeFilters, span.resource.serviceName) ||
       isTextInKeyValues(span.attributes.entries()) ||
+      (span.status.code === StatusCode.ERROR && isTextInKeyValues(ERROR_STATUS_AS_ATTRIBUTE)) ||
       (Array.isArray(span.events) &&
         span.events.some(event => isTextInKeyValues(event.attributes.entries()))) ||
       isTextInKeyValues(span.resource.attributes.entries()) ||

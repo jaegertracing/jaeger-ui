@@ -29,7 +29,7 @@ import getConfig from '../../../utils/config/get-config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 import { EMPTY_SPAN_FILTER, hiddenServices, withHiddenServices } from '../spanFilter';
-import { IOtelSpan } from '../../../types/otel';
+import { IOtelSpan, StatusCode } from '../../../types/otel';
 
 function resetLayoutStores() {
   useDisplayedLayoutStore.setState(useDisplayedLayoutStore.getInitialState(), true);
@@ -453,6 +453,7 @@ const makeSpan = (overrides: Record<string, unknown> = {}) =>
     depth: 0,
     hasChildren: false,
     childSpans: [],
+    status: { code: StatusCode.UNSET },
     ...overrides,
   }) as any;
 

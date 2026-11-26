@@ -17,7 +17,7 @@ vi.mock('../../../utils/tracking', async importOriginal => ({
 import { setDetailPanelMode, useDisplayedLayoutStore, useTraceTimelineStore } from './store';
 import { useSavedLayoutPrefsStore } from './store.layout';
 import * as track from './store.track';
-import { IEvent, IOtelSpan, IOtelTrace } from '../../../types/otel';
+import { IEvent, IOtelSpan, IOtelTrace, StatusCode } from '../../../types/otel';
 import { trackEvent } from '../../../utils/tracking';
 
 const noEntries = { entries: () => [] };
@@ -33,6 +33,7 @@ function makeSpan(spanID: string, depth: number, parentSpan?: object, extra: obj
     hasChildren: false,
     attributes: noEntries,
     resource,
+    status: { code: StatusCode.UNSET },
     ...extra,
   };
 }
