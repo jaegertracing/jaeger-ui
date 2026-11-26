@@ -10,8 +10,8 @@ import '@testing-library/jest-dom';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration, formatDurationCompact, isErrorSpan } from '../utils';
-import { parseOtelTrace } from '../../../../api/v3/parser';
-import { refinedTracesData } from '../../../../api/v3/schemas';
+import { transformOtelTrace } from '../../../../api/v3/parser';
+import { validateTracesData } from '../../../../api/v3/schemas';
 import { makeAttributes } from '../../../../model/attributes';
 import { toOtlpTrace } from '../../../../model/test/materializer-otlp';
 
@@ -117,7 +117,7 @@ describe('<SpanDetail>', () => {
     formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
     isErrorSpan.mockReset();
 
-    const trace = parseOtelTrace(refinedTracesData.parse(toOtlpTrace(traceSpec)));
+    const trace = transformOtelTrace(validateTracesData(toOtlpTrace(traceSpec)));
     [span] = trace.spans;
 
     detailState = new DetailState().toggleEvents().toggleResource().toggleLinks().toggleAttributes();
