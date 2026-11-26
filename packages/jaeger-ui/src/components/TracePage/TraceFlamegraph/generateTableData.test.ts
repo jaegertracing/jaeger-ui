@@ -3,9 +3,10 @@
 
 import { generateTableData } from './generateTableData';
 import testTrace from './testTrace.json';
-import transformTraceData from '../../../model/transform-trace-data';
+import { parseOtelTrace } from '../../../api/v3/parser';
+import { refinedTracesData } from '../../../api/v3/schemas';
 
-const otelTrace = transformTraceData(testTrace.data as any)!.asOtelTrace();
+const otelTrace = parseOtelTrace(refinedTracesData.parse(testTrace))!;
 
 describe('generateTableData', () => {
   it('returns one row per unique service:operation', () => {

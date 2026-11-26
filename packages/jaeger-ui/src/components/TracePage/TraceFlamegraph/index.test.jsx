@@ -6,7 +6,8 @@ import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
-import transformTraceData from '../../../model/transform-trace-data';
+import { parseOtelTrace } from '../../../api/v3/parser';
+import { refinedTracesData } from '../../../api/v3/schemas';
 
 // Store callback references so tests can invoke them directly
 const callbacks = {
@@ -80,7 +81,7 @@ vi.mock('d3-selection', () => ({
   }),
 }));
 
-const otelTrace = transformTraceData(testTrace.data).asOtelTrace();
+const otelTrace = parseOtelTrace(refinedTracesData.parse(testTrace));
 
 describe('<TraceFlamegraph />', () => {
   beforeEach(() => {
@@ -353,18 +354,20 @@ describe('<TraceFlamegraph />', () => {
       fireEvent.click(screen.getByTestId('flamegraph-collapse'));
       expect(mockDatum.mock.lastCall[0]).toBe(collapsedNode);
 
-      const data = structuredClone(testTrace.data);
-      const root = data.spans[0];
-      root.duration += 100000;
-      data.spans.push({
+      const data = structuredClone(testTrace);
+      const { spans } = data.resourceSpans[0].scopeSpans[0];
+      const root = spans[0];
+      root.endTimeUnixNano = String(BigInt(root.endTimeUnixNano) + 100_000_000n);
+      const childStart = BigInt(root.startTimeUnixNano) + 1_000_000n;
+      spans.push({
         ...root,
-        spanID: '0000000000004574',
-        operationName: 'VehicleLateChild',
-        startTime: root.startTime + 1000,
-        duration: 2000,
-        references: [{ refType: 'CHILD_OF', traceID: root.traceID, spanID: root.spanID }],
+        spanId: '0000000000004574',
+        parentSpanId: root.spanId,
+        name: 'VehicleLateChild',
+        startTimeUnixNano: String(childStart),
+        endTimeUnixNano: String(childStart + 2_000_000n),
       });
-      const refreshed = transformTraceData(data).asOtelTrace();
+      const refreshed = parseOtelTrace(refinedTracesData.parse(data));
       expect(refreshed.traceID).toBe(otelTrace.traceID);
       rerender(<TraceFlamegraph trace={refreshed} />);
 
