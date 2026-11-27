@@ -255,22 +255,27 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string):
 }
 
 /**
- * Formats a duration in microseconds to a compact string with 3 significant digits.
+ * Formats a duration in microseconds to a compact string with an appropriate unit (μs, ms, s, m).
+ * For ms, s, and m, precision depends on the value in the selected unit: values below 10 use
+ * 2 significant digits, values from 10 to below 100 use 3 significant digits, and values 100
+ * and above are rounded to the nearest integer. Sub-millisecond durations (including 0) round to
+ * the nearest integer microsecond, and values that round up to the next unit's threshold carry
+ * over to that unit.
  * Use this for all standalone latency displays: span durations, trace durations, axis
  * labels, table cells. Prefer this over `formatDuration` unless you specifically need
  * the higher precision for relative offset comparisons.
  *
  * @param microseconds - Duration in microseconds
- * @returns Formatted string with 3 significant digits and appropriate unit (μs, ms, s, m)
+ * @returns Formatted compact duration string with unit (μs, ms, s, m)
  *
  * @example
  * formatDurationCompact(123) // => "123μs"
  * formatDurationCompact(13835) // => "13.8ms"
  * formatDurationCompact(135842) // => "136ms"
- * formatDurationCompact(1835200) // => "1.84s"
+ * formatDurationCompact(1835200) // => "1.8s"
  */
 export function formatDurationCompact(microseconds: Microseconds): string {
-  // Format to 3 significant digits.
+  // Use 2 significant digits below 10, 3 below 100, and integer rounding from 100 up.
   const render = (value: number) =>
     value < 10 ? value.toPrecision(2) : value < 100 ? value.toPrecision(3) : String(Math.round(value));
 
