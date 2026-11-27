@@ -24,6 +24,7 @@ export interface ISpan {
 }
 
 export interface ITrace {
+  traceId: string;
   spans: ISpan[]; // pre-order
   roots: ISpan[];
   start: number;
@@ -43,35 +44,63 @@ const GENAI_TYPES: Record<string, SpanType> = {
   retrieval: 'RETRIEVAL',
 };
 
-// Converts the Jaeger JSON fixture into the flat model above.
+// The wire encodes a kind as a number; the model keeps the name the criteria show.
+const SPAN_KIND_NAMES: Record<number, string> = {
+  0: 'unspecified',
+  1: 'internal',
+  2: 'server',
+  3: 'client',
+  4: 'producer',
+  5: 'consumer',
+};
+
+// The OTLP JSON encoding names the value type in the key; the model holds plain strings.
+const attrValue = (v: any): string => String(v.stringValue ?? v.intValue ?? v.doubleValue ?? v.boolValue ?? '');
+
+// The model works in microseconds; the wire carries nanoseconds.
+const micros = (nano: string): number => Number(BigInt(nano) / 1000n);
+
+// Converts the OTLP fixture into the flat model above.
 export function loadTrace(json: any): ITrace {
   const byId = new Map<string, ISpan>();
-  const spans: ISpan[] = json.spans.map((s: any) => {
-    const attrs: Array<[string, string]> = s.tags.map((t: any) => [t.key, String(t.value)]);
-    const get = (k: string) => attrs.find(a => a[0] === k)?.[1];
-    const op = get('gen_ai.operation.name');
-    const isError = get('error') === 'true' || get('otel.status_code') === 'ERROR';
-    const tokens = attrs
-      .filter(a => a[0].startsWith('gen_ai.usage'))
-      .reduce((sum, a) => sum + (Number(a[1]) || 0), 0);
-    const span: ISpan = {
-      id: s.spanID,
-      parentId: s.references?.[0]?.spanID ?? null,
-      service: json.processes[s.processID].serviceName,
-      name: s.operationName,
-      kind: get('span.kind') ?? 'internal',
-      status: isError ? 'error' : 'ok',
-      spanType: op ? (GENAI_TYPES[op] ?? 'Non-GenAI') : 'Non-GenAI',
-      start: s.startTime,
-      duration: s.duration,
-      tokens,
-      attrs,
-      children: [],
-      depth: 0,
-    };
-    byId.set(span.id, span);
-    return span;
-  });
+  const spans: ISpan[] = [];
+  let traceId = '';
+  for (const resourceSpans of json.resourceSpans) {
+    const resourceAttrs: Array<[string, string]> = (resourceSpans.resource?.attributes ?? []).map((a: any) => [
+      a.key,
+      attrValue(a.value),
+    ]);
+    const service = resourceAttrs.find(([k]) => k === 'service.name')?.[1] ?? '';
+    for (const scopeSpans of resourceSpans.scopeSpans ?? []) {
+      for (const s of scopeSpans.spans ?? []) {
+        const attrs: Array<[string, string]> = (s.attributes ?? []).map((a: any) => [a.key, attrValue(a.value)]);
+        const get = (k: string) => attrs.find(a => a[0] === k)?.[1];
+        const op = get('gen_ai.operation.name');
+        const tokens = attrs
+          .filter(a => a[0].startsWith('gen_ai.usage'))
+          .reduce((sum, a) => sum + (Number(a[1]) || 0), 0);
+        const start = micros(s.startTimeUnixNano);
+        const span: ISpan = {
+          id: s.spanId,
+          parentId: s.parentSpanId || null,
+          service,
+          name: s.name,
+          kind: SPAN_KIND_NAMES[s.kind] ?? 'unspecified',
+          status: s.status?.code === 2 ? 'error' : 'ok',
+          spanType: op ? (GENAI_TYPES[op] ?? 'Non-GenAI') : 'Non-GenAI',
+          start,
+          duration: micros(s.endTimeUnixNano) - start,
+          tokens,
+          attrs,
+          children: [],
+          depth: 0,
+        };
+        byId.set(span.id, span);
+        spans.push(span);
+        traceId = s.traceId;
+      }
+    }
+  }
   const roots: ISpan[] = [];
   for (const s of spans) {
     const parent = s.parentId ? byId.get(s.parentId) : undefined;
@@ -90,6 +119,7 @@ export function loadTrace(json: any): ITrace {
   const start = Math.min(...ordered.map(s => s.start));
   const end = Math.max(...ordered.map(s => s.start + s.duration));
   return {
+    traceId,
     spans: ordered,
     roots,
     start,

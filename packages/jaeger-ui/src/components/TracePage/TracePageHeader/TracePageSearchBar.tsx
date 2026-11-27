@@ -167,6 +167,10 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             <code>500 -http.status_code</code> finds <code>500</code> anywhere except in that{' '}
             {useOtelTerms ? 'attribute' : 'tag'}.
           </li>
+          <li>
+            A span with an error status is searched as if it had <code>error=true</code>, so{' '}
+            <code>error</code> finds it.
+          </li>
         </ul>
         <table>
           <thead>

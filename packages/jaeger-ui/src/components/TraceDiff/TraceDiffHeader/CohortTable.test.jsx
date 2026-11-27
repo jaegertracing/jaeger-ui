@@ -9,9 +9,21 @@ import CohortTable from './CohortTable';
 import { fetchedState } from '../../../constants';
 import * as dateUtils from '../../../utils/date';
 
-vi.mock('./TraceTimelineLink', () => ({
-  default: props => <div data-testid="trace-timeline-link" data-trace-id={props.traceID} />,
+const { mockState } = vi.hoisted(() => ({
+  mockState: { useRealTraceTimelineLink: false },
 }));
+
+vi.mock('./TraceTimelineLink', async () => {
+  const actual = await vi.importActual('./TraceTimelineLink');
+  return {
+    default: props => {
+      if (mockState.useRealTraceTimelineLink) {
+        return <actual.default {...props} />;
+      }
+      return <div data-testid="trace-timeline-link" data-trace-id={props.traceID} />;
+    },
+  };
+});
 
 vi.mock('../../common/RelativeDate', () => ({
   default: props => (
@@ -93,6 +105,7 @@ describe('CohortTable', () => {
   });
 
   beforeEach(() => {
+    mockState.useRealTraceTimelineLink = false;
     selectTrace.mockReset();
     formatDurationSpy.mockClear();
   });
@@ -262,5 +275,24 @@ describe('CohortTable', () => {
     const { container: container3 } = render(<CohortTable {...defaultProps} />);
     const message3 = within(container3).queryByText(/Enter a Trace ID or perform a search/);
     expect(message3).not.toBeInTheDocument();
+  });
+
+  it('renders without crashing when a row is loading and renders the real TraceTimelineLink', () => {
+    mockState.useRealTraceTimelineLink = true;
+    const loadingCohort = [
+      ...cohort,
+      {
+        id: 'loading-trace-id',
+        state: fetchedState.LOADING,
+      },
+    ];
+
+    expect(() => {
+      render(<CohortTable {...defaultProps} cohort={loadingCohort} />);
+    }).not.toThrow();
+
+    const link = screen.getByRole('link', { name: 'Open trace loading in a new window' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/trace/loading-trace-id');
   });
 });

@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
-import { parseOtelTrace } from '../api/v3/parser';
+import { transformOtelTrace } from '../api/v3/parser';
 import { fetchedState } from '../constants';
 import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
@@ -40,7 +40,7 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
     queryKey: TRACE_QUERY_KEY(traceId),
     queryFn: async ({ signal }) => {
       const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId), signal);
-      const otel = parseOtelTrace(response);
+      const otel = transformOtelTrace(response);
       if (!otel) {
         throw new Error('Invalid trace data received.');
       }
@@ -63,7 +63,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
       queryKey: TRACE_QUERY_KEY(id),
       queryFn: async ({ signal }) => {
         const response = await jaegerClient.fetchTrace(toTraceIdHex(id), signal);
-        const otel = parseOtelTrace(response);
+        const otel = transformOtelTrace(response);
         if (!otel) {
           throw new Error('Invalid trace data received.');
         }
