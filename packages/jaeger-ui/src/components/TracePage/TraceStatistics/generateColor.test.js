@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import generateColor from './generateColor';
-import transformTraceData from '../../../model/transform-trace-data';
+import { transformOtelTrace } from '../../../api/v3/parser';
+import { validateTracesData } from '../../../api/v3/schemas';
 import { getColumnValuesSecondDropdown, getColumnValues } from './tableValues';
 
 import testTrace from './tableValuesTestTrace/testTrace.json';
 
-const transformedTrace = transformTraceData(testTrace).asOtelTrace();
+const transformedTrace = transformOtelTrace(validateTracesData(testTrace));
 
 describe('generateColor', () => {
   it('check generateColor to count, one NameSelector is selected', () => {

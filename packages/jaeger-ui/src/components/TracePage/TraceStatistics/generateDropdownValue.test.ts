@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
-import transformTraceData from '../../../model/transform-trace-data';
+import { transformOtelTrace } from '../../../api/v3/parser';
+import { validateTracesData } from '../../../api/v3/schemas';
 
 import testTrace from './tableValuesTestTrace/testTrace.json';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const transformedTrace = transformTraceData(testTrace as any)!;
-const otelTrace = transformedTrace.asOtelTrace();
+const otelTrace = transformOtelTrace(validateTracesData(testTrace))!;
 
 describe('generateDropdownValue', () => {
   it('check generateDropdownValue (legacy)', () => {

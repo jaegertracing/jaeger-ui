@@ -6,10 +6,11 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
-import transformTraceData from '../../../model/transform-trace-data';
+import { transformOtelTrace } from '../../../api/v3/parser';
+import { validateTracesData } from '../../../api/v3/schemas';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
-import testTrace from './testTrace.json';
+import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 
 vi.mock('@jaegertracing/plexus', () => {
   const DEFAULT_MODE = 'service';
@@ -64,7 +65,7 @@ vi.mock('@jaegertracing/plexus', () => {
   };
 });
 
-const transformedTrace = transformTraceData(testTrace);
+const trace = transformOtelTrace(validateTracesData(testTrace));
 
 describe('<TraceGraph>', () => {
   let props;
@@ -72,7 +73,7 @@ describe('<TraceGraph>', () => {
   beforeEach(() => {
     props = {
       headerHeight: 60,
-      trace: transformedTrace.asOtelTrace(),
+      trace,
       onSearchResults: vi.fn(),
     };
   });
