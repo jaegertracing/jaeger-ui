@@ -230,6 +230,8 @@ export default function TraceStatistics(props: Props) {
   const [valueNameSelector1, setValueNameSelector1] = useState<string>(getServiceName);
   const [showPopup, setShowPopup] = useState(false);
   const [popupContent, setPopupContent] = useState('');
+  // Holds the SQL cell that opened the popup so closing it can hand focus back.
+  const sqlCellRef = useRef<HTMLElement | null>(null);
 
   /**
    * If the search props change the search function is re-applied. Mirrors the
@@ -271,8 +273,16 @@ export default function TraceStatistics(props: Props) {
     setPopupContent(content);
   };
 
-  const onClickOption = (hasSubgroupValue: boolean, name: string) => {
-    if (valueNameSelector1 === 'sql.query' && hasSubgroupValue) togglePopup(name);
+  const closePopup = () => {
+    setShowPopup(false);
+    sqlCellRef.current?.focus();
+  };
+
+  const onClickOption = (hasSubgroupValue: boolean, name: string, cell: HTMLElement) => {
+    if (valueNameSelector1 === 'sql.query' && hasSubgroupValue) {
+      sqlCellRef.current = cell;
+      togglePopup(name);
+    }
   };
 
   const onCellFunction = (record: ITableSpan) => {
@@ -285,11 +295,19 @@ export default function TraceStatistics(props: Props) {
 
   const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
     const renderFunction = (cell: string, row: ITableSpan) => {
-      if (val.attribute === 'name')
+      if (val.attribute === 'name') {
+        const canOpenSql = valueNameSelector1 === 'sql.query' && row.hasSubgroupValue;
         return (
           <span
-            role="button"
-            onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
+            role={canOpenSql ? 'button' : undefined}
+            tabIndex={canOpenSql ? 0 : undefined}
+            onClick={event => onClickOption(row.hasSubgroupValue, row.name, event.currentTarget)}
+            onKeyDown={event => {
+              if (canOpenSql && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                onClickOption(row.hasSubgroupValue, row.name, event.currentTarget);
+              }
+            }}
             style={{
               borderLeft: `4px solid ${row.color || `transparent`}`,
               padding: '7px 0px 7px 10px',
@@ -299,6 +317,7 @@ export default function TraceStatistics(props: Props) {
             {cell}
           </span>
         );
+      }
       return `${cell}${val.suffix}`;
     };
     const ele = {
@@ -326,7 +345,7 @@ export default function TraceStatistics(props: Props) {
         useOtelTerms={useOtelTerms}
       />
 
-      {showPopup ? <PopupSQL closePopup={togglePopup} popupContent={popupContent} /> : null}
+      {showPopup ? <PopupSQL closePopup={closePopup} popupContent={popupContent} /> : null}
       <Table
         className="span-table span-view-table"
         columns={columns}
