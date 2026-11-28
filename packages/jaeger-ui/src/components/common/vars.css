@@ -101,6 +101,11 @@ SPDX-License-Identifier: Apache-2.0
   --heatmap-legend-min-height: 72px;
   --heatmap-legend-height: var(--heatmap-legend-min-height);
 
+  /* Top navigation bar. It is navy in both themes, so these have no dark-mode values. */
+  --nav-text: rgba(255, 255, 255, 0.85);
+  --nav-text-hover: #fff;
+  --nav-background-hover: rgba(255, 255, 255, 0.1);
+
   /* 
      Span categorical colors (IBM Carbon Sequence)
      Reference: https://www.carbondesignsystem.com/data-visualization/color-palettes/#categorical-palettes

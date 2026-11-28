@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
@@ -12,11 +12,12 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 vi.mock('antd', async () => {
   const actual = await vi.importActual('antd');
 
-  const Menu = ({ items = [], selectedKeys = [] }) => (
-    <nav data-testid="mock-menu" data-selectedkeys={JSON.stringify(selectedKeys)}>
+  const Menu = ({ items = [], selectedKeys = [], className }) => (
+    <nav data-testid="mock-menu" className={className} data-selectedkeys={JSON.stringify(selectedKeys)}>
       {items.map(item => (
         <div data-testid="mock-menu-item" key={item?.key || item?.label} data-key={item?.key || item?.label}>
           {item?.label}
+          {item?.children && <Menu items={item.children} />}
         </div>
       ))}
     </nav>
@@ -38,8 +39,9 @@ vi.mock('antd', async () => {
   return { ...actual, Menu, Dropdown };
 });
 
-const { useConfigMock } = vi.hoisted(() => ({
+const { useConfigMock, useJaegerAssistantConfiguredMock } = vi.hoisted(() => ({
   useConfigMock: jest.fn(),
+  useJaegerAssistantConfiguredMock: jest.fn(),
 }));
 
 vi.mock('../../hooks/useConfig', () => ({
@@ -47,7 +49,7 @@ vi.mock('../../hooks/useConfig', () => ({
 }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({
-  useJaegerAssistantConfigured: () => false,
+  useJaegerAssistantConfigured: () => useJaegerAssistantConfiguredMock(),
   useJaegerAssistantEnabled: () => false,
 }));
 
@@ -122,6 +124,8 @@ describe('<TopNav>', () => {
     useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
     useConfigMock.mockReset();
     useConfigMock.mockReturnValue(defaultProps.config);
+    useJaegerAssistantConfiguredMock.mockReset();
+    useJaegerAssistantConfiguredMock.mockReturnValue(false);
   });
 
   describe('renders the default menu options', () => {
@@ -271,5 +275,145 @@ describe('<TopNav>', () => {
     );
 
     expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+  });
+
+  it('includes the Ask Jaeger area in the right-side menu when the assistant is configured', () => {
+    useJaegerAssistantConfiguredMock.mockReturnValue(true);
+    render(
+      <BrowserRouter>
+        <TopNav {...defaultProps} />
+      </BrowserRouter>
+    );
+
+    const rightMenu = screen.getAllByTestId('mock-menu')[1];
+    const askArea = rightMenu.querySelector('[data-key="JaegerAskArea"] .TopNav--askArea');
+    expect(within(askArea).getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
+    expect(screen.queryByTestId('TraceIDSearchInput--form')).not.toBeInTheDocument();
+  });
+
+  it('omits the theme toggle from both menus when themes are disabled', () => {
+    useConfigMock.mockReturnValue({ ...defaultProps.config, themes: { enabled: false } });
+    render(
+      <BrowserRouter>
+        <TopNav {...defaultProps} />
+      </BrowserRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+    expect(document.querySelector('.TopNav--morePanel')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /toggle color mode/i })).not.toBeInTheDocument();
+  });
+
+  it('applies the layout classes to the left and right menus', () => {
+    render(
+      <BrowserRouter>
+        <TopNav {...defaultProps} />
+      </BrowserRouter>
+    );
+
+    const [leftMenu, rightMenu] = screen.getAllByTestId('mock-menu');
+    expect(leftMenu).toHaveClass('Menu--item--left');
+    expect(rightMenu).toHaveClass('Menu--item--right');
+  });
+
+  describe('"More options" panel', () => {
+    const openPanel = () => {
+      fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+      return document.querySelector('.TopNav--morePanel');
+    };
+
+    it('is closed by default', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
+      expect(document.querySelector('.TopNav--morePanel')).not.toBeInTheDocument();
+    });
+
+    it('holds the right menu items when opened', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      const panel = openPanel();
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'true');
+      expect(within(panel).getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+      expect(within(panel).getByRole('link', { name: labelGitHub })).toHaveAttribute('href', githubUrl);
+      expect(within(panel).getByRole('link', { name: 'Blog' })).toHaveAttribute('href', blogUrl);
+      expect(within(panel).getByRole('button', { name: /toggle color mode/i })).toBeInTheDocument();
+    });
+
+    it('closes when the button is clicked again', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      openPanel();
+      fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('lists the items of a menu group in place of its dropdown', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      const panel = openPanel();
+      expect(within(panel).queryByTestId('mock-dropdown')).not.toBeInTheDocument();
+      const group = within(panel).getByText(labelAbout).closest('[data-testid="mock-menu-item"]');
+      expect(within(group).getByText('Version 1')).toBeInTheDocument();
+      expect(within(group).getByRole('link', { name: 'Twitter' })).toHaveAttribute('target', '_self');
+      // Keyed under the group, so they don't clash with a top-level item of the same label
+      expect(within(group).getByRole('link', { name: 'Docs' }).closest('[data-key]')).toHaveAttribute(
+        'data-key',
+        `${labelAbout}/Docs`
+      );
+    });
+
+    it('closes when the page changes', () => {
+      const { rerender } = render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      openPanel();
+      rerender(
+        <BrowserRouter>
+          <TopNav {...defaultProps} pathname="/trace/abc123" />
+        </BrowserRouter>
+      );
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('stays closed when returning to the page it was opened on', () => {
+      const { rerender } = render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      openPanel();
+      rerender(
+        <BrowserRouter>
+          <TopNav {...defaultProps} pathname="/trace/abc123" />
+        </BrowserRouter>
+      );
+      rerender(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
+    });
   });
 });
