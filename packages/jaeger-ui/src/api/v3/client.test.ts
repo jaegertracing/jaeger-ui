@@ -24,6 +24,24 @@ describe('JaegerClient', () => {
     vi.useRealTimers();
   });
 
+  describe('fetchMetricDimensions', () => {
+    it('GETs /api/metrics/dimensions', async () => {
+      mockFetch.mockReset();
+      mockFetch.mockReturnValue(
+        Promise.resolve({
+          status: 200,
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+      );
+
+      await client.fetchMetricDimensions();
+      expect(mockFetch).toHaveBeenLastCalledWith('/api/metrics/dimensions', {
+        signal: expect.any(AbortSignal),
+      });
+    });
+  });
+
   describe('fetchMetrics', () => {
     const query = {
       endTs: 1_700_000_000_000,
@@ -33,6 +51,31 @@ describe('JaegerClient', () => {
       spanKind: 'server' as const,
       quantile: 0.95,
     };
+
+    it('GETs metrics query with repeated filter params', async () => {
+      mockFetch.mockReset();
+      const metricsType = 'calls';
+      const serviceName = 'serviceName';
+      const filterQuery = {
+        ...query,
+        quantile: 95,
+        filter: ['deployment.environment:prod', 'k8s.cluster:us-west-1'],
+      };
+      mockFetch.mockReturnValue(
+        Promise.resolve({
+          status: 200,
+          ok: true,
+          json: () => Promise.resolve({ name: 'service_call_rate', type: 'GAUGE', metrics: [] }),
+        })
+      );
+
+      await client.fetchMetrics(metricsType, serviceName, filterQuery);
+      const url = mockFetch.mock.calls[mockFetch.mock.calls.length - 1][0];
+      // Each filter must be its own query-string entry so the Go backend's
+      // r.URL.Query()[filterParam] returns both values.
+      expect(url).toContain('filter=deployment.environment%3Aprod');
+      expect(url).toContain('filter=k8s.cluster%3Aus-west-1');
+    });
 
     it('encodes the service and preserves operation query parameters in milliseconds', async () => {
       mockFetch.mockResolvedValue({

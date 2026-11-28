@@ -180,6 +180,10 @@ export class JaegerClient {
     return { ...schema.parse(data), quantile: query.quantile };
   }
 
+  async fetchMetricDimensions(): Promise<unknown> {
+    return this.fetchLegacy('metrics/dimensions', 'Failed to fetch metric dimensions');
+  }
+
   async fetchDependencies(
     endTs = Date.now(),
     lookback = DEFAULT_DEPENDENCY_LOOKBACK,
