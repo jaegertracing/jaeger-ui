@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -355,7 +355,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const currentService = formData.service;
   const {
     data: spanNamesData,
-    isLoading: isLoadingSpanNames,
+    isFetching: isFetchingSpanNames,
+    isSuccess: isSpanNamesSuccess,
     error: spanNamesError,
   } = useSpanNames(
     currentService && currentService !== '-' && currentService !== ALL_SERVICES ? currentService : null
@@ -373,15 +374,40 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     return store.getBool(ADJUST_TIME_ENABLED_KEY, Boolean(searchAdjustEndTime));
   });
 
+  const pendingServiceChange = useRef<{ service: string; operation?: string } | null>(null);
+
   const handleChange = useCallback((fieldData: Partial<ISearchFormFields>) => {
-    setFormData(prev => {
-      const nextFormData = { ...prev, ...fieldData };
-      if (fieldData.service) {
-        nextFormData.operation = ALL_OPERATIONS;
-      }
-      return nextFormData;
-    });
+    setFormData(prev => ({ ...prev, ...fieldData }));
   }, []);
+
+  const handleServiceChange = useCallback(
+    (service: string) => {
+      pendingServiceChange.current =
+        service !== '-' && service !== ALL_SERVICES ? { service, operation: formData.operation } : null;
+      handleChange({ service });
+    },
+    [formData.operation, handleChange]
+  );
+
+  const handleOperationChange = useCallback(
+    (operation: string) => {
+      pendingServiceChange.current = null;
+      handleChange({ operation });
+    },
+    [handleChange]
+  );
+
+  useEffect(() => {
+    const pending = pendingServiceChange.current;
+    if (!pending || pending.service !== currentService || isFetchingSpanNames || !isSpanNamesSuccess) {
+      return;
+    }
+
+    pendingServiceChange.current = null;
+    if (pending.operation && pending.operation !== ALL_OPERATIONS && !spanNames.includes(pending.operation)) {
+      handleChange({ operation: ALL_OPERATIONS });
+    }
+  }, [currentService, handleChange, isFetchingSpanNames, isSpanNamesSuccess, spanNames]);
 
   const handleAdjustTimeToggle = useCallback((checked: boolean) => {
     setAdjustTimeEnabled(checked);
@@ -400,6 +426,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const handleReset = useCallback(() => {
+    pendingServiceChange.current = null;
     setFormData(prev =>
       defaultFormData({ service: prev.service }, searchConfig?.defaultLookback, allowAllServices)
     );
@@ -432,7 +459,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Select A Service"
           disabled={submitting}
           loading={isLoadingServices}
-          onChange={(value: string) => handleChange({ service: value })}
+          onChange={handleServiceChange}
         >
           {allowAllServices && (
             <Option key={ALL_SERVICES} value={ALL_SERVICES}>
@@ -472,10 +499,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="operation"
           value={formData.operation}
           disabled={submitting || noSelectedService}
-          loading={isLoadingSpanNames}
+          loading={isFetchingSpanNames}
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
           allowCustomValue
-          onChange={(value: string) => handleChange({ operation: value })}
+          onChange={handleOperationChange}
         >
           <Option key={ALL_OPERATIONS} value={ALL_OPERATIONS}>
             {useOtelTerms ? 'All Span Names' : 'All Operations'}
