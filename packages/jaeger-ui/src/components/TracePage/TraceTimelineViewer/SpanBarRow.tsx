@@ -121,6 +121,15 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   useOtelTerms,
   tree = RECORDED_TREE,
 }) => {
+  const {
+    duration,
+    name: operationName,
+    resource: { serviceName },
+  } = span;
+  const isParent = tree.childCount(span) > 0;
+  const liftedPast = tree.liftedPast(span);
+  const hiddenErrors = tree.hiddenErrors(span);
+
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
   }, [onDetailToggled, span.spanID]);
@@ -134,18 +143,23 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         onDetailToggled(span.spanID);
+        return;
+      }
+      // Arrows toggle children only for the span name itself, not for a focused pill inside it,
+      // and leave modified arrows to the global shortcuts (e.g. Shift+Arrow pans) and the browser.
+      if (e.target !== e.currentTarget || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'ArrowRight' && isParent && !isChildrenExpanded) {
+        e.preventDefault();
+        e.stopPropagation();
+        onChildrenToggled(span.spanID);
+      } else if (e.key === 'ArrowLeft' && isParent && isChildrenExpanded) {
+        e.preventDefault();
+        e.stopPropagation();
+        onChildrenToggled(span.spanID);
       }
     },
-    [onDetailToggled, span.spanID]
+    [onDetailToggled, onChildrenToggled, span.spanID, isParent, isChildrenExpanded]
   );
-  const {
-    duration,
-    name: operationName,
-    resource: { serviceName },
-  } = span;
-  const isParent = tree.childCount(span) > 0;
-  const liftedPast = tree.liftedPast(span);
-  const hiddenErrors = tree.hiddenErrors(span);
   const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
   // One resolver for namespace + GenAI icons; GenAI wins when both match (#4217).
   const decoration = getSpanDecorationIcon(span);

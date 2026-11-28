@@ -47,6 +47,18 @@ const SpanTreeOffset: React.FC<TProps> = ({
     if ((e.key === 'Enter' || e.key === ' ') && onClick) {
       e.preventDefault();
       onClick();
+      return;
+    }
+    // Leave modified arrows to the global shortcuts (e.g. Shift+Arrow pans) and the browser.
+    if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight' && !childrenVisible && onClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick();
+    } else if (e.key === 'ArrowLeft' && childrenVisible && onClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick();
     }
   };
 
@@ -56,10 +68,10 @@ const SpanTreeOffset: React.FC<TProps> = ({
         ...(onClick && {
           onKeyDown: _childrenToggleKeyDown,
           tabIndex: 0,
+          role: 'button',
+          'aria-expanded': childrenVisible,
+          'aria-label': `${childrenVisible ? 'Collapse' : 'Expand'} child spans`,
         }),
-        role: 'switch',
-        'aria-checked': childrenVisible,
-        'aria-label': 'Expand or collapse child spans',
       }
     : null;
 
