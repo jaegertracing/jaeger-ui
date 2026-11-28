@@ -13,10 +13,11 @@ import colorGenerator from '../../../utils/color-generator';
 import { makeAttributes } from '../../../model/attributes';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
-vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick, color }) => (
+vi.mock('./SpanTreeOffset', async importOriginal => ({
+  ...(await importOriginal()),
+  default: jest.fn(({ childrenVisible, onClick, color }) => (
     <div data-testid="span-tree-offset" data-color={color} onClick={onClick}>
-      SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
+      SpanTreeOffset: {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
 }));
@@ -535,7 +536,10 @@ describe('<SpanBarRow>', () => {
 
     it('draws the indent guides from the lifted tree', () => {
       render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
-      expect(SpanTreeOffset.mock.lastCall[0].tree).toBe(liftedTree);
+      // The recorded span has a child; the lifted tree reports none and draws the row as a root.
+      expect(SpanTreeOffset.mock.lastCall[0]).toEqual(
+        expect.objectContaining({ ancestors: [], childCount: 0 })
+      );
     });
 
     it('marks a lifted row with the connector glyph and names the hidden spans on hover', async () => {

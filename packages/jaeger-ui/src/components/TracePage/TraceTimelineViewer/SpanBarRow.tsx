@@ -1,14 +1,14 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Tooltip } from 'antd';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
-import SpanTreeOffset from './SpanTreeOffset';
+import SpanTreeOffset, { getAncestorGuides } from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import { SpanDecorationIcon } from './SpanDecorationIcon';
 import Ticks from './Ticks';
@@ -138,6 +138,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     },
     [onDetailToggled, span.spanID]
   );
+  const ancestorGuides = useMemo(() => getAncestorGuides(span, tree), [span, tree]);
   const {
     duration,
     name: operationName,
@@ -187,8 +188,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            span={span}
-            tree={tree}
+            childCount={tree.childCount(span)}
+            ancestors={ancestorGuides}
             onClick={isParent ? _childrenToggle : undefined}
             // The tree markers stay on the service color, like the indent guides, even when the
             // bar takes a heatmap color.

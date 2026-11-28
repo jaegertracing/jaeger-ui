@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event';
 
 import SpanDetailRow from './SpanDetailRow';
 import DetailState from './SpanDetail/DetailState';
+import { RECORDED_TREE } from './generateRowStates';
 import colorGenerator from '../../../utils/color-generator';
 
 const MockSpanDetail = jest.fn(() => <div data-testid="mocked-span-detail" />);
@@ -16,7 +17,8 @@ vi.mock('./SpanDetail', () => ({
 }));
 
 const MockSpanTreeOffset = jest.fn(() => <div data-testid="mocked-span-tree-offset" />);
-vi.mock('./SpanTreeOffset', () => ({
+vi.mock('./SpanTreeOffset', async importOriginal => ({
+  ...(await importOriginal()),
   default: props => MockSpanTreeOffset(props),
 }));
 
@@ -35,6 +37,8 @@ describe('<SpanDetailRow>', () => {
       attributes: [],
     },
     warnings: null,
+    hasChildren: false,
+    childSpans: [],
   };
   const props = {
     color: '#aabbcc',
@@ -91,16 +95,23 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
+        childCount: 0,
         isDetailRow: true,
       })
     );
   });
 
   it('draws the indent guides from the tree it is given', () => {
-    const tree = { parentOf: () => null };
+    const drawnParent = { spanID: 'drawn-parent', resource: { serviceName: 'other-service' } };
+    const tree = {
+      ...RECORDED_TREE,
+      parentOf: s => (s === props.span ? drawnParent : null),
+      isLastChild: () => true,
+    };
     render(<SpanDetailRow {...props} tree={tree} />);
-    expect(MockSpanTreeOffset).toHaveBeenCalledWith(expect.objectContaining({ tree }));
+    expect(MockSpanTreeOffset).toHaveBeenCalledWith(
+      expect.objectContaining({ ancestors: [expect.objectContaining({ spanID: 'drawn-parent' })] })
+    );
   });
 
   it('renders the "expanded accent"', () => {

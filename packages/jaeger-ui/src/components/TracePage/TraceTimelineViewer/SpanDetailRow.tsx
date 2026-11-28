@@ -1,11 +1,11 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
-import SpanTreeOffset from './SpanTreeOffset';
+import SpanTreeOffset, { getAncestorGuides } from './SpanTreeOffset';
 import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import TimelineRow from './TimelineRow';
 
@@ -62,13 +62,14 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     eventItemToggle,
     useOtelTerms,
   } = props;
+  const ancestorGuides = useMemo(() => getAncestorGuides(span, tree), [span, tree]);
   return (
     <TimelineRow className="detail-row">
       {timelineBarsVisible && (
         <TimelineRow.Cell width={nameColumnWidth}>
           <SpanTreeOffset
-            span={span}
-            tree={tree}
+            childCount={tree.childCount(span)}
+            ancestors={ancestorGuides}
             showChildrenIcon={false}
             isDetailRow
             color={colorGenerator.getColorByKey(span.resource.serviceName)}
