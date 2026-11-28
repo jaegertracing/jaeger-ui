@@ -31,7 +31,9 @@ export function loadJaegerAssistantDock(importer = () => import('./JaegerAssista
     m => ({ default: m.JaegerAssistantDock }),
     (err: unknown) => {
       console.error('[jaeger-assistant] failed to load the assistant panel', err);
-      return { default: () => null };
+      return {
+        default: () => <div role="alert">The assistant failed to load. Reload the page to try again.</div>,
+      };
     }
   );
 }
