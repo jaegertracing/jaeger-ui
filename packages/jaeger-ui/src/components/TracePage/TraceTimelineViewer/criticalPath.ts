@@ -155,9 +155,20 @@ export function makeCriticalPathContext(
 ): CriticalPathContext {
   const index = buildCriticalPathIndex(criticalPath);
   const pruned = buildPrunedCriticalPaths(index, hiddenIDs, trace.spans, treeMode);
+  // A collapsed row merges the sections of its whole subtree, and the list asks again for every
+  // visible row each time it redraws, so the merged result is kept for the life of the context.
+  const collapsedSections = new Map<string, CriticalPathSection[]>();
 
   return {
     sectionsFor(span, isCollapsed, hasPrunedChildren) {
+      if (isCollapsed) {
+        let sections = collapsedSections.get(span.spanID);
+        if (!sections) {
+          sections = mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
+          collapsedSections.set(span.spanID, sections);
+        }
+        return sections;
+      }
       return getVisibleCriticalPathSections(
         isCollapsed,
         hasPrunedChildren,
