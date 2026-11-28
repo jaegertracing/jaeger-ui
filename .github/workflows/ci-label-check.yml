@@ -11,6 +11,9 @@ on:
       - labeled
       - unlabeled
 
+permissions:
+  contents: read
+
 jobs:
   check-label:
     # Auto-succeed when triggered by merge_group event.

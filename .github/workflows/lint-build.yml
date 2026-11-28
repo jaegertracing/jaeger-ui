@@ -40,7 +40,7 @@ jobs:
       - name: Verify dev server starts without errors
         run: pnpm run dev:check
       - name: Ensure PR is not on main branch
-        uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
+        uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@719b98487c3ee3ba9062e1527e6f8153a0c801f2 # main
 
   validate-3rd-party-configs:
     runs-on: ubuntu-latest
