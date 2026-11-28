@@ -1,13 +1,11 @@
 // Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { transformOtelTrace } from '../../../api/v3/parser';
-import { validateTracesData } from '../../../api/v3/schemas';
 import { SpanKind } from '../../../types/otel';
 import calculateTraceDagEV, { mapNonBlocking } from './calculateTraceDagEV';
-import testTrace from '../testTrace.json';
+import { loadTestTrace } from '../testTrace';
 
-const trace = transformOtelTrace(validateTracesData(testTrace));
+const trace = loadTestTrace();
 
 function assertData(nodes, service, operation, count, errors, time, percent, selfTime) {
   const d = nodes.find(({ data: n }) => n.service === service && n.operation === operation).data;

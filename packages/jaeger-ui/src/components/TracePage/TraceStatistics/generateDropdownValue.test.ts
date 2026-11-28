@@ -2,12 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
-import { transformOtelTrace } from '../../../api/v3/parser';
-import { validateTracesData } from '../../../api/v3/schemas';
 
-import testTrace from '../testTrace.json';
+import { loadTestTrace } from '../testTrace';
 
-const otelTrace = transformOtelTrace(validateTracesData(testTrace))!;
+const otelTrace = loadTestTrace();
 
 describe('generateDropdownValue', () => {
   it('check generateDropdownValue (legacy)', () => {

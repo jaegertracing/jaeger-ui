@@ -5,12 +5,10 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceSpanView from './index';
-import { transformOtelTrace } from '../../../api/v3/parser';
-import { validateTracesData } from '../../../api/v3/schemas';
 
-import testTrace from '../testTrace.json';
+import { loadTestTrace } from '../testTrace';
 
-const trace = transformOtelTrace(validateTracesData(testTrace));
+const trace = loadTestTrace();
 
 vi.mock('../../common/SearchableSelect', () => {
   return mockDefault(({ 'data-testid': testId, onChange, value, children }) => {
