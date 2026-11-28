@@ -1,6 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import { parseOtelTrace } from '../../../api/v3/parser';
 import TraceCriticalPath from './index';
 import test1 from './testCases/test1';
 import test2 from './testCases/test2';
@@ -111,5 +112,50 @@ describe('criticalPathForTrace error handling', () => {
     expect(sections.length).toBeGreaterThan(0);
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain(badRootSpan.spanID);
+  });
+});
+
+describe('criticalPathForTrace with many sequential children', () => {
+  it('should compute the critical path without exceeding the call stack', () => {
+    const childCount = 30000;
+    const toSpanId = index => (index + 1).toString(16).padStart(16, '0');
+    const toSpan = (index, parentIndex, startTime, endTime) => ({
+      traceId: '0123456789abcdef0123456789abcdef',
+      spanId: toSpanId(index),
+      parentSpanId: parentIndex === undefined ? undefined : toSpanId(parentIndex),
+      name: index === 0 ? 'root' : 'child',
+      kind: 1,
+      startTimeUnixNano: `${startTime}000`,
+      endTimeUnixNano: `${endTime}000`,
+    });
+    const spans = [toSpan(0, undefined, 1, 2 * childCount + 2)];
+    for (let i = 1; i <= childCount; i++) {
+      spans.push(toSpan(i, 0, 2 * i, 2 * i + 1));
+    }
+    const trace = parseOtelTrace({
+      resourceSpans: [
+        {
+          resource: { attributes: [{ key: 'service.name', value: { stringValue: 'wide-service' } }] },
+          scopeSpans: [{ scope: { name: 'critical-path-test' }, spans }],
+        },
+      ],
+    });
+
+    const { sections, failed, errors } = TraceCriticalPath(trace);
+
+    expect(failed).toBe(false);
+    expect(errors).toEqual([]);
+    expect(sections).toHaveLength(2 * childCount + 1);
+    expect(sections[0]).toEqual({
+      spanID: toSpanId(0),
+      sectionStart: 2 * childCount + 1,
+      sectionEnd: 2 * childCount + 2,
+    });
+    expect(sections[1]).toEqual({
+      spanID: toSpanId(childCount),
+      sectionStart: 2 * childCount,
+      sectionEnd: 2 * childCount + 1,
+    });
+    expect(sections[sections.length - 1]).toEqual({ spanID: toSpanId(0), sectionStart: 1, sectionEnd: 2 });
   });
 });
