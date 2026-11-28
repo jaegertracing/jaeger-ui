@@ -78,8 +78,10 @@ function parseMetricPoints(rawPoints: MetricPointObject[]): { x: number; y: numb
   return rawPoints.map(p => {
     let y: number | null;
     try {
-      y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
-      if (!Number.isFinite(y)) y = null;
+      // Callers scale error rates to percents later. Rounding to two decimals
+      // here turns 0.004 (0.4%) into 0, and does the same to sub-0.005 rates.
+      const value = p.gaugeValue.doubleValue;
+      y = typeof value === 'number' && Number.isFinite(value) ? value : null;
     } catch {
       y = null;
     }
@@ -190,7 +192,7 @@ export function transformOperationMetrics(payload: NamedOperationMetricResult[])
             });
 
             opsMetrics![opsName].metricPoints.avg[metric.name] =
-              count[metric.name] > 0 ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2)) : null;
+              count[metric.name] > 0 ? avg[metric.name] / count[metric.name] : null;
           }
         });
       }

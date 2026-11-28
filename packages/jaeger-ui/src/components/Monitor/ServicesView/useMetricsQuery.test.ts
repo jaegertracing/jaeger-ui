@@ -144,6 +144,25 @@ describe('transformServiceMetrics', () => {
     expect(result.serviceMetrics.service_error_rate).not.toBeNull();
   });
 
+  it('keeps fractional service error rates that are below one percent', () => {
+    const point = { gaugeValue: { doubleValue: 0.004 }, timestamp: '2021-01-01T00:00:00.000Z' };
+    const payload = [
+      latency50,
+      latency75,
+      latency95,
+      callRate,
+      {
+        status: 'fulfilled',
+        value: {
+          ...errorRate.value,
+          metrics: [{ labels: [{ name: 'service_name', value: 'svc' }], metricPoints: [point] }],
+        },
+      },
+    ] as PromiseSettledResult<MetricsAPIResponse>[];
+    const result = transformServiceMetrics(nameServiceResults(payload));
+    expect(result.serviceMetrics.service_error_rate!.metricPoints[0].y).toBe(0.004);
+  });
+
   it('clears all errors when all promises are fulfilled', () => {
     const result = transformServiceMetrics(nameServiceResults(fullServicePayload));
     expect(result.serviceError.service_latencies_50).toBeNull();
@@ -339,6 +358,62 @@ describe('transformOperationMetrics', () => {
     expect(result.opsError.opsCalls).toBeNull();
     expect(result.opsError.opsErrors).toBe(errorRateError);
     expect(result.serviceOpsMetrics).toBeUndefined();
+  });
+
+  it('keeps sub-percent error rates instead of rounding them to whole percents', () => {
+    const pt = (v: number, timestamp: string) => ({ gaugeValue: { doubleValue: v }, timestamp });
+    const payload = [
+      {
+        status: 'fulfilled',
+        value: {
+          name: 'service_operation_latencies',
+          type: 'GAUGE',
+          help: '',
+          quantile: 0.95,
+          metrics: [
+            {
+              labels: [{ name: 'operation', value: 'op1' }],
+              metricPoints: [pt(0.2, '2021-01-01T00:00:00.000Z')],
+            },
+          ],
+        },
+      },
+      {
+        status: 'fulfilled',
+        value: {
+          name: 'service_operation_call_rate',
+          type: 'GAUGE',
+          help: '',
+          quantile: 0.95,
+          metrics: [
+            {
+              labels: [{ name: 'operation', value: 'op1' }],
+              metricPoints: [pt(0.004, '2021-01-01T00:00:00.000Z')],
+            },
+          ],
+        },
+      },
+      {
+        status: 'fulfilled',
+        value: {
+          name: 'service_operation_error_rate',
+          type: 'GAUGE',
+          help: '',
+          quantile: 0.95,
+          metrics: [
+            {
+              labels: [{ name: 'operation', value: 'op1' }],
+              metricPoints: [pt(0.004, '2021-01-01T00:00:00.000Z'), pt(0.006, '2021-01-01T00:01:00.000Z')],
+            },
+          ],
+        },
+      },
+    ] as PromiseSettledResult<MetricsAPIResponse<true>>[];
+    const result = transformOperationMetrics(nameOperationResults(payload));
+    const op = result.serviceOpsMetrics![0];
+    expect(op.errRates).toBeCloseTo(0.005);
+    expect(op.dataPoints.service_operation_error_rate.map(point => point.y)).toEqual([0.004, 0.006]);
+    expect(op.requests).toBeCloseTo(0.004);
   });
 
   it('returns undefined serviceOpsMetrics when metrics array is empty', () => {

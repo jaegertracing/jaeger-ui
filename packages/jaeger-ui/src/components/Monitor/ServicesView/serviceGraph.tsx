@@ -152,7 +152,9 @@ export function formatYAxisTick(
   }
 
   if (name.includes('Error rate')) {
-    return value.toFixed(0);
+    // Two decimals keep a 0.4% tick from rendering as 0. Trailing zeros are
+    // dropped so a whole percent stays "1".
+    return String(Number(value.toFixed(2)));
   }
 
   if (value === 0) return '0';
