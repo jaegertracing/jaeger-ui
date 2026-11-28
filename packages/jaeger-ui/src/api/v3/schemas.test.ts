@@ -12,6 +12,7 @@ import {
   AnyValueSchema,
   traceIdHex,
   spanIdHex,
+  QualityMetricsSchema,
 } from './schemas';
 
 describe('ServicesResponseSchema', () => {
@@ -318,5 +319,408 @@ describe('AnyValueSchema (recursive)', () => {
     // do not break validation. This test pins that behavior.
     const v = { stringValue: 'hello', someFutureField: 123 };
     expect(AnyValueSchema.parse(v)).toEqual(v);
+  });
+});
+
+describe('QualityMetricsSchema', () => {
+  it('validates minimal valid quality metrics response', () => {
+    const minimal = {
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+      metrics: [],
+    };
+    expect(QualityMetricsSchema.parse(minimal)).toEqual(minimal);
+  });
+
+  it('validates full quality metrics response with all fields', () => {
+    const full = {
+      traceQualityDocumentationLink: 'https://example.com/docs/quality',
+      bannerText: {
+        value: 'System notice',
+        styling: { color: 'red', fontWeight: 'bold' },
+      },
+      scores: [
+        {
+          key: 'score-1',
+          label: 'Trace Completeness',
+          max: 100,
+          value: 95,
+        },
+      ],
+      metrics: [
+        {
+          name: 'Unique Span IDs',
+          category: 'score-1',
+          description: 'Spans in a trace must have distinct IDs',
+          metricDocumentationLink: 'https://example.com/docs/unique-ids',
+          metricWeight: 1.5,
+          passCount: 95,
+          passExamples: [{ traceID: '1234567890abcdef', spanIDs: ['span1', 'span2'] }],
+          failureCount: 5,
+          failureExamples: [{ traceID: 'fedcba0987654321' }],
+          exemptionCount: 0,
+          exemptionExamples: [],
+          details: [
+            {
+              description: 'Duplicate span ID breakdown',
+              header: 'Duplicates',
+              columns: [{ key: 'spanID', label: 'Span ID', preventSort: true }],
+              rows: [{ spanID: 'span1', count: 2 }],
+            },
+          ],
+        },
+      ],
+      clients: [
+        {
+          version: '1.40.0',
+          minVersion: '1.35.0',
+          count: 42,
+          examples: [{ traceID: 'abcdef1234567890' }],
+        },
+      ],
+    };
+    expect(QualityMetricsSchema.parse(full)).toEqual(full);
+  });
+
+  it('validates details with loose columns and rows', () => {
+    const data = {
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+      metrics: [
+        {
+          name: 'm1',
+          category: 's1',
+          description: 'd1',
+          metricDocumentationLink: 'https://example.com',
+          metricWeight: 1,
+          passCount: 1,
+          failureCount: 0,
+          details: [
+            {
+              columns: [{ customCol: 'value', another: 123 }],
+              rows: [{ customCol: 'data', arbitrary: true }],
+            },
+          ],
+        },
+      ],
+    };
+    expect(QualityMetricsSchema.parse(data)).toEqual(data);
+  });
+
+  it('validates details with string shorthand column definitions', () => {
+    const data = {
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+      metrics: [
+        {
+          name: 'm1',
+          category: 's1',
+          description: 'd1',
+          metricDocumentationLink: 'https://example.com',
+          metricWeight: 1,
+          passCount: 1,
+          failureCount: 0,
+          details: [
+            {
+              columns: ['col0', 'col1'],
+              rows: [{ col0: 'v0', col1: 'v1' }],
+            },
+          ],
+        },
+      ],
+    };
+    expect(QualityMetricsSchema.parse(data)).toEqual(data);
+  });
+
+  it('normalizes null optional values from built-in endpoint response to undefined', () => {
+    const endpointResponse = {
+      traceQualityDocumentationLink:
+        'https://github.com/jaegertracing/jaeger-analytics-java#trace-quality-metrics',
+      bannerText: {
+        value: '🛑 Made up data, for demonstration only!',
+        styling: {
+          color: 'blue',
+          fontWeight: 'bold',
+        },
+      },
+      scores: [
+        {
+          key: 'coverage',
+          label: 'Instrumentation Coverage',
+          max: 100,
+          value: 90,
+        },
+        {
+          key: 'quality',
+          label: 'Trace Quality',
+          max: 100,
+          value: 85,
+        },
+      ],
+      metrics: [
+        {
+          name: 'Span Completeness',
+          category: 'coverage',
+          description: 'Measures the completeness of spans in traces.',
+          metricDocumentationLink: 'https://example.com/span-completeness-docs',
+          metricWeight: 0.6,
+          passCount: 1500,
+          passExamples: [
+            { traceID: 'trace-id-001', spanIDs: null },
+            { traceID: 'trace-id-002', spanIDs: null },
+          ],
+          failureCount: 100,
+          failureExamples: [{ traceID: 'trace-id-003', spanIDs: null }],
+          exemptionCount: null,
+          exemptionExamples: null,
+          details: [
+            {
+              description: 'Detailed breakdown of span completeness.',
+              header: 'Span Completeness Details',
+              columns: [
+                { key: 'service', label: 'Service' },
+                { key: 'spanCount', label: 'Span Count' },
+              ],
+              rows: [
+                { service: 'sample-service-A', spanCount: 150 },
+                { service: 'sample-service-B', spanCount: 200 },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'Error Rate',
+          category: 'quality',
+          description: 'Percentage of spans that resulted in errors.',
+          metricDocumentationLink: 'https://example.com/error-rate-docs',
+          metricWeight: 0.4,
+          passCount: 1400,
+          passExamples: [{ traceID: 'trace-id-004', spanIDs: null }],
+          failureCount: 80,
+          failureExamples: [{ traceID: 'trace-id-005', spanIDs: null }],
+          exemptionCount: null,
+          exemptionExamples: null,
+          details: [
+            {
+              description: 'Detailed breakdown of error rates.',
+              header: 'Error Rate Details',
+              columns: [
+                { key: 'service', label: 'Service' },
+                { key: 'errorCount', label: 'Error Count' },
+              ],
+              rows: [
+                { service: 'sample-service-A', errorCount: 5 },
+                { service: 'sample-service-B', errorCount: 3 },
+              ],
+            },
+          ],
+        },
+      ],
+      clients: [
+        {
+          version: '1.0.0',
+          minVersion: '0.9.0',
+          count: 10,
+          examples: [{ traceID: 'trace-id-006', spanIDs: null }],
+        },
+      ],
+    };
+
+    const parsed = QualityMetricsSchema.parse(endpointResponse);
+    expect(parsed.metrics[0].passExamples?.[0].spanIDs).toBeUndefined();
+    expect(parsed.metrics[0].exemptionCount).toBeUndefined();
+    expect(parsed.metrics[0].exemptionExamples).toBeUndefined();
+    expect(parsed.clients?.[0].examples[0].spanIDs).toBeUndefined();
+    expect(parsed.scores).toHaveLength(2);
+    expect(parsed.metrics).toHaveLength(2);
+  });
+
+  it('normalizes null details from the Go Details slice to undefined', () => {
+    const parsed = QualityMetricsSchema.parse({
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+      metrics: [
+        {
+          name: 'm1',
+          category: 's1',
+          description: 'd1',
+          metricDocumentationLink: 'https://example.com',
+          metricWeight: 1,
+          passCount: 1,
+          failureCount: 0,
+          details: null,
+        },
+      ],
+    });
+    expect(parsed.metrics[0].details).toBeUndefined();
+  });
+
+  it('validates bannerText as plain string', () => {
+    const data = {
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      bannerText: 'Plain text banner',
+      scores: [],
+      metrics: [],
+    };
+    expect(QualityMetricsSchema.parse(data)).toEqual(data);
+  });
+
+  it('passes through unknown extra properties on root and nested objects', () => {
+    const data = {
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [{ key: 's1', label: 'S1', max: 10, value: 8, customScoreMeta: 'extra' }],
+      metrics: [
+        {
+          name: 'm1',
+          category: 's1',
+          description: 'd1',
+          metricDocumentationLink: 'https://example.com',
+          metricWeight: 1,
+          passCount: 10,
+          failureCount: 0,
+          futureMetricAttr: { flag: true },
+        },
+      ],
+      customServerTag: 'experimental',
+    };
+    expect(QualityMetricsSchema.parse(data)).toEqual(data);
+  });
+
+  it('rejects missing traceQualityDocumentationLink', () => {
+    const data = {
+      scores: [],
+      metrics: [],
+    };
+    expect(() => QualityMetricsSchema.parse(data)).toThrow(z.ZodError);
+  });
+
+  it('rejects missing or non-array scores', () => {
+    expect(() =>
+      QualityMetricsSchema.parse({
+        traceQualityDocumentationLink: 'https://example.com',
+        metrics: [],
+      })
+    ).toThrow(z.ZodError);
+
+    expect(() =>
+      QualityMetricsSchema.parse({
+        traceQualityDocumentationLink: 'https://example.com',
+        scores: 'invalid',
+        metrics: [],
+      })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects invalid score object', () => {
+    expect(() =>
+      QualityMetricsSchema.parse({
+        traceQualityDocumentationLink: 'https://example.com',
+        scores: [{ key: 'score1', label: 'Score 1', max: 100, value: 'not-a-number' }],
+        metrics: [],
+      })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects missing or non-array metrics', () => {
+    expect(() =>
+      QualityMetricsSchema.parse({
+        traceQualityDocumentationLink: 'https://example.com',
+        scores: [],
+      })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects invalid metric object', () => {
+    expect(() =>
+      QualityMetricsSchema.parse({
+        traceQualityDocumentationLink: 'https://example.com',
+        scores: [],
+        metrics: [{ name: 'm1', category: 'c1' }],
+      })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects invalid bannerText type', () => {
+    expect(() =>
+      QualityMetricsSchema.parse({
+        traceQualityDocumentationLink: 'https://example.com',
+        bannerText: 12345,
+        scores: [],
+        metrics: [],
+      })
+    ).toThrow(z.ZodError);
+  });
+
+  it('accepts bannerText object without optional styling', () => {
+    const data = {
+      traceQualityDocumentationLink: 'https://example.com',
+      bannerText: {
+        value: 'Banner without styling',
+      },
+      scores: [],
+      metrics: [],
+    };
+    expect(QualityMetricsSchema.parse(data)).toEqual(data);
+  });
+
+  it('defaults null client examples and detail columns/rows to empty arrays', () => {
+    const parsed = QualityMetricsSchema.parse({
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+      metrics: [
+        {
+          name: 'm1',
+          category: 's1',
+          description: 'd1',
+          metricDocumentationLink: 'https://example.com',
+          metricWeight: 1,
+          passCount: 1,
+          failureCount: 0,
+          details: [{ columns: null, rows: null }],
+        },
+      ],
+      clients: [{ version: '1.0.0', minVersion: '0.9.0', count: 1, examples: null }],
+    });
+    expect(parsed.metrics[0].details?.[0].columns).toEqual([]);
+    expect(parsed.metrics[0].details?.[0].rows).toEqual([]);
+    expect(parsed.clients?.[0].examples).toEqual([]);
+  });
+
+  it('rejects missing detail columns and rows and missing client examples', () => {
+    const metric = {
+      name: 'm1',
+      category: 's1',
+      description: 'd1',
+      metricDocumentationLink: 'https://example.com',
+      metricWeight: 1,
+      passCount: 1,
+      failureCount: 0,
+    };
+    const base = {
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+    };
+
+    expect(() =>
+      QualityMetricsSchema.parse({
+        ...base,
+        metrics: [{ ...metric, details: [{ rows: [] }] }],
+      })
+    ).toThrow(z.ZodError);
+
+    expect(() =>
+      QualityMetricsSchema.parse({
+        ...base,
+        metrics: [{ ...metric, details: [{ columns: [] }] }],
+      })
+    ).toThrow(z.ZodError);
+
+    expect(() =>
+      QualityMetricsSchema.parse({
+        ...base,
+        metrics: [metric],
+        clients: [{ version: '1.0.0', minVersion: '0.9.0', count: 1 }],
+      })
+    ).toThrow(z.ZodError);
   });
 });
