@@ -5,11 +5,10 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceSpanView from './index';
-import transformTraceData from '../../../model/transform-trace-data';
 
-import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
+import { loadTestTrace } from '../testTrace';
 
-const trace = transformTraceData(testTrace).asOtelTrace();
+const trace = loadTestTrace();
 
 vi.mock('../../common/SearchableSelect', () => {
   return mockDefault(({ 'data-testid': testId, onChange, value, children }) => {
@@ -115,22 +114,22 @@ describe('<TraceSpanView>', () => {
     expect(renderedServiceNames()).toEqual(['service2']);
   });
 
-  // Rows start in the trace's tree order, and sorting keeps that order for ties: span-4 and span-6
+  // Rows start in the trace's tree order, and sorting keeps that order for ties: spans 40 and 60
   // both last 20000 µs, and several spans share a service or operation name. These expected orders
   // change if the tree order changes.
   it.each([
-    ['Service Name', 'span-1 span-2 span-3 span-2_1 span-6 span-12 span-13 span-14 span-4 span-5'],
-    ['Operation', 'span-1 span-4 span-2 span-5 span-2_1 span-3 span-7 span-6 span-12 span-13'],
-    ['Span ID', 'span-1 span-12 span-13 span-14 span-2 span-2_1 span-3 span-4 span-5 span-6'],
-    ['Duration', 'span-14 span-13 span-12 span-5 span-4 span-6 span-2 span-2_1 span-3 span-7'],
-    ['Start Time', 'span-1 span-2 span-3 span-4 span-5 span-2_1 span-6 span-12 span-13 span-14'],
+    ['Service Name', '10 20 30 21 60 12 13 14 40 50'],
+    ['Operation', '10 40 20 50 21 30 70 60 12 13'],
+    ['Span ID', '10 12 13 14 20 21 30 40 50 60'],
+    ['Duration', '14 13 12 50 40 60 20 21 30 70'],
+    ['Start Time', '10 20 30 40 50 21 60 12 13 14'],
   ])('sorts the rows ascending by %s when its header is clicked', (title, expectedSpanIDs) => {
     const { container } = render(<TraceSpanView {...defaultProps} />);
     fireEvent.click(within(screen.getByRole('table')).getByText(title));
     const rows = container.querySelectorAll('.ant-table-row');
     expect(rows).toHaveLength(10);
     const renderedSpanIDs = Array.from(rows).map(row => row.querySelector('.span-id-cell').textContent);
-    expect(renderedSpanIDs).toEqual(expectedSpanIDs.split(' '));
+    expect(renderedSpanIDs).toEqual(expectedSpanIDs.split(' ').map(id => id.padStart(16, '0')));
   });
 
   it('check handler', () => {

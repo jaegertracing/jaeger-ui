@@ -1,0 +1,231 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "service1"
+            }
+          },
+          {
+            "key": "hostname",
+            "value": {
+              "stringValue": "foobar.org"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "spans": [
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000010",
+              "flags": 1,
+              "name": "op1",
+              "kind": 2,
+              "startTimeUnixNano": "1542666452979000000",
+              "endTimeUnixNano": "1542666453369000000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "server"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000020",
+              "parentSpanId": "0000000000000010",
+              "flags": 1,
+              "name": "op2",
+              "kind": 3,
+              "startTimeUnixNano": "1542666453104000000",
+              "endTimeUnixNano": "1542666453137000000",
+              "status": {
+                "code": 2,
+                "message": "error"
+              },
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                },
+                {
+                  "key": "error",
+                  "value": {
+                    "boolValue": true
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000021",
+              "parentSpanId": "0000000000000010",
+              "flags": 1,
+              "name": "op2",
+              "kind": 3,
+              "startTimeUnixNano": "1542666453229000000",
+              "endTimeUnixNano": "1542666453266000000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000030",
+              "parentSpanId": "0000000000000010",
+              "flags": 1,
+              "name": "op3",
+              "kind": 3,
+              "startTimeUnixNano": "1542666453159000000",
+              "endTimeUnixNano": "1542666453225000000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000060",
+              "parentSpanId": "0000000000000010",
+              "flags": 1,
+              "name": "op4",
+              "kind": 4,
+              "startTimeUnixNano": "1542666453279000000",
+              "endTimeUnixNano": "1542666453299000000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "producer"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000012",
+              "parentSpanId": "0000000000000010",
+              "flags": 1,
+              "name": "op6",
+              "startTimeUnixNano": "1542666453309000000",
+              "endTimeUnixNano": "1542666453319000000"
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000013",
+              "parentSpanId": "0000000000000012",
+              "flags": 1,
+              "name": "op7",
+              "startTimeUnixNano": "1542666453310000000",
+              "endTimeUnixNano": "1542666453319000000"
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000014",
+              "parentSpanId": "0000000000000012",
+              "flags": 1,
+              "name": "op7",
+              "startTimeUnixNano": "1542666453311000000",
+              "endTimeUnixNano": "1542666453319000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "service2"
+            }
+          },
+          {
+            "key": "hostname",
+            "value": {
+              "stringValue": "foobar.org"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "spans": [
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000040",
+              "parentSpanId": "0000000000000030",
+              "flags": 1,
+              "name": "op1",
+              "kind": 2,
+              "startTimeUnixNano": "1542666453179000000",
+              "endTimeUnixNano": "1542666453199000000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "server"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000050",
+              "parentSpanId": "0000000000000040",
+              "flags": 1,
+              "name": "op2",
+              "startTimeUnixNano": "1542666453180000000",
+              "endTimeUnixNano": "1542666453198000000",
+              "attributes": [
+                {
+                  "key": "db.type",
+                  "value": {
+                    "stringValue": "sql"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "00000000000000000000000000000123",
+              "spanId": "0000000000000070",
+              "parentSpanId": "0000000000000060",
+              "flags": 1,
+              "name": "op3",
+              "kind": 5,
+              "startTimeUnixNano": "1542666453779000000",
+              "endTimeUnixNano": "1542666453979000000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "consumer"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

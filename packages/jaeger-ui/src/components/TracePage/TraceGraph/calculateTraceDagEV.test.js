@@ -1,12 +1,11 @@
 // Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import transformTraceData from '../../../model/transform-trace-data';
 import { SpanKind } from '../../../types/otel';
 import calculateTraceDagEV, { mapNonBlocking } from './calculateTraceDagEV';
-import testTrace from './testTrace.json';
+import { loadTestTrace } from '../testTrace';
 
-const transformedTrace = transformTraceData(testTrace);
+const trace = loadTestTrace();
 
 function assertData(nodes, service, operation, count, errors, time, percent, selfTime) {
   const d = nodes.find(({ data: n }) => n.service === service && n.operation === operation).data;
@@ -20,7 +19,7 @@ function assertData(nodes, service, operation, count, errors, time, percent, sel
 
 describe('calculateTraceDagEV', () => {
   it('calculates TraceGraph', () => {
-    const traceDag = calculateTraceDagEV(transformedTrace.asOtelTrace());
+    const traceDag = calculateTraceDagEV(trace);
     const { vertices: nodes } = traceDag;
     expect(nodes.length).toBe(9);
     assertData(nodes, 'service1', 'op1', 1, 0, 390, 39, 224);
@@ -30,7 +29,7 @@ describe('calculateTraceDagEV', () => {
     assertData(nodes, 'service1', 'op3', 1, 0, 66, 6.6, 46);
     assertData(nodes, 'service2', 'op1', 1, 0, 20, 2, 2);
     assertData(nodes, 'service2', 'op2', 1, 0, 18, 1.8, 18);
-    // follows_from relation will not influence self-time
+    // The non-blocking producer-to-consumer edge does not affect self-time.
     assertData(nodes, 'service1', 'op4', 1, 0, 20, 2, 20);
     assertData(nodes, 'service2', 'op3', 1, 0, 200, 20, 200);
     // fork-join self-times are calculated correctly (self-time drange)
