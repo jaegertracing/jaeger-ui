@@ -27,6 +27,60 @@ const partsMock = vi.hoisted(() => ({
 
 const capturedAgUiOnError = vi.hoisted(() => ({ fn: /** @type {null | ((e: unknown) => void)} */ (null) }));
 
+const httpAgentMock = vi.hoisted(() => ({
+  instance: null,
+  runAgent: vi.fn(),
+}));
+
+const runtimeMock = vi.hoisted(() => {
+  const state = {
+    isRunning: false,
+    listener: /** @type {null | (() => void)} */ (null),
+  };
+  const thread = {
+    getState: () => ({ isRunning: state.isRunning }),
+    subscribe: listener => {
+      state.listener = listener;
+      return () => {
+        if (state.listener === listener) state.listener = null;
+      };
+    },
+  };
+  return { state, thread, runtime: { mockRuntime: true, thread } };
+});
+
+const otelMock = vi.hoisted(() => {
+  const state = {
+    spans: [],
+    activeContext: {},
+    contextWith: vi.fn((_ctx, fn) => fn()),
+    setSpan: vi.fn((ctx, span) => ({ ctx, span })),
+    startSpan: null,
+  };
+  state.startSpan = vi.fn(() => {
+    const span = {
+      end: vi.fn(),
+      recordException: vi.fn(),
+      setStatus: vi.fn(),
+    };
+    state.spans.push(span);
+    return span;
+  });
+  return state;
+});
+
+vi.mock('@opentelemetry/api', () => ({
+  context: {
+    active: () => otelMock.activeContext,
+    with: otelMock.contextWith,
+  },
+  trace: {
+    getTracer: () => ({ startSpan: otelMock.startSpan }),
+    setSpan: otelMock.setSpan,
+  },
+  SpanStatusCode: { ERROR: 2 },
+}));
+
 vi.mock('./jaeger-AG-UI', () => ({
   getJaegerAGUIUrl: () => agUiMock.url,
 }));
@@ -37,13 +91,17 @@ vi.mock('../../hooks/useJaegerAssistant', () => ({
 }));
 
 vi.mock('@ag-ui/client', () => ({
-  HttpAgent: vi.fn().mockImplementation(function MockHttpAgent() {}),
+  HttpAgent: vi.fn().mockImplementation(function MockHttpAgent() {
+    const instance = { runAgent: httpAgentMock.runAgent };
+    httpAgentMock.instance = instance;
+    return instance;
+  }),
 }));
 
 vi.mock('@assistant-ui/react-ag-ui', () => ({
   useAgUiRuntime: opts => {
     capturedAgUiOnError.fn = opts?.onError ?? null;
-    return { mockRuntime: true };
+    return runtimeMock.runtime;
   },
 }));
 
@@ -374,7 +432,13 @@ describe('JaegerAssistantRuntimeProvider', () => {
   beforeEach(() => {
     agUiMock.configured = false;
     capturedAgUiOnError.fn = null;
+    runtimeMock.state.isRunning = false;
+    runtimeMock.state.listener = null;
+    runtimeMock.runtime.thread = runtimeMock.thread;
+    httpAgentMock.instance = null;
+    otelMock.spans.length = 0;
     vi.clearAllMocks();
+    httpAgentMock.runAgent.mockResolvedValue({ newMessages: [], result: undefined });
   });
 
   it('does not wrap with AssistantRuntimeProvider when assistant is not configured', () => {
@@ -421,6 +485,79 @@ describe('JaegerAssistantRuntimeProvider', () => {
     await receiver.fetch('/x', { method: 'POST' });
     expect(fetchSpy).toHaveBeenCalledWith('/x', { method: 'POST' });
     fetchSpy.mockRestore();
+  });
+
+  it('creates one assistant turn span around each AG-UI run', async () => {
+    agUiMock.configured = true;
+    render(
+      <JaegerAssistantProvider>
+        <JaegerAssistantDock />
+      </JaegerAssistantProvider>
+    );
+
+    expect(otelMock.startSpan).not.toHaveBeenCalled();
+    const agent = httpAgentMock.instance;
+    const result = await agent.runAgent({ runId: 'run-1' });
+
+    expect(otelMock.startSpan).toHaveBeenCalledWith('assistant.turn');
+    expect(otelMock.spans).toHaveLength(1);
+    expect(otelMock.setSpan).toHaveBeenCalledWith(otelMock.activeContext, otelMock.spans[0]);
+    expect(otelMock.contextWith).toHaveBeenCalledTimes(1);
+    expect(httpAgentMock.runAgent).toHaveBeenCalledWith({ runId: 'run-1' });
+    expect(result).toEqual({ newMessages: [], result: undefined });
+    expect(otelMock.spans[0].end).toHaveBeenCalledTimes(1);
+  });
+
+  it('records an AG-UI failure, ends the span, and preserves the rejection', async () => {
+    agUiMock.configured = true;
+    const err = new Error('ag-ui-failure');
+    httpAgentMock.runAgent.mockRejectedValue(err);
+    render(
+      <JaegerAssistantProvider>
+        <JaegerAssistantDock />
+      </JaegerAssistantProvider>
+    );
+
+    const agent = httpAgentMock.instance;
+    await expect(agent.runAgent({ runId: 'run-1' })).rejects.toBe(err);
+    expect(otelMock.spans[0].recordException).toHaveBeenCalledWith(err);
+    expect(otelMock.spans[0].setStatus).toHaveBeenCalledWith({
+      code: 2,
+      message: 'ag-ui-failure',
+    });
+    expect(otelMock.spans[0].end).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps overlapping AG-UI runs in separate spans', async () => {
+    agUiMock.configured = true;
+    const pending = [];
+    httpAgentMock.runAgent.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          pending.push(resolve);
+        })
+    );
+    render(
+      <JaegerAssistantProvider>
+        <JaegerAssistantDock />
+      </JaegerAssistantProvider>
+    );
+
+    const agent = httpAgentMock.instance;
+    const first = agent.runAgent({ runId: 'run-1' });
+    const second = agent.runAgent({ runId: 'run-2' });
+    expect(otelMock.spans).toHaveLength(2);
+    expect(otelMock.spans[0].end).not.toHaveBeenCalled();
+    expect(otelMock.spans[1].end).not.toHaveBeenCalled();
+
+    pending[1]({ newMessages: [], result: 'second' });
+    await second;
+    expect(otelMock.spans[1].end).toHaveBeenCalledTimes(1);
+    expect(otelMock.spans[0].end).not.toHaveBeenCalled();
+
+    pending[0]({ newMessages: [], result: 'first' });
+    await first;
+    expect(otelMock.spans[0].end).toHaveBeenCalledTimes(1);
   });
 
   it('useAgUiRuntime onError logs AG-UI errors (lines 29–30)', () => {

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { context, SpanStatusCode, trace } from '@opentelemetry/api';
 import { HttpAgent } from '@ag-ui/client';
 import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import {
@@ -31,13 +32,36 @@ import './JaegerAssistantPanel.css';
  */
 function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNode }) {
   const url = getJaegerAGUIUrl();
+
   // HttpAgent stores the supplied fetch as `this.fetch` and later invokes it as a method,
   // so the bare global `fetch` would be called with `this === HttpAgent` and throw
   // "Illegal invocation". Wrap it to detach the receiver.
-  const agent = React.useMemo(
-    () => new HttpAgent({ url, fetch: (input, init) => fetch(input, init) }),
-    [url]
-  );
+  //
+  // Trace runAgent rather than observing React's isRunning state. The AG-UI runtime starts
+  // the request immediately after changing that state, before a React effect can observe it.
+  // Keeping the active context around runAgent guarantees that fetch instrumentation sees
+  // assistant.turn as its parent and gives each concurrent or superseded run its own span.
+  const agent = React.useMemo(() => {
+    const httpAgent = new HttpAgent({
+      url,
+      fetch: (input, init) => fetch(input, init),
+    });
+    const runAgent = httpAgent.runAgent.bind(httpAgent);
+    httpAgent.runAgent = async (...args) => {
+      const span = trace.getTracer('jaeger-ui').startSpan('assistant.turn');
+      try {
+        return await context.with(trace.setSpan(context.active(), span), () => runAgent(...args));
+      } catch (error) {
+        const exception = error instanceof Error ? error : new Error(String(error));
+        span.recordException(exception);
+        span.setStatus({ code: SpanStatusCode.ERROR, message: exception.message });
+        throw error;
+      } finally {
+        span.end();
+      }
+    };
+    return httpAgent;
+  }, [url]);
   const runtime = useAgUiRuntime({
     agent,
     showThinking: true,
