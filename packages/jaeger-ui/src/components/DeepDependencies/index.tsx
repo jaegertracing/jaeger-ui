@@ -5,7 +5,6 @@ import * as React from 'react';
 import { useState, useCallback, useEffect, useMemo, useRef, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
-import _get from 'lodash/get';
 
 import { trackClearOperation, trackFocusPaths, trackHide, trackSetService, trackShow } from './index.track';
 import Graph from './Graph';
@@ -47,6 +46,11 @@ import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 interface IDoneState {
   state: typeof fetchedState.DONE;
   model: TDdgModel;
+}
+function getModelHash(graphState: TDdgStateEntry | undefined): string | undefined {
+  return graphState && graphState.state === fetchedState.DONE
+    ? (graphState as IDoneState).model.hash
+    : undefined;
 }
 interface IErrorState {
   state: typeof fetchedState.ERROR;
@@ -139,7 +143,7 @@ export const DeepDependencyGraphPageImpl = memo(function DeepDependencyGraphPage
 }: TProps) {
   const [selectedVertex, setSelectedVertex] = useState<TDdgVertex | undefined>(undefined);
   const { service, operation, visEncoding, density } = urlState;
-  const graphHash = _get(graphState, 'model.hash');
+  const graphHash = getModelHash(graphState);
 
   const urlStateRef = useRef(urlState);
   const uiFindRef = useRef(uiFind);
@@ -444,7 +448,7 @@ export function deriveDdgPageProps(
     graph,
     graphState: effectiveGraphState,
     showOp,
-    urlState: sanitizeUrlState(urlState, _get(effectiveGraphState, 'model.hash')),
+    urlState: sanitizeUrlState(urlState, getModelHash(effectiveGraphState)),
     uiFind: parseUiFind(locationSearch),
   };
 }
