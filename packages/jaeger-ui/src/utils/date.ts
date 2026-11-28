@@ -255,29 +255,30 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string):
 }
 
 /**
- * Formats a duration in microseconds to a compact string with an appropriate unit (μs, ms, s, m).
- * For ms, s, and m, precision depends on the value in the selected unit: values below 10 use
- * 2 significant digits, values from 10 to below 100 use 3 significant digits, and values 100
- * and above are rounded to the nearest integer. Sub-millisecond durations (including 0) round to
- * the nearest integer microsecond, and values that round up to the next unit's threshold carry
- * over to that unit.
+ * Formats a duration in microseconds to a compact string with an appropriate unit (μs, ms, s, m),
+ * using at most 3 significant digits.
+ * For ms, s, and m below 1000 in their selected unit, values render with up to 3 significant
+ * digits and omit trailing fractional zeros while preserving meaningful integer zeros. Sub-millisecond
+ * durations (including 0) and minute values of 1000 or greater round to the nearest integer, and
+ * values that round up to the next unit's threshold carry over to that unit.
  * Use this for all standalone latency displays: span durations, trace durations, axis
  * labels, table cells. Prefer this over `formatDuration` unless you specifically need
  * the higher precision for relative offset comparisons.
  *
  * @param microseconds - Duration in microseconds
- * @returns Formatted compact duration string with unit (μs, ms, s, m)
+ * @returns Formatted string with at most 3 significant digits and appropriate unit (μs, ms, s, m)
  *
  * @example
  * formatDurationCompact(123) // => "123μs"
  * formatDurationCompact(13835) // => "13.8ms"
  * formatDurationCompact(135842) // => "136ms"
- * formatDurationCompact(1835200) // => "1.8s"
+ * formatDurationCompact(1835200) // => "1.84s"
  */
 export function formatDurationCompact(microseconds: Microseconds): string {
-  // Use 2 significant digits below 10, 3 below 100, and integer rounding from 100 up.
+  // Format values below 1000 with at most 3 significant digits without trailing
+  // fractional zeros; round larger values (e.g. >= 1000m) to the nearest integer.
   const render = (value: number) =>
-    value < 10 ? value.toPrecision(2) : value < 100 ? value.toPrecision(3) : String(Math.round(value));
+    value < 1000 ? String(Number(value.toPrecision(3))) : String(Math.round(value));
 
   // Each branch rounds before it renders, so the range check belongs on the
   // rendered value and not on the raw one: 999.5ms renders as "1000ms", which is
@@ -297,5 +298,7 @@ export function formatDurationCompact(microseconds: Microseconds): string {
     return `${s}s`;
   }
 
-  return `${render(microseconds / ONE_MINUTE)}m`;
+  // Seconds rounding to 60 carry over to 1m even when microseconds / ONE_MINUTE
+  // is slightly below 0.9995 (e.g. 59950000μs = 0.999166...m).
+  return microseconds < ONE_MINUTE ? '1m' : `${render(microseconds / ONE_MINUTE)}m`;
 }
