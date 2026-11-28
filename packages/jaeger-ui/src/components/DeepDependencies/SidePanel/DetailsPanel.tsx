@@ -14,6 +14,7 @@ import VerticalResizer from '../../common/VerticalResizer';
 import { jaegerClient } from '../../../api/v3/client';
 import { TDecoration } from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
+import { supplantPath, supplantUrl } from '../../../model/path-agnostic-decorations/template';
 import usePathAgnosticDecoration from '../../../hooks/usePathAgnosticDecoration';
 
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
@@ -47,17 +48,19 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
 
     let fetchUrl: string | undefined;
-    let getDetailPath: string | undefined;
-    let getDefPath: string | undefined;
+    let getDetailPath: string[] | undefined;
+    let getDefPath: string[] | undefined;
 
     if (opDetailUrl && opDetailPath && operation) {
-      fetchUrl = stringSupplant(opDetailUrl, { service, operation });
-      getDetailPath = stringSupplant(opDetailPath, { service, operation });
-      getDefPath = opDetailColumnDefPath && stringSupplant(opDetailColumnDefPath, { service, operation });
+      fetchUrl = supplantUrl(opDetailUrl, { service, operation });
+      getDetailPath = supplantPath(opDetailPath, { service, operation });
+      getDefPath = opDetailColumnDefPath
+        ? supplantPath(opDetailColumnDefPath, { service, operation })
+        : undefined;
     } else if (detailUrl && detailPath) {
-      fetchUrl = stringSupplant(detailUrl, { service });
-      getDetailPath = stringSupplant(detailPath, { service });
-      getDefPath = detailColumnDefPath && stringSupplant(detailColumnDefPath, { service });
+      fetchUrl = supplantUrl(detailUrl, { service });
+      getDetailPath = supplantPath(detailPath, { service });
+      getDefPath = detailColumnDefPath ? supplantPath(detailColumnDefPath, { service }) : undefined;
     }
 
     if (!fetchUrl || !getDetailPath) return;
@@ -68,10 +71,10 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
       .fetchDecoration(fetchUrl)
       .then((res: unknown) => {
         let detailsErred = false;
-        let details = _get(res, getDetailPath as string);
+        let details = _get(res, getDetailPath as string[]);
 
         if (details === undefined) {
-          details = `\`${getDetailPath}\` not found in response`;
+          details = `\`${(getDetailPath as string[]).join('.')}\` not found in response`;
           detailsErred = true;
         }
 
@@ -145,7 +148,7 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
             <a
               aria-label="More info in a new window"
               className="Ddg--DetailsPanel--DetailLink"
-              href={stringSupplant(detailLink, { service, operation })}
+              href={supplantUrl(detailLink, { service, operation })}
               target="_blank"
               rel="noreferrer noopener"
             >

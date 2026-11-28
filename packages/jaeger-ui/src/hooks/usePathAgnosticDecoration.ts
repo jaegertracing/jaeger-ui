@@ -8,13 +8,13 @@ import queryString from 'query-string';
 import { jaegerClient } from '../api/v3/client';
 import getDecorationPresentation, { TDecoration } from '../model/path-agnostic-decorations';
 import { TPadEntry } from '../model/path-agnostic-decorations/types';
+import { supplantPath, supplantUrl } from '../model/path-agnostic-decorations/template';
 import { useConfig } from './useConfig';
-import stringSupplant from '../utils/stringSupplant';
 
 async function fetchSummary(
   client: QueryClient,
   url: string,
-  path: string,
+  path: string[],
   maximumKey: readonly string[]
 ): Promise<TPadEntry> {
   // Different services and decorations can extract different paths from one response.
@@ -33,7 +33,7 @@ async function fetchSummary(
   const value: TPadEntry =
     'error' in response
       ? `Unable to fetch decoration: ${response.error}`
-      : _get(response.data, path, `\`${path}\` not found in response`);
+      : _get(response.data, path, `\`${path.join('.')}\` not found in response`);
   // The maximum is the largest numeric value seen for this scope and tier during the session.
   // Update it once per response so readers observe a number instead of scanning every summary query.
   if (typeof value === 'number' && value > (client.getQueryData<number>(maximumKey) ?? -Infinity)) {
@@ -72,13 +72,13 @@ export default function usePathAgnosticDecoration({
       const isOperation = tier === 'withOp';
       const url =
         schema &&
-        stringSupplant(isOperation ? schema.opSummaryUrl! : schema.summaryUrl, {
+        supplantUrl(isOperation ? schema.opSummaryUrl! : schema.summaryUrl, {
           service,
           operation: op,
         });
       const path =
         schema &&
-        stringSupplant(isOperation ? schema.opSummaryPath! : schema.summaryPath, {
+        supplantPath(isOperation ? schema.opSummaryPath! : schema.summaryPath, {
           service,
           operation: op,
         });
