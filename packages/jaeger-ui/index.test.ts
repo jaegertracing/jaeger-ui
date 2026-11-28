@@ -50,6 +50,7 @@ function runScript(location: ILocation): string {
         inserted = node;
       },
     },
+    querySelector: () => null,
     addEventListener: () => {},
     getElementById: () => null,
   };
@@ -57,6 +58,31 @@ function runScript(location: ILocation): string {
   if (inserted !== base) throw new Error('Script did not insert the <base> element');
   expect(attrs['data-inject-target']).toBe('BASE_URL');
   return attrs.href;
+}
+
+// Runs the script on a page whose markup already holds the elements that match the
+// selectors in present, and returns the selectors it queried and whether it inserted
+// a <base> element.
+function runScriptOnPageWith(present: string[]): { queried: string[]; inserted: boolean } {
+  const queried: string[] = [];
+  let inserted = false;
+  const mockDoc = {
+    createElement: () => ({ setAttribute: () => {} }),
+    currentScript: {
+      after: () => {
+        inserted = true;
+      },
+    },
+    querySelector: (selector: string) => {
+      queried.push(selector);
+      return present.includes(selector) ? {} : null;
+    },
+    addEventListener: () => {},
+    getElementById: () => null,
+  };
+  const url = new URL(`${ORIGIN}/trace/abc123`);
+  scriptFn(mockDoc, { location: { href: url.href, origin: url.origin, pathname: url.pathname } });
+  return { queried, inserted };
 }
 
 // Builds window.location the way a browser does, so the path is normalized
@@ -171,5 +197,23 @@ describe('inline base-path detection script', () => {
       expect(detectBasePath('/%2F%2Fevil.example/search')).toBe('/%2F%2Fevil.example/');
       expect(detectBasePath('/%5Cevil.example/search')).toBe('/%5Cevil.example/');
     });
+  });
+});
+
+describe('a page that already has a <base href>', () => {
+  it('does not add a second one', () => {
+    expect(runScriptOnPageWith(['base[href]']).inserted).toBe(false);
+  });
+
+  it('adds one when the page has none', () => {
+    expect(runScriptOnPageWith([]).inserted).toBe(true);
+  });
+
+  it('looks only for a <base> that sets href, not one that sets only target', () => {
+    // A <base target="_blank"> matches 'base' but not 'base[href]'; skipping on it would leave
+    // site-prefix.ts reading the page URL as the prefix.
+    const { queried, inserted } = runScriptOnPageWith(['base']);
+    expect(queried).toEqual(['base[href]']);
+    expect(inserted).toBe(true);
   });
 });
