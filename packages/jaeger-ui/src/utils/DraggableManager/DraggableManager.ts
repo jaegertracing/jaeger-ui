@@ -1,10 +1,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import type React from 'react';
-
 import EUpdateTypes from './EUpdateTypes';
-import { DraggableBounds, DraggingUpdate } from './types';
+import { DraggableBounds, DraggableSyntheticEvent, DraggingUpdate } from './types';
 import { TNil } from '../../types';
 
 const LEFT_MOUSE_BUTTON = 0;
@@ -48,10 +46,10 @@ export default class DraggableManager {
   tag: string | TNil;
 
   // handlers for integration with DOM elements
-  handleMouseEnter: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
-  handleMouseMove: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
-  handleMouseLeave: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
-  handleMouseDown: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
+  handleMouseEnter: (event: DraggableSyntheticEvent) => void;
+  handleMouseMove: (event: DraggableSyntheticEvent) => void;
+  handleMouseLeave: (event: DraggableSyntheticEvent) => void;
+  handleMouseDown: (event: DraggableSyntheticEvent) => void;
 
   constructor({ getBounds, tag, resetBoundsOnResize = true, ...rest }: DraggableManagerOptions) {
     this.handleMouseDown = this._handleDragEvent;
@@ -132,7 +130,7 @@ export default class DraggableManager {
     this._bounds = undefined;
   };
 
-  _handleMinorMouseEvent = (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => {
+  _handleMinorMouseEvent = (event: DraggableSyntheticEvent) => {
     const { button, clientX, type: eventType } = event;
     if (this._isDragging || button !== LEFT_MOUSE_BUTTON) {
       return;
@@ -165,7 +163,7 @@ export default class DraggableManager {
     });
   };
 
-  _handleDragEvent = (event: MouseEvent | React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => {
+  _handleDragEvent = (event: MouseEvent | DraggableSyntheticEvent) => {
     const { button, clientX, type: eventType } = event;
     let type: EUpdateTypes;
     let handler: ((update: DraggingUpdate) => void) | TNil;

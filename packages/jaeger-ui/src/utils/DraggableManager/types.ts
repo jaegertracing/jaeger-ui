@@ -14,8 +14,10 @@ export type DraggableBounds = {
   width: number;
 };
 
+export type DraggableSyntheticEvent = React.MouseEvent<HTMLElement | SVGElement, MouseEvent>;
+
 export type DraggingUpdate = {
-  event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent> | MouseEvent;
+  event: DraggableSyntheticEvent | MouseEvent;
   manager: DraggableManager;
   tag: string | TNil;
   type: EUpdateTypes;

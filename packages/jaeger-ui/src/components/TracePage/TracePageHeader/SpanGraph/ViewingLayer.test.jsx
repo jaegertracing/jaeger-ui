@@ -4,7 +4,8 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ViewingLayer, { dragTypes } from './ViewingLayer';
+import ViewingLayer from './ViewingLayer';
+import DraggableManager from '../../../../utils/DraggableManager';
 
 vi.mock('./Scrubber', () => mockDefault(props => <div data-testid="scrubber" {...props} />));
 
@@ -42,11 +43,6 @@ describe('<SpanGraph>', () => {
     beforeEach(() => {
       props.viewRange = getViewRange(0.1, 0.9);
       rerender(<ViewingLayer ref={ref} {...props} />);
-    });
-
-    it('throws if _root is not set', () => {
-      ref.current._root = null;
-      expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow('invalid state');
     });
 
     it('returns the correct bounds for reframe', () => {
@@ -136,12 +132,6 @@ describe('<SpanGraph>', () => {
       expect(shift).toHaveAttribute('x', '50%');
       expect(shift).toHaveAttribute('width', '0%');
       expect(edge).toHaveAttribute('x', '50%');
-    });
-
-    it('throws in _handleScrubberDragEnd for unknown tag', () => {
-      expect(() =>
-        ref.current._handleScrubberDragEnd({ manager: { resetBounds: jest.fn() }, tag: 'random', value: 0.5 })
-      ).toThrow('bad state');
     });
 
     it('renders the cursor guide when cursor is present and not prevented', () => {
@@ -367,5 +357,96 @@ describe('<SpanGraph>', () => {
 
   it('renders handles for the timeRangeFilter', () => {
     expect(container.querySelectorAll('[data-testid="scrubber"]').length).toBe(2);
+  });
+});
+
+describe('<ViewingLayer /> hooks', () => {
+  const makeProps = overrides => ({
+    height: 60,
+    numTicks: 5,
+    updateNextViewRangeTime: vi.fn(),
+    updateViewRangeTime: vi.fn(),
+    viewRange: getViewRange(0, 1),
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 10, width: 100 });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('disposes all drag managers and removes their window listeners on unmount', () => {
+    const dispose = vi.spyOn(DraggableManager.prototype, 'dispose');
+    const props = makeProps();
+    const { container, unmount } = render(<ViewingLayer {...props} />);
+    const graph = container.querySelector('.ViewingLayer--graph');
+
+    fireEvent.mouseDown(graph, { button: 0, clientX: 40 });
+    props.updateNextViewRangeTime.mockClear();
+    props.updateViewRangeTime.mockClear();
+    unmount();
+
+    expect(dispose).toHaveBeenCalledTimes(3);
+    fireEvent.mouseMove(window, { button: 0, clientX: 70 });
+    fireEvent.mouseUp(window, { button: 0, clientX: 70 });
+    expect(props.updateNextViewRangeTime).not.toHaveBeenCalled();
+    expect(props.updateViewRangeTime).not.toHaveBeenCalled();
+  });
+
+  it('keeps managers stable during rerenders and uses the latest drag props', () => {
+    const dispose = vi.spyOn(DraggableManager.prototype, 'dispose');
+    const initialProps = makeProps({ viewRange: getViewRange(0.1, 0.9) });
+    const { container, rerender } = render(<ViewingLayer {...initialProps} />);
+    const startScrubber = container.querySelectorAll('[data-testid="scrubber"]')[0];
+
+    fireEvent.mouseDown(startScrubber, { button: 0, clientX: 20 });
+    initialProps.updateNextViewRangeTime.mockClear();
+    initialProps.updateViewRangeTime.mockClear();
+
+    const nextProps = makeProps({ viewRange: getViewRange(0.2, 0.8) });
+    rerender(<ViewingLayer {...nextProps} />);
+    fireEvent.mouseMove(window, { button: 0, clientX: 60 });
+    fireEvent.mouseUp(window, { button: 0, clientX: 60 });
+
+    expect(dispose).not.toHaveBeenCalled();
+    expect(initialProps.updateNextViewRangeTime).not.toHaveBeenCalled();
+    expect(initialProps.updateViewRangeTime).not.toHaveBeenCalled();
+    expect(nextProps.updateNextViewRangeTime).toHaveBeenLastCalledWith({ shiftStart: 0.5 });
+    expect(nextProps.updateViewRangeTime).toHaveBeenLastCalledWith(0.5, 0.8, 'minimap');
+  });
+
+  it('uses the latest update callback when resetting the zoom', () => {
+    const initialProps = makeProps({ viewRange: getViewRange(0.1, 0.9) });
+    const { container, rerender } = render(<ViewingLayer {...initialProps} />);
+    const nextProps = makeProps({ viewRange: getViewRange(0.2, 0.8) });
+
+    rerender(<ViewingLayer {...nextProps} />);
+    fireEvent.click(container.querySelector('.ViewingLayer--resetZoom'));
+
+    expect(initialProps.updateViewRangeTime).not.toHaveBeenCalled();
+    expect(nextProps.updateViewRangeTime).toHaveBeenLastCalledWith(0, 1);
+  });
+
+  it('commits only on release and keeps the cursor guide hidden during a scrubber drag', () => {
+    const props = makeProps({
+      viewRange: { time: { current: [0.1, 0.9], cursor: 0.5 } },
+    });
+    const { container } = render(<ViewingLayer {...props} />);
+    const startScrubber = container.querySelectorAll('[data-testid="scrubber"]')[0];
+
+    fireEvent.mouseEnter(startScrubber);
+    fireEvent.mouseDown(startScrubber, { button: 0, clientX: 20 });
+    fireEvent.mouseMove(window, { button: 0, clientX: 60 });
+    fireEvent.mouseLeave(startScrubber, { clientX: 60 });
+
+    expect(props.updateViewRangeTime).not.toHaveBeenCalled();
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
+
+    fireEvent.mouseUp(window, { button: 0, clientX: 60 });
+    expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(0.5, 0.9, 'minimap');
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).toHaveAttribute('x1', '50%');
   });
 });
