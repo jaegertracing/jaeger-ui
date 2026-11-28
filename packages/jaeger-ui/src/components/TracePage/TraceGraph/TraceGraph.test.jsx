@@ -10,7 +10,7 @@ import { transformOtelTrace } from '../../../api/v3/parser';
 import { validateTracesData } from '../../../api/v3/schemas';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
-import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
+import testTrace from '../testTrace.json';
 
 vi.mock('@jaegertracing/plexus', () => {
   const DEFAULT_MODE = 'service';

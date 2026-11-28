@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { generateTableData } from './generateTableData';
-import testTrace from './testTrace.json';
+import testTrace from './pyroscopeTrace.json';
 import { transformOtelTrace } from '../../../api/v3/parser';
 import { validateTracesData } from '../../../api/v3/schemas';
 

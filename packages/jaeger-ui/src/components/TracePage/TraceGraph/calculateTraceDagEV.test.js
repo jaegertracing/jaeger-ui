@@ -5,7 +5,7 @@ import { transformOtelTrace } from '../../../api/v3/parser';
 import { validateTracesData } from '../../../api/v3/schemas';
 import { SpanKind } from '../../../types/otel';
 import calculateTraceDagEV, { mapNonBlocking } from './calculateTraceDagEV';
-import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
+import testTrace from '../testTrace.json';
 
 const trace = transformOtelTrace(validateTracesData(testTrace));
 

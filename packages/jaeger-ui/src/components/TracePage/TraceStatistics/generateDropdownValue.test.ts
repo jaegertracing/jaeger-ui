@@ -5,7 +5,7 @@ import { generateDropdownValue, generateSecondDropdownValue } from './generateDr
 import { transformOtelTrace } from '../../../api/v3/parser';
 import { validateTracesData } from '../../../api/v3/schemas';
 
-import testTrace from './tableValuesTestTrace/testTrace.json';
+import testTrace from '../testTrace.json';
 
 const otelTrace = transformOtelTrace(validateTracesData(testTrace))!;
 

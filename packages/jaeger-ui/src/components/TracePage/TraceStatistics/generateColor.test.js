@@ -6,7 +6,7 @@ import { transformOtelTrace } from '../../../api/v3/parser';
 import { validateTracesData } from '../../../api/v3/schemas';
 import { getColumnValuesSecondDropdown, getColumnValues } from './tableValues';
 
-import testTrace from './tableValuesTestTrace/testTrace.json';
+import testTrace from '../testTrace.json';
 
 const transformedTrace = transformOtelTrace(validateTracesData(testTrace));
 
