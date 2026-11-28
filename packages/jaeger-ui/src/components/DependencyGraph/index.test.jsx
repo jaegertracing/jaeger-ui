@@ -86,10 +86,18 @@ describe('<DependencyGraphPage>', () => {
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
-  it('shows an error message when the query errors', () => {
+  it('shows an error message when the query errors with no cached data', () => {
     mockHook({ data: undefined, error: new Error('boom') });
     renderPage();
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
+  });
+
+  it('keeps the graph when a background refetch errors but cached data remains', () => {
+    mockHook({ data: defaultDeps, error: new Error('refetch boom') });
+    renderPage();
+    expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
+    expect(screen.getByTestId('dag-component')).toBeInTheDocument();
+    expect(screen.getByText(/Dependency reload failed/i)).toBeInTheDocument();
   });
 
   it('shows a message where there is nothing to visualize', () => {
