@@ -54,6 +54,38 @@ describe('classifySpan', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'retrieval' }]))).toBe('RETRIEVAL');
   });
 
+  it('classifies realtime_inference as LLM_CALL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'realtime_inference' }]))).toBe(
+      'LLM_CALL'
+    );
+  });
+
+  it('classifies plan as AGENT', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'plan' }]))).toBe('AGENT');
+  });
+
+  it('classifies search_memory as RETRIEVAL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'search_memory' }]))).toBe(
+      'RETRIEVAL'
+    );
+  });
+
+  it.each([
+    'user_speech',
+    'fetch_response',
+    'invoke_runner',
+    'create_memory',
+    'update_memory',
+    'upsert_memory',
+    'delete_memory',
+    'create_memory_store',
+    'delete_memory_store',
+  ])('keeps the spec operation %s, which has no matching kind, as UNKNOWN_GENAI', operation => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: operation }]))).toBe(
+      'UNKNOWN_GENAI'
+    );
+  });
+
   it('returns UNKNOWN_GENAI for an unrecognized gen_ai.operation.name', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'some_new_op' }]))).toBe(
       'UNKNOWN_GENAI'

@@ -11,16 +11,22 @@ import {
 
 type SpanAttrs = { attributes: IAttributes };
 
+// Values of gen_ai.operation.name from the OpenTelemetry GenAI semantic conventions. The other values
+// in the spec (user_speech, fetch_response, invoke_runner and the memory write and store operations)
+// have no matching kind here, so those spans stay UNKNOWN_GENAI.
 const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
   chat: 'LLM_CALL',
   text_completion: 'LLM_CALL',
   generate_content: 'LLM_CALL',
   embeddings: 'LLM_CALL',
+  realtime_inference: 'LLM_CALL',
   execute_tool: 'TOOL_CALL',
   invoke_agent: 'AGENT',
   create_agent: 'AGENT',
   invoke_workflow: 'AGENT',
+  plan: 'AGENT',
   retrieval: 'RETRIEVAL',
+  search_memory: 'RETRIEVAL',
 };
 
 /**
