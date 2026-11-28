@@ -24,12 +24,12 @@ vi.mock('./JaegerAssistantPanel', () => ({
 }));
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
 import { PageImpl as Page, loadJaegerAssistantDock } from './Page';
-import { JaegerAssistantProvider } from './JaegerAssistantContext';
+import { JaegerAssistantProvider, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { trackPageView } from '../../utils/tracking';
 
 const renderWithPath = (path = '/test?search=value') =>
@@ -38,6 +38,20 @@ const renderWithPath = (path = '/test?search=value') =>
       <Page />
     </MemoryRouter>
   );
+
+function AssistantPanelControls() {
+  const assistant = useJaegerAssistantOptional();
+  return (
+    <>
+      <button type="button" onClick={() => assistant?.setPanelOpen(true)}>
+        Open assistant panel
+      </button>
+      <button type="button" onClick={() => assistant?.setPanelOpen(false)}>
+        Close assistant panel
+      </button>
+    </>
+  );
+}
 
 const embeddedV0 = {
   version: 'v0',
@@ -119,12 +133,81 @@ describe('<Page>', () => {
       expect(screen.getByTestId('page-child')).toBeInTheDocument();
     });
 
-    it('degrades to an empty dock when the chunk fails to load', async () => {
+    it('shows a reload notice when the chunk fails to load', async () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const err = new Error('chunk load failed');
       const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(err));
       expect(spy).toHaveBeenCalledWith('[jaeger-assistant] failed to load the assistant panel', err);
-      expect(Fallback()).toBeNull();
+      assistantMock.configured = true;
+      render(
+        <JaegerAssistantProvider>
+          <Fallback />
+          <AssistantPanelControls />
+        </JaegerAssistantProvider>
+      );
+      const notice = screen.getByText('The assistant failed to load. Reload the page to try again.');
+      expect(notice).not.toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Open assistant panel' }));
+      expect(notice).toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close assistant panel' }));
+      expect(notice).not.toBeVisible();
+      spy.mockRestore();
+    });
+
+    it('returns null from load failure fallback when assistant is not configured', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(new Error('fail')));
+      assistantMock.configured = false;
+      const { container } = render(
+        <JaegerAssistantProvider>
+          <Fallback />
+        </JaegerAssistantProvider>
+      );
+      expect(container.firstChild).toBeNull();
+      spy.mockRestore();
+    });
+
+    it('allows retrying chunk load without page reload', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      let shouldFail = true;
+      const failingThenSucceedingImporter = vi.fn().mockImplementation(() => {
+        if (shouldFail) {
+          return Promise.reject(new Error('temporary network failure'));
+        }
+        return Promise.resolve({
+          JaegerAssistantDock: () => <aside data-testid="recovered-dock">Dock Loaded</aside>,
+        });
+      });
+
+      assistantMock.configured = true;
+      render(
+        <MemoryRouter initialEntries={['/test']}>
+          <JaegerAssistantProvider>
+            <Page assistantDockImporter={failingThenSucceedingImporter}>
+              <span data-testid="page-child" />
+            </Page>
+            <AssistantPanelControls />
+          </JaegerAssistantProvider>
+        </MemoryRouter>
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Open assistant panel' }));
+      const notice = await screen.findByText('The assistant failed to load. Reload the page to try again.');
+      expect(notice).toBeVisible();
+
+      const retryBtn = screen.getByRole('button', { name: 'Retry' });
+      expect(retryBtn).toBeVisible();
+
+      shouldFail = false;
+      fireEvent.click(retryBtn);
+
+      expect(await screen.findByTestId('recovered-dock')).toBeInTheDocument();
+      expect(
+        screen.queryByText('The assistant failed to load. Reload the page to try again.')
+      ).not.toBeInTheDocument();
+
       spy.mockRestore();
     });
   });
