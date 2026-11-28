@@ -1,125 +1,129 @@
 {
-  "traceID": "006c3cf93508f205",
-  "spans": [
+  "resourceSpans": [
     {
-      "traceID": "006c3cf93508f205",
-      "spanID": "006c3cf93508f205",
-      "flags": 1,
-      "operationName": "send",
-      "references": [],
-      "startTime": 1679437737490189,
-      "duration": 36,
-      "tags": [
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "service-one"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
         {
-          "key": "span.kind",
-          "type": "string",
-          "value": "producer"
+          "spans": [
+            {
+              "traceId": "0000000000000000006c3cf93508f205",
+              "spanId": "006c3cf93508f205",
+              "name": "send",
+              "kind": 4,
+              "flags": 1,
+              "startTimeUnixNano": "1679437737490189000",
+              "endTimeUnixNano": "1679437737490225000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "producer"
+                  }
+                }
+              ]
+            }
+          ]
         }
-      ],
-      "logs": [],
-      "processID": "p1",
-      "warnings": null
+      ]
     },
     {
-      "traceID": "006c3cf93508f205",
-      "spanID": "2dc4b796e2127e32",
-      "flags": 1,
-      "operationName": "overlapping child 1",
-      "references": [
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "service-two"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
         {
-          "refType": "CHILD_OF",
-          "traceID": "006c3cf93508f205",
-          "spanID": "006c3cf93508f205"
+          "spans": [
+            {
+              "traceId": "0000000000000000006c3cf93508f205",
+              "spanId": "2dc4b796e2127e32",
+              "parentSpanId": "006c3cf93508f205",
+              "name": "overlapping child 1",
+              "kind": 3,
+              "flags": 1,
+              "startTimeUnixNano": "1679437737490192000",
+              "endTimeUnixNano": "1679437737490202000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "0000000000000000006c3cf93508f205",
+              "spanId": "5d423585b4c63d48",
+              "parentSpanId": "006c3cf93508f205",
+              "name": "overlapping child 2",
+              "kind": 3,
+              "flags": 1,
+              "startTimeUnixNano": "1679437737490198000",
+              "endTimeUnixNano": "1679437737490206000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "0000000000000000006c3cf93508f205",
+              "spanId": "4570ab68826f43f9",
+              "parentSpanId": "006c3cf93508f205",
+              "name": "longer child",
+              "kind": 3,
+              "flags": 1,
+              "startTimeUnixNano": "1679437737490205000",
+              "endTimeUnixNano": "1679437737490223000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                }
+              ]
+            }
+          ]
         }
-      ],
-      "startTime": 1679437737490192,
-      "duration": 10,
-      "tags": [
-        {
-          "key": "span.kind",
-          "type": "string",
-          "value": "client"
-        },
-        {
-          "key": "http.method",
-          "type": "string",
-          "value": "POST"
-        }
-      ],
-      "logs": [],
-      "processID": "p2",
-      "warnings": null
-    },
-    {
-      "traceID": "006c3cf93508f205",
-      "spanID": "5d423585b4c63d48",
-      "flags": 1,
-      "operationName": "overlapping child 2",
-      "references": [
-        {
-          "refType": "CHILD_OF",
-          "traceID": "006c3cf93508f205",
-          "spanID": "006c3cf93508f205"
-        }
-      ],
-      "startTime": 1679437737490198,
-      "duration": 8,
-      "tags": [
-        {
-          "key": "span.kind",
-          "type": "string",
-          "value": "client"
-        },
-        {
-          "key": "http.method",
-          "type": "string",
-          "value": "POST"
-        }
-      ],
-      "logs": [],
-      "processID": "p2",
-      "warnings": null
-    },
-    {
-      "traceID": "006c3cf93508f205",
-      "spanID": "4570ab68826f43f9",
-      "flags": 1,
-      "operationName": "longer child",
-      "references": [
-        {
-          "refType": "CHILD_OF",
-          "traceID": "006c3cf93508f205",
-          "spanID": "006c3cf93508f205"
-        }
-      ],
-      "startTime": 1679437737490205,
-      "duration": 18,
-      "tags": [
-        {
-          "key": "span.kind",
-          "type": "string",
-          "value": "client"
-        },
-        {
-          "key": "http.method",
-          "type": "string",
-          "value": "POST"
-        }
-      ],
-      "logs": [],
-      "processID": "p2",
-      "warnings": null
+      ]
     }
-  ],
-  "processes": {
-    "p1": {
-      "serviceName": "service-one",
-      "tags": []
-    },
-    "p2": {
-      "serviceName": "service-two",
-      "tags": []
-    }
-  },
-  "warnings": null
+  ]
 }

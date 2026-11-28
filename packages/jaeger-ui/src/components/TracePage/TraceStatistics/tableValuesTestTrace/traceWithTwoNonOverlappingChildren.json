@@ -1,95 +1,105 @@
 {
-  "traceID": "006c3cf93508f205",
-  "spans": [
+  "resourceSpans": [
     {
-      "traceID": "006c3cf93508f205",
-      "spanID": "006c3cf93508f205",
-      "flags": 1,
-      "operationName": "send",
-      "references": [],
-      "startTime": 100,
-      "duration": 40,
-      "tags": [
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "service-one"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
         {
-          "key": "span.kind",
-          "type": "string",
-          "value": "producer"
+          "spans": [
+            {
+              "traceId": "0000000000000000006c3cf93508f205",
+              "spanId": "006c3cf93508f205",
+              "name": "send",
+              "kind": 4,
+              "flags": 1,
+              "startTimeUnixNano": "100000",
+              "endTimeUnixNano": "140000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "producer"
+                  }
+                }
+              ]
+            }
+          ]
         }
-      ],
-      "logs": [],
-      "processID": "p1",
-      "warnings": null
+      ]
     },
     {
-      "traceID": "006c3cf93508f205",
-      "spanID": "2dc4b796e2127e32",
-      "flags": 1,
-      "operationName": "non-overlapping child",
-      "references": [
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "service-two"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
         {
-          "refType": "CHILD_OF",
-          "traceID": "006c3cf93508f205",
-          "spanID": "006c3cf93508f205"
+          "spans": [
+            {
+              "traceId": "0000000000000000006c3cf93508f205",
+              "spanId": "2dc4b796e2127e32",
+              "parentSpanId": "006c3cf93508f205",
+              "name": "non-overlapping child",
+              "kind": 3,
+              "flags": 1,
+              "startTimeUnixNano": "110000",
+              "endTimeUnixNano": "120000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "0000000000000000006c3cf93508f205",
+              "spanId": "5d423585b4c63d48",
+              "parentSpanId": "006c3cf93508f205",
+              "name": "async task 2",
+              "kind": 3,
+              "flags": 1,
+              "startTimeUnixNano": "500000",
+              "endTimeUnixNano": "600000",
+              "attributes": [
+                {
+                  "key": "span.kind",
+                  "value": {
+                    "stringValue": "client"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                }
+              ]
+            }
+          ]
         }
-      ],
-      "startTime": 110,
-      "duration": 10,
-      "tags": [
-        {
-          "key": "span.kind",
-          "type": "string",
-          "value": "client"
-        },
-        {
-          "key": "http.method",
-          "type": "string",
-          "value": "POST"
-        }
-      ],
-      "logs": [],
-      "processID": "p2",
-      "warnings": null
-    },
-    {
-      "traceID": "006c3cf93508f205",
-      "spanID": "5d423585b4c63d48",
-      "flags": 1,
-      "operationName": "async task 2",
-      "references": [
-        {
-          "refType": "CHILD_OF",
-          "traceID": "006c3cf93508f205",
-          "spanID": "006c3cf93508f205"
-        }
-      ],
-      "startTime": 500,
-      "duration": 100,
-      "tags": [
-        {
-          "key": "span.kind",
-          "type": "string",
-          "value": "client"
-        },
-        {
-          "key": "http.method",
-          "type": "string",
-          "value": "POST"
-        }
-      ],
-      "logs": [],
-      "processID": "p2",
-      "warnings": null
+      ]
     }
-  ],
-  "processes": {
-    "p1": {
-      "serviceName": "service-one",
-      "tags": []
-    },
-    "p2": {
-      "serviceName": "service-two",
-      "tags": []
-    }
-  },
-  "warnings": null
+  ]
 }

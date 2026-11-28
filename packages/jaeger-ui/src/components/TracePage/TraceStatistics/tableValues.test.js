@@ -1,6 +1,8 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { transformOtelTrace } from '../../../api/v3/parser';
+import { validateTracesData } from '../../../api/v3/schemas';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
@@ -17,35 +19,37 @@ import traceWithThreeShortChildren from './tableValuesTestTrace/traceWithThreeSh
 import traceWithTwoChildrenStartedAtTraceStart from './tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json';
 import traceWithMultipleSpansWithTheSameValueInDifferentTags from './tableValuesTestTrace/traceWithMultipleSpansWithTheSameValueInDifferentTags.json';
 
-const transformedTrace = transformTraceData(testTraceNormal).asOtelTrace();
-const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther).asOtelTrace();
-const transformedTraceSpanAmongEachOtheGrouped = transformTraceData(
-  traceSpanAmongEachOtherGrouped
-).asOtelTrace();
-const transformedTraceSpanAmongEachOtheGroupedAndSpans = transformTraceData(
-  traceSpanAmongEachOtherGroupedAndSpans
-).asOtelTrace();
-const transformedTraceSpanLongerAsParent = transformTraceData(traceSpanLongerAsParent).asOtelTrace();
-const transformedTraceWithOverlappingChildrenLongerThanParent = transformTraceData(
-  traceWithOverlappingChildrenLongerThanParent
-).asOtelTrace();
-const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(
-  traceWithTwoNonOverlappingChildren
-).asOtelTrace();
-const transformedTraceWithOverlappingChildren = transformTraceData(
-  traceWithOverlappingChildren
-).asOtelTrace();
+const transformedTrace = transformOtelTrace(validateTracesData(testTraceNormal));
+const transformedTraceSpanAmongEachOthe = transformOtelTrace(validateTracesData(traceSpanAmongEachOther));
+const transformedTraceSpanAmongEachOtheGrouped = transformOtelTrace(
+  validateTracesData(traceSpanAmongEachOtherGrouped)
+);
+const transformedTraceSpanAmongEachOtheGroupedAndSpans = transformOtelTrace(
+  validateTracesData(traceSpanAmongEachOtherGroupedAndSpans)
+);
+const transformedTraceSpanLongerAsParent = transformOtelTrace(validateTracesData(traceSpanLongerAsParent));
+const transformedTraceWithOverlappingChildrenLongerThanParent = transformOtelTrace(
+  validateTracesData(traceWithOverlappingChildrenLongerThanParent)
+);
+const transformedTraceWithTwoNonOverlappingChildren = transformOtelTrace(
+  validateTracesData(traceWithTwoNonOverlappingChildren)
+);
+const transformedTraceWithOverlappingChildren = transformOtelTrace(
+  validateTracesData(traceWithOverlappingChildren)
+);
 const transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent = transformTraceData(
   traceWithSingleChildLongerThanParentAndStartsAfterParent
 ).asOtelTrace();
-const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren).asOtelTrace();
-const transformedTraceWithTwoChildrenStartedAtTraceStart = transformTraceData(
-  traceWithTwoChildrenStartedAtTraceStart
-).asOtelTrace();
+const transformedTraceWithThreeShortChildren = transformOtelTrace(
+  validateTracesData(traceWithThreeShortChildren)
+);
+const transformedTraceWithTwoChildrenStartedAtTraceStart = transformOtelTrace(
+  validateTracesData(traceWithTwoChildrenStartedAtTraceStart)
+);
 
-const transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags = transformTraceData(
-  traceWithMultipleSpansWithTheSameValueInDifferentTags
-).asOtelTrace();
+const transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags = transformOtelTrace(
+  validateTracesData(traceWithMultipleSpansWithTheSameValueInDifferentTags)
+);
 
 describe('tableValues', () => {
   it("getColumnValuesSecondDropdown doesn't return duplicated data when input contains details", () => {
