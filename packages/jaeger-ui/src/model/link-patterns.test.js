@@ -352,6 +352,111 @@ describe('computeTraceLink()', () => {
       },
     ]);
   });
+
+  it('executes formatters exactly once in trace links', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const patterns = [
+      {
+        type: 'traces',
+        url: 'http://example.com/?from=#{startTime | add 1000000}',
+        text: 'link (#{startTime | add 1000000})',
+      },
+      {
+        type: 'traces',
+        url: 'http://example.com/?date=#{startTime | epoch_micros_to_date_iso}',
+        text: 'date link (#{startTime | epoch_micros_to_date_iso})',
+      },
+      {
+        type: 'traces',
+        url: 'http://example.com/?id=#{traceID | pad_start 8 0}',
+        text: 'id link (#{traceID | pad_start 8 0})',
+      },
+    ].map(processLinkPattern);
+
+    const testTrace = {
+      resource: { attributes: [] },
+      traceName: 'theTrace',
+      traceID: '123',
+      spans: [],
+      startTime: 5000000,
+      endTime: 6000000,
+      duration: 1000000,
+      services: [],
+    };
+
+    expect(computeTraceLink(patterns, testTrace)).toEqual([
+      {
+        url: 'http://example.com/?from=6000000',
+        text: 'link (6000000)',
+      },
+      {
+        url: 'http://example.com/?date=1970-01-01T00%3A00%3A05.000Z',
+        text: 'date link (1970-01-01T00:00:05.000Z)',
+      },
+      {
+        url: 'http://example.com/?id=00000123',
+        text: 'id link (00000123)',
+      },
+    ]);
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it('handles multiple independently formatted placeholders for the same trace parameter', () => {
+    const patterns = [
+      {
+        type: 'traces',
+        url: 'http://example.com/?from=#{startTime | add -1000000}&to=#{startTime | add 1000000}',
+        text: 'range: #{startTime | add -1000000} to #{startTime | add 1000000}',
+      },
+    ].map(processLinkPattern);
+
+    const testTrace = {
+      resource: { attributes: [] },
+      traceName: 'theTrace',
+      traceID: 'trc1',
+      spans: [],
+      startTime: 5000000,
+      endTime: 6000000,
+      duration: 1000000,
+      services: [],
+    };
+
+    expect(computeTraceLink(patterns, testTrace)).toEqual([
+      {
+        url: 'http://example.com/?from=4000000&to=6000000',
+        text: 'range: 4000000 to 6000000',
+      },
+    ]);
+  });
+
+  it('formats numeric zero and supports unformatted parameters in trace links', () => {
+    const patterns = [
+      {
+        type: 'traces',
+        url: 'http://example.com/?id=#{traceID}&start=#{startTime | add 5}&rawStart=#{startTime}',
+        text: 'trace #{traceID} at #{startTime | add 5} (raw: #{startTime})',
+      },
+    ].map(processLinkPattern);
+
+    const testTrace = {
+      resource: { attributes: [] },
+      traceName: 'theTrace',
+      traceID: 'trc1',
+      spans: [],
+      startTime: 0,
+      endTime: 1000,
+      duration: 1000,
+      services: [],
+    };
+
+    expect(computeTraceLink(patterns, testTrace)).toEqual([
+      {
+        url: 'http://example.com/?id=trc1&start=5&rawStart=0',
+        text: 'trace trc1 at 5 (raw: 0)',
+      },
+    ]);
+  });
 });
 
 describe('computeLinks()', () => {
@@ -472,6 +577,128 @@ describe('computeLinks()', () => {
         text: 'legacy log link (logVal)',
       },
     ]);
+  });
+
+  it('applies formatters to attribute (tag), process (resource), and event (log) links', () => {
+    const formattedPatterns = [
+      {
+        type: 'attributes',
+        key: 'http.status_code',
+        url: 'http://example.com/?code=#{http.status_code | add 1}',
+        text: 'status code (#{http.status_code | add 1})',
+      },
+      {
+        type: 'process',
+        key: 'service.version',
+        url: 'http://example.com/?version=#{service.version | pad_start 5 0}',
+        text: 'version (#{service.version | pad_start 5 0})',
+      },
+      {
+        type: 'logs',
+        key: 'log.count',
+        url: 'http://example.com/?count=#{log.count | add 10}',
+        text: 'log count (#{log.count | add 10})',
+      },
+    ].map(processLinkPattern);
+
+    const span = wrapSpanAttrs({
+      depth: 0,
+      resource: { attributes: [{ key: 'service.version', value: '7' }] },
+      attributes: [{ key: 'http.status_code', value: 200 }],
+      events: [{ attributes: [{ key: 'log.count', value: 5 }] }],
+    });
+
+    expect(computeLinks(formattedPatterns, span, span.attributes, 0)).toEqual([
+      {
+        url: 'http://example.com/?code=201',
+        text: 'status code (201)',
+      },
+    ]);
+    expect(computeLinks(formattedPatterns, span, span.resource.attributes, 0)).toEqual([
+      {
+        url: 'http://example.com/?version=00007',
+        text: 'version (00007)',
+      },
+    ]);
+    expect(computeLinks(formattedPatterns, span, span.events[0].attributes, 0)).toEqual([
+      {
+        url: 'http://example.com/?count=15',
+        text: 'log count (15)',
+      },
+    ]);
+  });
+
+  it('resolves trace-prefixed parameters with formatters in span links', () => {
+    const tracePrefixedPatterns = [
+      {
+        type: 'attributes',
+        key: 'myKey',
+        url: 'http://example.com/?start=#{trace.startTime | add 1000}&id=#{trace.traceID | pad_start 8 0}',
+        text: 'trace start: #{trace.startTime | add 1000}',
+      },
+    ].map(processLinkPattern);
+
+    const span = wrapSpanAttrs({
+      depth: 0,
+      resource: {},
+      attributes: [{ key: 'myKey', value: 'myVal' }],
+    });
+
+    expect(computeLinks(tracePrefixedPatterns, span, span.attributes, 0, trace)).toEqual([
+      {
+        url: 'http://example.com/?start=2000&id=0000trc1',
+        text: 'trace start: 2000',
+      },
+    ]);
+  });
+
+  it('formats numeric zero in span attributes and supports independent formatters', () => {
+    const patterns = [
+      {
+        type: 'attributes',
+        key: 'n',
+        url: 'http://example.com/?inc=#{n | add 5}&dec=#{n | add -5}&raw=#{n}',
+        text: 'inc: #{n | add 5}, dec: #{n | add -5}, raw: #{n}',
+      },
+    ].map(processLinkPattern);
+
+    const span = wrapSpanAttrs({
+      depth: 0,
+      resource: {},
+      attributes: [{ key: 'n', value: 0 }],
+    });
+
+    expect(computeLinks(patterns, span, span.attributes, 0)).toEqual([
+      {
+        url: 'http://example.com/?inc=5&dec=-5&raw=0',
+        text: 'inc: 5, dec: -5, raw: 0',
+      },
+    ]);
+  });
+
+  it('logs a warning and skips link when a parameter with formatters is missing', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const patterns = [
+      {
+        type: 'attributes',
+        key: 'myKey',
+        url: 'http://example.com/?missing=#{nonExistent | add 1}',
+        text: 'missing link',
+      },
+    ].map(processLinkPattern);
+
+    const span = wrapSpanAttrs({
+      depth: 0,
+      resource: {},
+      attributes: [{ key: 'myKey', value: 'myVal' }],
+    });
+
+    expect(computeLinks(patterns, span, span.attributes, 0)).toEqual([]);
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Skipping link pattern, missing parameter nonExistent | add 1 for key myKey in attributes.',
+      expect.anything()
+    );
+    warnSpy.mockRestore();
   });
 });
 
