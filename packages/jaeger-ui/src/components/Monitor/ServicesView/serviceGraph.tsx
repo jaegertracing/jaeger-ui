@@ -152,7 +152,8 @@ export function formatYAxisTick(
   }
 
   if (name.includes('Error rate')) {
-    return value.toFixed(0);
+    // Up to two decimals, so 0.4% isn't shown as 0; a whole percent stays "1", not "1.00".
+    return String(Number(value.toFixed(2)));
   }
 
   if (value === 0) return '0';
