@@ -30,6 +30,7 @@ type SpanBarRowProps = {
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
   isMatchingFilter: boolean;
+  hasHiddenMatches?: boolean;
   isSelected?: boolean;
   timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
@@ -102,6 +103,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   isChildrenExpanded,
   isDetailExpanded,
   isMatchingFilter,
+  hasHiddenMatches = false,
   isSelected,
   timelineBarsVisible,
   numTicks,
@@ -180,11 +182,17 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
           ${isMatchingFilter ? 'is-matching-filter' : ''}
+          ${hasHiddenMatches ? 'has-hidden-matches' : ''}
           ${isSelected ? 'is-selected' : ''}
         `}
     >
       <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
-        <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
+        <div
+          className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''} ${
+            hasHiddenMatches ? 'has-hidden-matches' : ''
+          }`}
+          title={hasHiddenMatches ? 'Contains hidden search matches' : undefined}
+        >
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
             span={span}
@@ -193,6 +201,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             // The tree markers stay on the service color, like the indent guides, even when the
             // bar takes a heatmap color.
             color={colorGenerator.getColorByKey(span.resource.serviceName)}
+            hasHiddenMatches={hasHiddenMatches}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}

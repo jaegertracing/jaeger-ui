@@ -66,6 +66,17 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--trace-emphasis-highlight);
 }
 
+.span-row.has-hidden-matches:not(.is-matching-filter) {
+  background-color: color-mix(in srgb, var(--trace-emphasis-highlight) 35%, var(--surface-secondary));
+  outline: 1px dashed var(--feedback-warning);
+  outline-offset: -1px;
+}
+
+.span-row.has-hidden-matches.is-matching-filter {
+  outline: 1px dashed var(--feedback-warning);
+  outline-offset: -1px;
+}
+
 .span-row.is-selected .span-name-wrapper {
   background-color: var(--interactive-primary-light);
 }
@@ -106,6 +117,10 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--trace-emphasis-highlight);
 }
 
+.span-name-wrapper.has-hidden-matches:not(.is-matching-filter) {
+  background-color: color-mix(in srgb, var(--trace-emphasis-highlight) 35%, var(--surface-secondary));
+}
+
 .span-name-wrapper:hover {
   border-right: 1px solid var(--border-default);
   float: left;
@@ -125,6 +140,10 @@ SPDX-License-Identifier: Apache-2.0
 
 .span-row.is-matching-filter:hover .span-name-wrapper {
   background: var(--trace-emphasis-highlight);
+}
+
+.span-row.has-hidden-matches:not(.is-matching-filter):hover .span-name-wrapper {
+  background: color-mix(in srgb, var(--trace-emphasis-highlight) 50%, var(--surface-secondary));
 }
 
 .span-row.is-expanded .span-name-wrapper {
@@ -193,6 +212,18 @@ SPDX-License-Identifier: Apache-2.0
 .span-row.is-matching-filter:hover .span-view {
   background-color: var(--trace-emphasis-highlight);
   outline: 1px solid var(--border-default);
+}
+
+.span-row.has-hidden-matches:not(.is-matching-filter):hover .span-view {
+  background-color: color-mix(in srgb, var(--trace-emphasis-highlight) 35%, var(--surface-secondary));
+  outline: 1px dashed var(--feedback-warning);
+  outline-offset: -1px;
+}
+
+.span-row.has-hidden-matches .SpanTreeOffset--box {
+  border-style: dashed;
+  border-color: var(--feedback-warning);
+  box-shadow: 0 0 0 1px var(--feedback-warning);
 }
 
 .span-row.is-expanded .span-view {

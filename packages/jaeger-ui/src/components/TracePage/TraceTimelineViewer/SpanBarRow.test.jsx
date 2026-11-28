@@ -14,8 +14,13 @@ import { makeAttributes } from '../../../model/attributes';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick, color }) => (
-    <div data-testid="span-tree-offset" data-color={color} onClick={onClick}>
+  default: jest.fn(({ span, childrenVisible, onClick, color, hasHiddenMatches }) => (
+    <div
+      data-testid="span-tree-offset"
+      data-color={color}
+      data-has-hidden-matches={hasHiddenMatches ? 'true' : undefined}
+      onClick={onClick}
+    >
       SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
@@ -248,6 +253,43 @@ describe('<SpanBarRow>', () => {
     expect(row).toHaveClass('is-matching-filter');
     const wrapper = screen.getByTestId('span-tree-offset').parentElement;
     expect(wrapper).toHaveClass('span-name-wrapper', 'is-matching-filter');
+  });
+
+  it('applies has-hidden-matches classes when hasHiddenMatches is true', () => {
+    const props = {
+      ...defaultProps,
+      hasHiddenMatches: true,
+    };
+    render(<SpanBarRow {...props} />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).toHaveClass('has-hidden-matches');
+    const wrapper = screen.getByTestId('span-tree-offset').parentElement;
+    expect(wrapper).toHaveClass('span-name-wrapper', 'has-hidden-matches');
+    expect(wrapper).toHaveAttribute('title', 'Contains hidden search matches');
+    expect(screen.getByTestId('span-tree-offset')).toHaveAttribute('data-has-hidden-matches', 'true');
+  });
+
+  it('does not apply has-hidden-matches classes when hasHiddenMatches is false', () => {
+    render(<SpanBarRow {...defaultProps} hasHiddenMatches={false} />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).not.toHaveClass('has-hidden-matches');
+    const wrapper = screen.getByTestId('span-tree-offset').parentElement;
+    expect(wrapper).not.toHaveClass('has-hidden-matches');
+    expect(wrapper).not.toHaveAttribute('title');
+    expect(screen.getByTestId('span-tree-offset')).not.toHaveAttribute('data-has-hidden-matches');
+  });
+
+  it('applies both is-matching-filter and has-hidden-matches classes simultaneously', () => {
+    const props = {
+      ...defaultProps,
+      isMatchingFilter: true,
+      hasHiddenMatches: true,
+    };
+    render(<SpanBarRow {...props} />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).toHaveClass('is-matching-filter', 'has-hidden-matches');
+    const wrapper = screen.getByTestId('span-tree-offset').parentElement;
+    expect(wrapper).toHaveClass('span-name-wrapper', 'is-matching-filter', 'has-hidden-matches');
   });
 
   it('applies is-children-collapsed class when isParent is true and isChildrenExpanded is false', () => {
