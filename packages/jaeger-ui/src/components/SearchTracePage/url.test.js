@@ -3,11 +3,16 @@
 
 import * as ReactRouterDom from 'react-router-dom';
 
+import getConfig from '../../utils/config/get-config';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches, searchQueryFromUrl } from './url';
 
 vi.mock('react-router-dom', () => ({
   matchPath: vi.fn(),
+}));
+
+vi.mock('../../utils/config/get-config', () => ({
+  default: vi.fn(() => ({ search: {} })),
 }));
 
 describe('SearchTracePage/url', () => {
@@ -244,6 +249,10 @@ describe('SearchTracePage/url', () => {
   });
 
   describe('searchQueryFromUrl', () => {
+    beforeEach(() => {
+      vi.mocked(getConfig).mockReturnValue({ search: {} });
+    });
+
     it('returns null when no service, start, or end is present', () => {
       expect(searchQueryFromUrl('?limit=20')).toBeNull();
     });
@@ -276,9 +285,36 @@ describe('SearchTracePage/url', () => {
       expect(result?.lookback).toBe('custom');
     });
 
-    it('returns empty lookback when service is present but no timestamps', () => {
+    it('uses the default lookback and derives timestamps when service is present but no timestamps', () => {
+      const before = Date.now();
       const result = searchQueryFromUrl('?service=svc');
-      expect(result?.lookback).toBe('');
+      const after = Date.now();
+
+      expect(result?.lookback).toBe('1h');
+
+      const startUs = Number(result?.start);
+      const endUs = Number(result?.end);
+
+      expect(endUs).toBeGreaterThanOrEqual(before * 1000);
+      expect(endUs).toBeLessThanOrEqual(after * 1000 + 1000 * 1000);
+      expect(endUs - startUs).toBeCloseTo(60 * 60 * 1_000_000, -6);
+    });
+
+    it('uses search.defaultLookback from config when service is present but no timestamps', () => {
+      vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
+
+      const before = Date.now();
+      const result = searchQueryFromUrl('?service=svc');
+      const after = Date.now();
+
+      expect(result?.lookback).toBe('15m');
+
+      const startUs = Number(result?.start);
+      const endUs = Number(result?.end);
+
+      expect(endUs).toBeGreaterThanOrEqual(before * 1000);
+      expect(endUs).toBeLessThanOrEqual(after * 1000 + 1000 * 1000);
+      expect(endUs - startUs).toBeCloseTo(15 * 60 * 1_000_000, -6);
     });
 
     it('derives start/end from lookback when old-style URL omits timestamps', () => {
