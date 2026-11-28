@@ -122,6 +122,40 @@ describe('<DependencyGraphPage>', () => {
     expect(lastDAGOptionsProps.selectedDataSource).toBe('Small Graph');
   });
 
+  it('changing the data source resets the focal service and depth', () => {
+    renderPage();
+
+    act(() => {
+      lastDAGOptionsProps.onServiceSelect('elder-one');
+      lastDAGOptionsProps.onDepthChange(2);
+    });
+    expect(lastDAGOptionsProps.selectedService).toBe('elder-one');
+    expect(lastDAGOptionsProps.selectedDepth).toBe(2);
+
+    act(() => {
+      lastDAGOptionsProps.onDataSourceChange('Small Graph');
+    });
+
+    expect(lastDAGOptionsProps.selectedService).toBeUndefined();
+    expect(lastDAGOptionsProps.selectedDepth).toBe(5);
+  });
+
+  it('keeping the same data source preserves the focal service and depth', () => {
+    renderPage();
+
+    act(() => {
+      lastDAGOptionsProps.onServiceSelect('elder-one');
+      lastDAGOptionsProps.onDepthChange(2);
+    });
+
+    act(() => {
+      lastDAGOptionsProps.onDataSourceChange('Backend');
+    });
+
+    expect(lastDAGOptionsProps.selectedService).toBe('elder-one');
+    expect(lastDAGOptionsProps.selectedDepth).toBe(2);
+  });
+
   describe('DAG options', () => {
     beforeEach(() => {
       jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
