@@ -550,7 +550,10 @@ describe('ServiceGraphImpl helper functions', () => {
 
   describe('formatYAxisTick', () => {
     it('handles error rate values', () => {
-      expect(formatYAxisTick(1.23, 'Error rate')).toBe('1');
+      expect(formatYAxisTick(1.23, 'Error rate')).toBe('1.23');
+      expect(formatYAxisTick(0.4, 'Error rate (%)')).toBe('0.4');
+      expect(formatYAxisTick(0, 'Error rate (%)')).toBe('0');
+      expect(formatYAxisTick(50, 'Error rate (%)')).toBe('50');
     });
 
     it('handles custom formatter', () => {

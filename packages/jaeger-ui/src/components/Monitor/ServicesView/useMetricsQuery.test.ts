@@ -138,6 +138,25 @@ describe('transformServiceMetrics', () => {
     expect(result.serviceMetrics.service_latencies![2].quantile).toBe(0.95);
   });
 
+  it('keeps a service error rate below one percent for the chart', () => {
+    const subPercent = {
+      ...errorRate,
+      value: {
+        ...errorRate.value,
+        metrics: [
+          {
+            labels: errorRate.value.metrics[0].labels,
+            metricPoints: [{ gaugeValue: { doubleValue: 0.004 }, timestamp: metricPoint.timestamp }],
+          },
+        ],
+      },
+    };
+    const result = transformServiceMetrics(
+      nameServiceResults([latency50, latency75, latency95, callRate, subPercent])
+    );
+    expect(result.serviceMetrics.service_error_rate!.metricPoints[0].y).toBe(0.004);
+  });
+
   it('populates service_call_rate and service_error_rate', () => {
     const result = transformServiceMetrics(nameServiceResults(fullServicePayload));
     expect(result.serviceMetrics.service_call_rate).not.toBeNull();
@@ -326,6 +345,31 @@ describe('transformOperationMetrics', () => {
     const impacts = result.serviceOpsMetrics!.map(m => m.impact);
     expect(Math.max(...impacts)).toBe(1);
     expect(Math.min(...impacts)).toBe(0);
+  });
+
+  it('keeps error rates below one percent instead of rounding them to 0', () => {
+    const pt = (v: number) => ({ gaugeValue: { doubleValue: v }, timestamp: '2021-01-01T00:00:00.000Z' });
+    const metric = (name: string, values: number[]) => ({
+      status: 'fulfilled',
+      value: {
+        name,
+        type: 'GAUGE',
+        help: '',
+        quantile: 0.95,
+        metrics: [{ labels: [{ name: 'operation', value: 'op1' }], metricPoints: values.map(pt) }],
+      },
+    });
+    const payload = [
+      metric('service_operation_latencies', [10]),
+      metric('service_operation_call_rate', [2]),
+      // Error rates are fractions: 0.4% and 0.6%, 0.5% on average.
+      metric('service_operation_error_rate', [0.004, 0.006]),
+    ] as PromiseSettledResult<MetricsAPIResponse<true>>[];
+
+    const [op] = transformOperationMetrics(nameOperationResults(payload)).serviceOpsMetrics!;
+
+    expect(op.errRates).toBeCloseTo(0.005, 10);
+    expect(op.dataPoints.service_operation_error_rate.map(p => p.y)).toEqual([0.004, 0.006]);
   });
 
   it('records rejected operation requests by label rather than position', () => {
