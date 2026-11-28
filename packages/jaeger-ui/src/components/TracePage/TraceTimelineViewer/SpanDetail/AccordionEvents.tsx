@@ -95,7 +95,8 @@ export default function AccordionEvents({
       <button
         type="button"
         className="AccordionEvents--toggle"
-        onClick={() => {
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
           setShowOutOfRangeEvents(true);
         }}
       >
@@ -108,7 +109,8 @@ export default function AccordionEvents({
       <button
         type="button"
         className="AccordionEvents--toggle"
-        onClick={() => {
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
           setShowOutOfRangeEvents(false);
         }}
       >
