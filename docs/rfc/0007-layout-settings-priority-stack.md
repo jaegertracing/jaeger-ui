@@ -1,12 +1,12 @@
 # RFC 0007: Layout Settings Priority Stack
 
-* **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759), and PR 2's persistence controls in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777); PRs 3–5 remain outstanding.
+* **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759), and PR 2's persistence controls in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777). PR 4's resolver and wiring are implemented; PRs 3 and 5 remain outstanding.
 * **Created**: 2026-05-10
-* **Last Updated**: 2026-11-17
+* **Last Updated**: 2026-11-18
 
 > Originally filed as ADR-0010. It is a proposal, and an unimplemented one, so it now lives here; [ADR-0010](../adr/0010-layout-settings-priority-stack.md) is a pointer at this document.
 
-**Where this stands.** [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759) implements PR 1's layout URL utilities, adapting closed, unmerged [#3852](https://github.com/jaegertracing/jaeger-ui/pull/3852). The helpers parse and serialize layout settings, remove all overrides or only one, and include settings in trace links. They do not yet apply URL settings to the view. [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112) has migrated the layout preferences to Zustand's `persist` middleware with the `jaeger.layout` storage key. PR 2's `persist` flag is implemented by keeping the saved preferences in their own persisted store, `useSavedLayoutPrefsStore`, apart from the displayed layout in `useDisplayedLayoutStore`. The flag adapts closed, unmerged [#3853](https://github.com/jaegertracing/jaeger-ui/pull/3853). Nothing passes `persist: false` yet. There is no `useLayoutSettings` or heuristic layer, and `TraceViewSettings` remains an antd `Dropdown`. The remaining work must apply URL settings through `persist: false` so they do not overwrite saved preferences.
+**Where this stands.** [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759) implements the layout URL utilities. [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112) added persistence, [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777) added persistence controls, and [#4798](https://github.com/jaegertracing/jaeger-ui/pull/4798) split saved preferences in `useSavedLayoutPrefsStore` from the in-memory `useDisplayedLayoutStore`. `useLayoutSettings` resolves each setting from the URL, optional heuristic inputs, and saved preferences. `TracePage` renders the resolved values and its toggles write to the URL without saving defaults, following [#4796](https://github.com/jaegertracing/jaeger-ui/pull/4796). No trace heuristics are supplied yet. `TraceViewSettings` remains an antd `Dropdown`; the popover, source badges, and "Set as my default" action remain outstanding. Until that action lands, no control changes the saved timeline or detail-panel default.
 
 PR 2 overlaps with [#3981](https://github.com/jaegertracing/jaeger-ui/issues/3981) / [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112), which move `store.layout.ts` onto Zustand's `persist` middleware. Sequence the middleware migration first: the `persist` flag PR 2 needs is a property of whatever persistence mechanism the store ends up with, and adding it to the manual `localStorage.setItem` calls only to move them again is wasted work — so the flag belonged on top of #4112 rather than the reverse. That order held: #4112 merged first, and #3853's flag was adapted onto it.
 
@@ -86,7 +86,9 @@ Pure functions with no React dependency:
 
 Implemented in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777) and [#4798](https://github.com/jaegertracing/jaeger-ui/pull/4798) on top of #4112's `persist` middleware. The Zustand setters (`setTimelineBarsVisible`, `applyDetailPanelModeToLayout`) accept an optional options object with `persist?: boolean`, defaulting to `true`. The `setDetailPanelMode` coordinator in `store.ts` forwards the options. With `{ persist: false }`, a setter changes the displayed layout in `useDisplayedLayoutStore` and leaves the saved preferences in `useSavedLayoutPrefsStore` alone. Nothing is written to `localStorage`, so a temporary change does not overwrite defaults saved by another tab.
 
-Existing callers omit the options and still save their changes. No caller passes `{ persist: false }` yet; URL-driven updates will use it when `useLayoutSettings` lands. Moving toggles to temporary updates waits for "Set as my default".
+`useLayoutSettings` passes `{ persist: false }` when applying resolved settings and handling toggles. The mode and visibility setters still save when options are omitted.
+
+Width drags update only the displayed widths while the displayed panel mode or timeline visibility differs from the saved layout. They resume saving when the displayed layout matches the saved one. This keeps constraints from a temporary layout out of the saved widths.
 
 Switching to the side panel narrows the span name column to fit, and switching back to inline does not restore the width until the next load. The saved width stays unchanged.
 
@@ -94,7 +96,7 @@ Switching to the side panel narrows the span name column to fit, and switching b
 
 Redesigns the settings control from a `Dropdown` to a `Popover` panel with `Switch` controls. This is a self-contained UX improvement with no dependency on the URL or priority stack logic.
 
-### PR 4 — `useLayoutSettings` hook + wiring
+### PR 4 ✅ — `useLayoutSettings` hook + wiring
 
 The central hook. Returns a `ResolvedSetting<T>` for each setting:
 
@@ -112,11 +114,13 @@ Resolution order per setting:
 2. Else if a heuristic override is present → `source: 'heuristic'`, `isOverridden: heuristicValue !== lsDefault`.
 3. Else → `source: 'localstorage'`, `isOverridden: storeValue !== lsDefault`.
 
-The hook also keeps the Zustand store in sync with URL values via a `useEffect` so that components reading Zustand directly (e.g. `TraceTimelineViewer`) see the correct values without going through the hook.
+The hook also keeps the displayed Zustand store in sync with URL values via a `useLayoutEffect`, before paint, so that components reading Zustand directly (e.g. `TraceTimelineViewer`) see the correct values without going through the hook.
 
 When a trace page opens, the hook sets the store from that page's URL: a setting with a parameter takes the parameter's value, and a setting without one takes the heuristic value, or else the localStorage default. A value shown on a trace that was open before does not carry over.
 
-`TracePage` calls `useLayoutSettings(location.search)` and uses `resolvedSetting.value` for rendering instead of raw Zustand store values. This is the single resolution point; all child components receive the effective value via props.
+`TracePage` calls `useLayoutSettings(location, enableSidePanel)` and uses `resolvedSetting.value` for rendering instead of raw Zustand store values. The hook accepts optional per-setting heuristic inputs; no trace detector supplies them yet. It ignores URL and heuristic requests for a disabled side panel. Its setters replace only that setting's URL parameter, preserving other parameters, the hash, and router state. The layout effect then applies the value without persistence.
+
+This is the single resolution point. Child components receive the effective value via props, and components that read Zustand directly see the same values after synchronization.
 
 ### PR 5 — Source badges + "Set as my default"
 
@@ -137,5 +141,5 @@ Adds the override indicator UI to `TraceViewSettings`: a source badge (*Set by s
 
 ### Future work
 
-- Heuristic overrides are currently stubbed (`computeHeuristicOverrides` returns `null` for all fields). The infrastructure is in place; heuristics will be implemented when trace-type detection is added.
+- The hook accepts heuristic overrides, but callers do not supply any yet. Trace-driven heuristics will be implemented when the layout rules for each trace type are defined.
 - Additional settings (e.g. zoom level, collapsed state) could be added to the priority stack using the same pattern.
