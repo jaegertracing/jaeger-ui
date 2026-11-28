@@ -1,0 +1,117 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.ConversationPage {
+  background: var(--surface-primary);
+  min-height: calc(100vh - var(--nav-height));
+}
+
+.ConversationPage--header {
+  align-items: center;
+  background: var(--surface-secondary);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+}
+
+.ConversationPage--title {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ConversationPage--title h1 {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.ConversationPage--id {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ConversationPage--controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ConversationPage--control {
+  align-items: center;
+  color: var(--text-muted);
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.ConversationPage--serviceSelect {
+  min-width: 180px;
+}
+
+.ConversationPage--lookbackSelect {
+  min-width: 140px;
+}
+
+.ConversationPage--body {
+  padding: 1rem 1.25rem;
+}
+
+.ConversationPage--summary {
+  align-items: baseline;
+  color: var(--text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.ConversationPage--message {
+  color: var(--text-primary);
+  max-width: 48rem;
+}
+
+.ConversationPage--warning {
+  color: var(--feedback-warning);
+  margin: 0 0 0.75rem;
+}
+
+.ConversationPage--muted {
+  color: var(--text-muted);
+}
+
+.ConversationPage--turnCell {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ConversationPage--traceLink {
+  align-items: baseline;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.ConversationPage--traceID {
+  color: var(--text-muted);
+  font-family: monospace;
+  font-size: 0.85em;
+}
+
+.ConversationPage--offset {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.ConversationPage--errorTag {
+  margin: 0;
+}

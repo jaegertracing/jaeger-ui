@@ -11,6 +11,7 @@ import { ROUTE_PATH as deepDependenciesPath } from '../DeepDependencies/url';
 import { ROUTE_PATH as qualityMetricsPath } from '../QualityMetrics/url';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
 import { ROUTE_PATH as plexusDemoPath } from '../PlexusDemo/url';
+import { ROUTE_PATH as conversationPath } from '../ConversationPage/url';
 
 // SearchTracePage and TraceRouter are the two most-used pages (landing page and
 // primary navigation target), so they are imported eagerly.
@@ -23,6 +24,7 @@ const DependencyGraph = React.lazy(() => import('../DependencyGraph'));
 const DeepDependencies = React.lazy(() => import('../DeepDependencies'));
 const QualityMetrics = React.lazy(() => import('../QualityMetrics'));
 const MonitorATMPage = React.lazy(() => import('../Monitor'));
+const ConversationPage = React.lazy(() => import('../ConversationPage'));
 
 // Only include the Plexus demo in development builds.
 // Vite replaces import.meta.env.DEV with false in production, which causes Rollup
@@ -72,6 +74,14 @@ export const ROUTES: { path: string; element: React.ReactNode }[] = [
     element: (
       <React.Suspense fallback={Fallback}>
         <MonitorATMPage />
+      </React.Suspense>
+    ),
+  },
+  {
+    path: conversationPath,
+    element: (
+      <React.Suspense fallback={Fallback}>
+        <ConversationPage />
       </React.Suspense>
     ),
   },
