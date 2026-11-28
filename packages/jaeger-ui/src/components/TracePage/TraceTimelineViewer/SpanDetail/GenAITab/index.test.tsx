@@ -742,13 +742,13 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const header = screen.getByText('Tool Call: get_weather').closest('[role="switch"]');
-    expect(header).toHaveAttribute('aria-checked', 'true');
+    const header = screen.getByText('Tool Call: get_weather').closest('[role="button"]');
+    expect(header).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Arguments')).toBeInTheDocument();
     expect(screen.getByText('Result')).toBeInTheDocument();
 
     fireEvent.click(header!);
-    expect(header).toHaveAttribute('aria-checked', 'false');
+    expect(header).toHaveAttribute('aria-expanded', 'false');
     expect(container.querySelector('.KeyValueTable')).not.toBeInTheDocument();
   });
 
@@ -1005,8 +1005,8 @@ describe('GenAITab', () => {
 
   it('auto-expands Other GenAI Attributes when it is the only section', () => {
     render(<GenAITab span={makeSpan([{ key: 'gen_ai.conversation.id', value: 'conv-1' }])} />);
-    expect(screen.getByText('Other GenAI Attributes').closest('[role="switch"]')).toHaveAttribute(
-      'aria-checked',
+    expect(screen.getByText('Other GenAI Attributes').closest('[role="button"]')).toHaveAttribute(
+      'aria-expanded',
       'true'
     );
     expect(screen.getByText('gen_ai.conversation.id')).toBeInTheDocument();
@@ -1024,10 +1024,10 @@ describe('GenAITab', () => {
       />
     );
     const header = screen.getByText((_, element) => element?.textContent === 'Other GenAI Attributes:');
-    expect(header.closest('[role="switch"]')).toHaveAttribute('aria-checked', 'false');
+    expect(header.closest('[role="button"]')).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(header);
-    expect(screen.getByText('Other GenAI Attributes').closest('[role="switch"]')).toHaveAttribute(
-      'aria-checked',
+    expect(screen.getByText('Other GenAI Attributes').closest('[role="button"]')).toHaveAttribute(
+      'aria-expanded',
       'true'
     );
   });

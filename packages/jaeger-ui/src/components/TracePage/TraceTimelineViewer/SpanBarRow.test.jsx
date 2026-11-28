@@ -116,7 +116,7 @@ describe('<SpanBarRow>', () => {
   it('renders correctly with essential elements', () => {
     render(<SpanBarRow {...defaultProps} />);
     expect(screen.getByTestId('span-tree-offset')).toBeVisible();
-    expect(screen.getByRole('switch')).toBeVisible();
+    expect(screen.getByRole('button', { expanded: false })).toBeVisible();
   });
 
   it('triggers onDetailToggled when view area is clicked', () => {
@@ -129,7 +129,7 @@ describe('<SpanBarRow>', () => {
 
   it('triggers onDetailToggled when Enter is pressed on span name', () => {
     render(<SpanBarRow {...defaultProps} />);
-    const spanName = screen.getByRole('switch');
+    const spanName = screen.getByRole('button', { expanded: false });
     fireEvent.keyDown(spanName, { key: 'Enter' });
     expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
@@ -137,7 +137,7 @@ describe('<SpanBarRow>', () => {
 
   it('triggers onDetailToggled when Space is pressed on span name', () => {
     render(<SpanBarRow {...defaultProps} />);
-    const spanName = screen.getByRole('switch');
+    const spanName = screen.getByRole('button', { expanded: false });
     fireEvent.keyDown(spanName, { key: ' ' });
     expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
@@ -145,7 +145,7 @@ describe('<SpanBarRow>', () => {
 
   it('does not trigger onDetailToggled for other keys on span name', () => {
     render(<SpanBarRow {...defaultProps} />);
-    const spanName = screen.getByRole('switch');
+    const spanName = screen.getByRole('button', { expanded: false });
     fireEvent.keyDown(spanName, { key: 'Tab' });
     expect(defaultProps.onDetailToggled).not.toHaveBeenCalled();
   });
@@ -234,7 +234,7 @@ describe('<SpanBarRow>', () => {
       isDetailExpanded: true,
     };
     render(<SpanBarRow {...props} />);
-    const link = screen.getByRole('switch');
+    const link = screen.getByRole('button', { expanded: true });
     expect(link).toHaveClass('span-name', 'is-detail-expanded');
   });
 
@@ -587,7 +587,7 @@ describe('<SpanBarRow>', () => {
     it('visually hides the service name when showServiceName is false', () => {
       render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
       expect(screen.getByText('service-name')).toHaveClass('SpanBarRow--visuallyHidden');
-      expect(screen.getByRole('switch', { name: /service-name\s*op-name/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /service-name\s*op-name/ })).toBeInTheDocument();
     });
 
     it('still shows the operation name when service name is hidden', () => {

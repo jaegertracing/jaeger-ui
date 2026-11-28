@@ -125,9 +125,9 @@ export default function AccordionEvents({
     );
     HeaderComponent = 'a';
     headerProps = {
-      'aria-checked': isOpen,
+      'aria-expanded': isOpen,
       onClick: accordionToggle(onToggle),
-      role: 'switch',
+      role: 'button',
     };
   }
 
