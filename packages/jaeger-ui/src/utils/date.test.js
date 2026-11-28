@@ -267,6 +267,7 @@ describe('formatDurationCompact', () => {
   describe('microseconds', () => {
     it('formats values < 1μs', () => {
       expect(formatDurationCompact(0)).toBe('0μs');
+      expect(formatDurationCompact(0.4)).toBe('0μs');
       expect(formatDurationCompact(0.5)).toBe('1μs'); // rounds up
     });
 
@@ -278,15 +279,20 @@ describe('formatDurationCompact', () => {
   });
 
   describe('milliseconds', () => {
-    it('formats values 1-10ms with 2 significant digits', () => {
-      expect(formatDurationCompact(1000)).toBe('1.0ms');
+    it('formats values 1-10ms with at most 3 significant digits', () => {
+      expect(formatDurationCompact(1000)).toBe('1ms');
       expect(formatDurationCompact(1500)).toBe('1.5ms');
+      expect(formatDurationCompact(1836)).toBe('1.84ms');
+      expect(formatDurationCompact(9994)).toBe('9.99ms');
       expect(formatDurationCompact(9999)).toBe('10ms'); // rounds to 10
     });
 
-    it('formats values 10-100ms with 3 significant digits', () => {
+    it('formats values 10-100ms with at most 3 significant digits', () => {
+      expect(formatDurationCompact(10000)).toBe('10ms');
       expect(formatDurationCompact(13835)).toBe('13.8ms');
-      expect(formatDurationCompact(50000)).toBe('50.0ms');
+      expect(formatDurationCompact(50000)).toBe('50ms');
+      expect(formatDurationCompact(99949)).toBe('99.9ms');
+      expect(formatDurationCompact(99950)).toBe('100ms');
       expect(formatDurationCompact(99999)).toBe('100ms'); // rounds to 100
     });
 
@@ -298,14 +304,14 @@ describe('formatDurationCompact', () => {
   });
 
   describe('seconds', () => {
-    it('formats values 1-10s with 2 significant digits', () => {
-      expect(formatDurationCompact(1000000)).toBe('1.0s');
-      expect(formatDurationCompact(1835200)).toBe('1.8s');
+    it('formats values 1-10s with at most 3 significant digits', () => {
+      expect(formatDurationCompact(1000000)).toBe('1s');
+      expect(formatDurationCompact(1835200)).toBe('1.84s');
       expect(formatDurationCompact(9999000)).toBe('10s');
     });
 
-    it('formats values 10-60s with 3 significant digits', () => {
-      expect(formatDurationCompact(15000000)).toBe('15.0s');
+    it('formats values 10-60s with at most 3 significant digits', () => {
+      expect(formatDurationCompact(15000000)).toBe('15s');
       expect(formatDurationCompact(45678000)).toBe('45.7s');
       expect(formatDurationCompact(59900000)).toBe('59.9s');
     });
@@ -313,32 +319,36 @@ describe('formatDurationCompact', () => {
 
   describe('minutes', () => {
     it('formats values >= 60s as minutes', () => {
-      expect(formatDurationCompact(60000000)).toBe('1.0m');
+      expect(formatDurationCompact(60000000)).toBe('1m');
+      expect(formatDurationCompact(69000000)).toBe('1.15m');
       expect(formatDurationCompact(150000000)).toBe('2.5m');
-      expect(formatDurationCompact(600000000)).toBe('10.0m'); // toPrecision(3) = "10.0"
+      expect(formatDurationCompact(600000000)).toBe('10m');
     });
 
     it('formats large minute values with appropriate precision', () => {
-      expect(formatDurationCompact(3600000000)).toBe('60.0m'); // 1 hour, toPrecision(3) = "60.0"
+      expect(formatDurationCompact(3600000000)).toBe('60m'); // 1 hour
       expect(formatDurationCompact(7200000000)).toBe('120m'); // 2 hours, rounds
+      expect(formatDurationCompact(60000000000)).toBe('1000m'); // >= 1000m stays integer without scientific notation
     });
   });
 
   describe('edge cases', () => {
     it('handles unit boundaries correctly', () => {
       expect(formatDurationCompact(999)).toBe('999μs');
-      expect(formatDurationCompact(1000)).toBe('1.0ms');
-      expect(formatDurationCompact(999999)).toBe('1.0s');
-      expect(formatDurationCompact(1000000)).toBe('1.0s');
+      expect(formatDurationCompact(999.4)).toBe('999μs');
+      expect(formatDurationCompact(999.5)).toBe('1ms');
+      expect(formatDurationCompact(1000)).toBe('1ms');
+      expect(formatDurationCompact(999999)).toBe('1s');
+      expect(formatDurationCompact(1000000)).toBe('1s');
     });
 
     // Rounding to three significant digits can reach the base of the next unit.
     // Each pair is one microsecond either side of the boundary.
     it.each([
       { input: 999499, expected: '999ms' },
-      { input: 999500, expected: '1.0s' },
+      { input: 999500, expected: '1s' },
       { input: 59949999, expected: '59.9s' },
-      { input: 59950000, expected: '1.0m' },
+      { input: 59950000, expected: '1m' },
     ])('carries at the boundary: $input μs is $expected', ({ input, expected }) => {
       expect(formatDurationCompact(input)).toBe(expected);
     });

@@ -255,13 +255,18 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string):
 }
 
 /**
- * Formats a duration in microseconds to a compact string with 3 significant digits.
+ * Formats a duration in microseconds to a compact string with an appropriate unit (μs, ms, s, m),
+ * using at most 3 significant digits.
+ * For ms, s, and m below 1000 in their selected unit, values render with up to 3 significant
+ * digits and omit trailing fractional zeros while preserving meaningful integer zeros. Sub-millisecond
+ * durations (including 0) and minute values of 1000 or greater round to the nearest integer, and
+ * values that round up to the next unit's threshold carry over to that unit.
  * Use this for all standalone latency displays: span durations, trace durations, axis
  * labels, table cells. Prefer this over `formatDuration` unless you specifically need
  * the higher precision for relative offset comparisons.
  *
  * @param microseconds - Duration in microseconds
- * @returns Formatted string with 3 significant digits and appropriate unit (μs, ms, s, m)
+ * @returns Formatted string with at most 3 significant digits and appropriate unit (μs, ms, s, m)
  *
  * @example
  * formatDurationCompact(123) // => "123μs"
@@ -270,9 +275,10 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string):
  * formatDurationCompact(1835200) // => "1.84s"
  */
 export function formatDurationCompact(microseconds: Microseconds): string {
-  // Format to 3 significant digits.
+  // Format values below 1000 with at most 3 significant digits without trailing
+  // fractional zeros; round larger values (e.g. >= 1000m) to the nearest integer.
   const render = (value: number) =>
-    value < 10 ? value.toPrecision(2) : value < 100 ? value.toPrecision(3) : String(Math.round(value));
+    value < 1000 ? String(Number(value.toPrecision(3))) : String(Math.round(value));
 
   // Each branch rounds before it renders, so the range check belongs on the
   // rendered value and not on the raw one: 999.5ms renders as "1000ms", which is
@@ -292,5 +298,7 @@ export function formatDurationCompact(microseconds: Microseconds): string {
     return `${s}s`;
   }
 
-  return `${render(microseconds / ONE_MINUTE)}m`;
+  // Seconds rounding to 60 carry over to 1m even when microseconds / ONE_MINUTE
+  // is slightly below 0.9995 (e.g. 59950000μs = 0.999166...m).
+  return microseconds < ONE_MINUTE ? '1m' : `${render(microseconds / ONE_MINUTE)}m`;
 }
