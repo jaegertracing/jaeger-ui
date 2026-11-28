@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceFlamegraph from './index';
-import testTrace from './testTrace.json';
+import testTrace from './pyroscopeTrace.json';
 import { transformOtelTrace } from '../../../api/v3/parser';
 import { validateTracesData } from '../../../api/v3/schemas';
 

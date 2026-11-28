@@ -6,11 +6,9 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
-import { transformOtelTrace } from '../../../api/v3/parser';
-import { validateTracesData } from '../../../api/v3/schemas';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
-import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
+import { loadTestTrace } from '../testTrace';
 
 vi.mock('@jaegertracing/plexus', () => {
   const DEFAULT_MODE = 'service';
@@ -65,7 +63,7 @@ vi.mock('@jaegertracing/plexus', () => {
   };
 });
 
-const trace = transformOtelTrace(validateTracesData(testTrace));
+const trace = loadTestTrace();
 
 describe('<TraceGraph>', () => {
   let props;
