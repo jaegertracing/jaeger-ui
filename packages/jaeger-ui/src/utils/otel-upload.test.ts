@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isOtelUpload, validateOtelUpload } from './otel-upload';
-import { refinedTracesData } from '../api/v3/schemas';
+import { validateTracesData } from '../api/v3/schemas';
 import numericUpload from './fixtures/otlp-upload-numeric.json';
 
 it.each([numericUpload, { result: numericUpload }, { ...numericUpload, result: { unrelated: true } }])(
@@ -44,7 +44,7 @@ it.each([numericUpload, { result: numericUpload }, { ...numericUpload, result: {
 );
 
 it('keeps the network int64 wire contract strict', () => {
-  expect(() => refinedTracesData.parse(numericUpload)).toThrow();
+  expect(() => validateTracesData(numericUpload)).toThrow();
 });
 
 it.each(['startTimeUnixNano', 'endTimeUnixNano', 'eventTime', 'intValue'])(

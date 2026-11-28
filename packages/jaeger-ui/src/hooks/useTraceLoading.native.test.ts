@@ -7,7 +7,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { fetchedState } from '../constants';
 import { queryClient } from '../query/app-query-client';
 import { getCachedTrace, populateTraceCache, useTrace, useTraces } from './useTraceLoading';
-import { parseOtelTrace } from '../api/v3/parser';
+import { transformOtelTrace } from '../api/v3/parser';
 import type { IOtelTrace } from '../types/otel';
 
 const traceID = 'abcdef0123456789abcdef0123456789';
@@ -103,7 +103,7 @@ describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
 
   it('replaces an unobserved canonical branching trace when an alias loads', async () => {
     const response = branchingResponse();
-    const oldTrace = parseOtelTrace(response.result)!;
+    const oldTrace = transformOtelTrace(response.result)!;
     populateTraceCache(oldTrace);
     const readChildren = guardDeepComparison(oldTrace);
     respond(response);
@@ -265,8 +265,8 @@ describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
 
 it('replaces uploaded branching traces without comparing their cyclic graphs', () => {
   const response = branchingResponse();
-  const oldTrace = parseOtelTrace(response.result)!;
-  const fresh = parseOtelTrace(response.result)!;
+  const oldTrace = transformOtelTrace(response.result)!;
+  const fresh = transformOtelTrace(response.result)!;
   populateTraceCache(oldTrace);
   const readChildren = guardDeepComparison(oldTrace);
   populateTraceCache(fresh);

@@ -12,7 +12,7 @@ import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
 import type { SpanData, TraceData } from '../../types/trace';
 import type { TraceSummary } from '../../types/trace-summary';
-import { parseOtelTrace } from '../../api/v3/parser';
+import { transformOtelTrace } from '../../api/v3/parser';
 import { isOtelUpload, splitOtelUpload, validateOtelUpload } from '../../utils/otel-upload';
 import type { TracesDataWire } from '../../api/v3/schemas';
 
@@ -88,7 +88,7 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
   // after grouping every valid document, so later entries cannot overwrite spans.
   for (const data of splitOtelUpload(otelDocuments)) {
     try {
-      const otel = parseOtelTrace(data);
+      const otel = transformOtelTrace(data);
       if (!otel) {
         errorCount++;
         continue;

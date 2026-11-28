@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeAttributes } from '../../../model/attributes';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
 import filterSpans from '../../../utils/filter-spans';
+import { makeOtelSpan } from '../../../utils/test/makeOtelSpan';
 import {
   attributeMatchIDs,
   decodeClause,
@@ -43,13 +44,12 @@ function makeSpan(
   spanID: string,
   attributes: ReadonlyArray<{ key: string; value: AttributeValue }>
 ): IOtelSpan {
-  return {
+  return makeOtelSpan({
     spanID,
     name: `op-${spanID}`,
     attributes: makeAttributes(attributes),
-    events: [],
     resource: { serviceName: `service-${spanID}`, attributes: makeAttributes() },
-  } as unknown as IOtelSpan;
+  });
 }
 
 describe('span pill texts', () => {

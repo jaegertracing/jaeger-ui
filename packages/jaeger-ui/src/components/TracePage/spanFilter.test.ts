@@ -28,8 +28,9 @@ import {
   withSetClause,
 } from './spanFilter';
 import genaiTestTrace from './TraceTimelineViewer/genaiTestTrace.json';
+import { transformOtelTrace } from '../../api/v3/parser';
+import { validateTracesData } from '../../api/v3/schemas';
 import { makeAttributes } from '../../model/attributes';
-import transformTraceData from '../../model/transform-trace-data';
 import { IAttribute, IOtelSpan, SpanKind, StatusCode } from '../../types/otel';
 
 function makeSpan(
@@ -234,7 +235,7 @@ describe('evaluateSpanFilter', () => {
   });
 
   it('treats a GenAI span as hidden when a plain ancestor service is pruned', () => {
-    const trace = transformTraceData(genaiTestTrace as never)!.asOtelTrace();
+    const trace = transformOtelTrace(validateTracesData(genaiTestTrace))!;
     const nestedLlm = trace.spans.find(
       s => s.resource.serviceName === 'summarizer-agent' && s.genAIKind !== undefined
     )!;
