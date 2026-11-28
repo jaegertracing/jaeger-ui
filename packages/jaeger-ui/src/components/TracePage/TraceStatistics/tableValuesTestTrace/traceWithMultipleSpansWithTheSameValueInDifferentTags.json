@@ -68,7 +68,7 @@
             },
             {
               "traceId": "0000000000000000006c3cf93508f205",
-              "spanId": "2dc4b796e2127e32",
+              "spanId": "2dc4b796e2127e33",
               "name": "another span with test",
               "kind": 3,
               "flags": 1,
